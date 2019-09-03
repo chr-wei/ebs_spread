@@ -39,6 +39,22 @@ Enum ComparisonTypes
 End Enum
 
 
+Sub Test_Base()
+    Dim darr() As Double
+    darr = Utils.CopyVarArrToDoubleArr(Array(0.4, 0.5, 7))
+    Dim concateeOne As Double: concateeOne = 5#
+    Debug.Print Utils.SerializeArray(Base.ConcatToArray(darr, concateeOne))
+    Dim concateeTwo() As Double: concateeTwo = Utils.CopyVarArrToDoubleArr(Array(77, 55, 44))
+    Debug.Print Utils.SerializeArray(Base.ConcatToArray(darr, concateeTwo))
+    
+    Dim arrThree() As Double: arrThree = Utils.CopyVarArrToDoubleArr(Array(77, 55, 44, 66, 11))
+    Debug.Print Utils.SerializeArray(Base.ExtractSubArray(arrThree, 0, 0))
+    Debug.Print Utils.SerializeArray(Base.ExtractSubArray(arrThree, 0, 1))
+    Debug.Print Utils.SerializeArray(Base.ExtractSubArray(arrThree, 2, 7))
+End Sub
+
+
+
 Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optional inLow As Long = -1, Optional inHi As Long = -1, _
     Optional ByRef associate As Variant, _
     Optional ByRef associate2 As Variant, _
@@ -484,14 +500,14 @@ End Function
 
 
 
-Function Max(val1 As Variant, Optional val2 As Double) As Double
+Function Max(val1 As Variant, Optional val2 As Variant) As Variant
     'Returns the maximum value of two values or of a passed array
     '
     'Input args:
-    '  val1:   Array or double. If array only val1 arg is used
-    '
+    '   val1:   Array or numeric value. If array only val1 arg is used
+    '   val2:   Numeric value
     'Output args:
-    '  Max:    The maximum value
+    '   Max:    The maximum value
     
     'Init output
     Max = 0
@@ -502,10 +518,10 @@ Function Max(val1 As Variant, Optional val2 As Double) As Double
     If IsArray(val1) Then
         Dim arrVal As Variant
         For Each arrVal In val1
-            If arrVal > Max Then Max = CDbl(arrVal)
+            If arrVal > Max Then Max = arrVal
         Next arrVal
-    ElseIf CDbl(val1) > val2 Then
-        Max = CDbl(val1)
+    ElseIf val1 > val2 Then
+        Max = val1
     Else
         Max = val2
     End If
@@ -513,11 +529,12 @@ End Function
 
 
 
-Function Min(val1 As Variant, Optional val2 As Double) As Double
+Function Min(val1 As Variant, Optional val2 As Variant) As Variant
     'Returns the minimum value of two values or of a passed array
     '
     'Input args:
-    '  val1:   Array or double. If array only val1 arg is used
+    '  val1:    Array or numeric value. If array only val1 arg is used
+    '  val2:    Numeric value
     '
     'Output args:
     '  Min:    The minimum value
@@ -531,10 +548,10 @@ Function Min(val1 As Variant, Optional val2 As Double) As Double
     If IsArray(val1) Then
         Dim arrVal As Variant
         For Each arrVal In val1
-            If arrVal < Min Then Min = CDbl(arrVal)
+            If arrVal < Min Then Min = arrVal
         Next arrVal
     ElseIf val1 < val2 Then
-        Min = CDbl(val1)
+        Min = val1
     Else
         Min = val2
     End If
@@ -604,4 +621,89 @@ Function GetArrayDimension(arr As Variant) As Long
     Wend
 Err:
     GetArrayDimension = idx - 1
+End Function
+
+
+
+Function ConcatToArray(arr As Variant, concatee As Variant) As Variant
+    'Concatenates an array and a single value or a second array
+    '
+    'Input args:
+    '   arr:        The array the data is concatenated to
+    '   concatee:   The value or array that is concatenated to the array
+    '
+    'Output args:
+    '   ConcatToArray:    Output array. If any of the variables is empty then the other one will be returned
+    
+    Dim outArray() As Variant
+    
+    'Init output
+    ConcatToArray = outArray
+    
+    'Check args and concat
+    Dim arrCount As Long: arrCount = UBound(arr) - LBound(arr) + 1
+    Dim arrIdx As Long
+    
+    If Not IsArray(arr) Then Exit Function
+    If IsArray(concatee) Then
+        If Not Base.IsArrayAllocated(concatee) Then
+            'Output first array if second array is not initialized
+            ConcatToArray = arr
+            Exit Function
+        End If
+        Dim concateeCount As Long: concateeCount = UBound(concatee) - LBound(concatee) + 1
+        ReDim outArray(0 To arrCount + concateeCount - 1)
+        
+        'Add the first array to the resulting array
+        For arrIdx = 0 To arrCount - 1
+            outArray(arrIdx) = arr(LBound(arr) + arrIdx)
+        Next arrIdx
+        
+        'Add the concatee array to the resulting array
+        For arrIdx = arrCount To UBound(outArray)
+            outArray(arrIdx) = concatee(LBound(concatee) + arrIdx - arrCount)
+        Next arrIdx
+        
+    Else
+        'Append a single value to the array
+        ReDim outArray(0 To arrCount)
+        For arrIdx = 0 To UBound(outArray) - 1
+            outArray(arrIdx) = arr(arrIdx)
+        Next arrIdx
+        
+        outArray(UBound(outArray)) = concatee
+    End If
+    ConcatToArray = outArray
+End Function
+
+
+
+Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant()
+    'This function extracts a subarray out of an array. Passed bounds have to be in range of the array bounds
+    '
+    'Input args:
+    '   arr:    The array
+    '   lbnd:   The lower bound (inclusive)
+    '   ubnd:   The upper bound (inclusive)
+    '
+    'Output args:
+    '   ExtractSubArray:    The extracted array
+    
+    'Init output
+    Dim subArr() As Variant
+    ExtractSubArray = subArr
+    
+    'Check args
+    If Not Base.IsArrayAllocated(arr) Then Exit Function
+    If lbnd < LBound(arr) Or ubnd > UBound(arr) Or lbnd > ubnd Then Exit Function
+    
+    'Extract the sub array
+    ReDim subArr(0 To ubnd - lbnd)
+    
+    Dim idx As Long
+    For idx = lbnd To ubnd
+        subArr(idx - lbnd) = arr(idx)
+    Next idx
+    
+    ExtractSubArray = subArr
 End Function

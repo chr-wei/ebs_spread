@@ -19,7 +19,7 @@ Attribute VB_Name = "MigrationUtils"
 
 Option Explicit
 
-Sub CopyEbsTableToTaskSheets()
+Sub Mig_CopyEbsTableToTaskSheets()
 'v0.97 and earlier to v0.98
 'Replaces the old second table of task sheets with a simpler one
     Dim templateSheet As Worksheet
@@ -44,7 +44,7 @@ End Sub
 
 
 
-Sub ReplaceUserEstimateText()
+Sub Mig_ReplaceUserEstimateText()
 'v0.97 and earlier to v0.98
     Dim sheet As Worksheet
     

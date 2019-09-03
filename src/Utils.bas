@@ -32,8 +32,6 @@ Public Enum DeserializedType
     ceDates = 2
 End Enum
 
-
-
 Function CreateHashString(Optional prefix As String = "") As String
     'Function is used to create a unique hash value (first 18 chars of sha256) with prefix if needed.
     '
@@ -400,7 +398,7 @@ Function IntersectListColAndCells(sheet As Worksheet, listId As Variant, colIden
     End If
     
     Dim listCol As Range
-    'xx problem here
+
     Set listCol = Utils.GetListColumn(sheet, listId, colIdentifier, ceAll)
     
     If Not listCol Is Nothing Then
@@ -553,6 +551,12 @@ Function SerializeArray(arr As Variant) As String
     '
     'Output args:
     '   SerializeArray: The serialized array string
+    
+    'Init output
+    SerializeArray = ""
+    
+    'Check args
+    If Not Base.IsArrayAllocated(arr) Then Exit Function
     
     Dim item As Variant
     
