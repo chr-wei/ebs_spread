@@ -265,7 +265,9 @@ Function IsTaskTracking(entry As Variant) As Boolean
         Case "String"
             taskHash = entry
         Case "Range"
-            taskHash = PlanningUtils.GetTaskHash(Range(entry))
+            Dim rng As Range
+            Set rng = entry
+            taskHash = PlanningUtils.GetTaskHash(rng)
     End Select
     
     If StrComp(taskHash, "") = 0 Then
@@ -845,7 +847,7 @@ Function OrganizePrioColumn()
     Dim sf As SortFields
     Set sf = lo.Sort.SortFields
     sf.Clear
-    sf.Add2 Key:=prioCol, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
+    sf.Add Key:=prioCol, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
     
     With lo.Sort
         .header = xlYes
