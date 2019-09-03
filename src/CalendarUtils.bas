@@ -32,71 +32,124 @@ End Sub
 
 
 
-Sub Test_MapHoursToDate()
-    'A test method which maps hours to a dates.
-    'https://docs.microsoft.com/de-de/office/vba/outlook/how-to/search-and-filter/search-the-calendar-for-appointments-that-occur-partially-or-entirely-in-a-given
+Sub Test_MultiMapHoursToDate()
+    Debug.Print ""
+    Dim contributor As String: contributor = "Me"
 
-    Dim contributor As String
-    contributor = "Me"
-    
     Dim oItems As Outlook.Items
     Set oItems = CalendarUtils.GetCalItems(contributor, Constants.BUSY_AT_OPTIONAL_APPOINTMENTS)
-    
-    Debug.Print "##### Test_MapHoursToDate on: " + CStr(Now) + " #####"
-    
-    Dim startingDate As Date
-    Dim hours As Double
-        
-    hours = 1
-    startingDate = CDate("06/20/2019 07:00")
-    Debug.Print "Testing 5: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
-        
-    startingDate = CDate("06/20/2019 08:00")
-    
-    Debug.Print "Testing 1: " & startingDate; " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
+
+    Dim multiHours() As Double
+    multiHours = Utils.CopyVarArrToDoubleArr(Array(6, 7, 60, 120, 2, 6, 10, 0, 5, 40))
+
+    Dim startingTime As Date
+    startingTime = CDate("06/20/2019 07:00")
+
+    Dim hourSetpoints() As Double
+    'hourSetpoints = Utils.CopyVarArrToDoubleArr(Array(0, 0, 0))
+
+    Dim dateSetpoints() As Date
+    'dateSetpoints = Utils.CopyVarArrToDateArr(Array(startingTime, startingTime, startingTime))
+
+    Dim allRetrievedDates() As Date
+    Debug.Print "#### Test with speed improvement ####"
+
+    allRetrievedDates = CalendarUtils.MultiMapHoursToDate(contributor, oItems, _
+        multiHours, _
+        startingTime, _
+        hourSetpoints, dateSetpoints, _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
 
-    startingDate = CDate("06/20/2019 09:00")
-    Debug.Print "Testing 2: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Dim idx As Integer
+    For idx = 0 To UBound(allRetrievedDates)
+        Debug.Print "Mapped hour " & multiHours(idx) & " to " & allRetrievedDates(idx)
+    Next idx
 
-    startingDate = CDate("06/20/2019 10:00")
-    Debug.Print "Testing 3: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    'Now test map without speed improvement
+    Dim mapHour As Double
+    Dim retrievedDate As Date
+    Debug.Print "#### Test without speed improvement ####"
 
-    startingDate = CDate("06/20/2019 11:00")
-    Debug.Print "Testing 4: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
+    mapHour = 6
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+        mapHour, _
+        startingTime, _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
-    startingDate = CDate("06/20/2019 19:00")
-    Debug.Print "Testing 6: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    mapHour = 7
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
-    startingDate = CDate("06/21/2019 19:00")
-    Debug.Print "Testing 7: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
-        
-    startingDate = CDate("06/17/2019 08:00")
-    hours = 40
-    Debug.Print "Testing 8: " & startingDate & " +" & hours & "h -> " & MapHoursToDate(contributor, oItems, _
-        hours, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    mapHour = 60
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 120
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 2
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 6
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 10
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 0
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 5
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+
+    mapHour = 40
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 End Sub
 
 
@@ -121,7 +174,7 @@ Sub Test_MapDateToHours()
     Debug.Print "Testing 1: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
         endingDate, startingDate, _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
+        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result nok.
         
     startingDate = CDate("06/17/2019 08:00")
     endingDate = CDate("06/18/2019 10:00")
@@ -168,11 +221,13 @@ End Sub
 
 
 
+
 Function MultiMapHoursToDate( _
     contributor As String, _
     appointmentList As Outlook.Items, _
-    multiRemainingHours() As Double, _
-    startingTime As Date, _
+    inHours() As Double, _
+    inStart As Date, _
+    Optional inHourSetpoints As Variant, Optional inDateSetpoints As Variant, _
     Optional ByVal appointmentOnsetHours As Double = 0, _
     Optional ByVal appointmentOffsetHours As Double = 0, _
     Optional ByVal maxIterations As Integer = 32767) As Date()
@@ -180,17 +235,18 @@ Function MultiMapHoursToDate( _
     'Maps multi hours to a date regarding the standard outlook calendar. Events, working hours, preparation and post-action times are
     'taken into account. Data fetching approach:
     '  (1) Data from outlook and from 'Settings'sheet
-    '  (2) No outlook events but working hours and on- offset hours from the 'Settings'sheet
+    '  (2) No outlook events but working hours and on-offset hours from the 'Settings' sheet
     '  (3) No outlook events but working hours, and on-offset hours from defined constants in code
     '
     'Input args:
-    '  contributor:            The name of the contributor. Needed to get leisure times for the switched 'current'day in the algorithm
-    '  appointmentList:        List of appointments coming from outlook
-    '  multieRemainingHours:   Has to be sorted ascending as the algorithm starts with the last (lower) value und only does calculation
-    '                          on the hours left
-    '  appointmentOnsetHours:  The hours one needs prior to the event to prepare
-    '  apptoinmentOffsetHours: The hours one needs after the event to analyze the event
-    '  (arg list is the same as in 'MapHoursToDate'
+    '   contributor:            The name of the contributor. Needed to get leisure times for the switched 'current'day in the algorithm
+    '   appointmentList:        List of appointments coming from outlook
+    '   inHours:                Pass an array with remaining hours to map. This is the main input
+    '   inHourSetpoints:        Remaining hours for which dates have been mapped already (see inDateSetpoints)
+    '   inDateSetpoints:        Mapped dates as result of a previous map call. These setpoints help speeding up the calculation for the passed 'inHours' array
+    '   inStart:                The time the mapping is started from
+    '   appointmentOnsetHours:  The hours one needs prior to the event to prepare
+    '   apptoinmentOffsetHours: The hours one needs after the event to analyze the event
     '
     'Output args:
     '  MultiMapHoursToDate:  Array of dates corresponding to the hours from the input array
@@ -200,45 +256,109 @@ Function MultiMapHoursToDate( _
     MultiMapHoursToDate = allMappedDates
     
     'Check args
-    If Not Base.IsArrayAllocated(multiRemainingHours) Then Exit Function
+    If Not Base.IsArrayAllocated(inHours) Then Exit Function
     
-    ReDim allMappedDates(UBound(multiRemainingHours))
+    Dim useSetpoints As Boolean: useSetpoints = False
+    Dim bndSetpoints As Integer: bndSetpoints = 0
+    If Base.IsArrayAllocated(inHourSetpoints) And StrComp(TypeName(inHourSetpoints), "Double()") = 0 And _
+        Base.IsArrayAllocated(inDateSetpoints) And StrComp(TypeName(inDateSetpoints), "Date()") = 0 Then
+        'Check if double and dates arrays were passed and initialized
+        If (UBound(inHourSetpoints)) = UBound(inDateSetpoints) And _
+            (LBound(inHourSetpoints) = LBound(inDateSetpoints)) Then
+            'Check if bounds of setpoints are the same
+            bndSetpoints = UBound(inHourSetpoints)
+            useSetpoints = True
+        End If
+    End If
     
-    Dim previousRemainingHours As Double
-    Dim remainingHours As Double
     Dim mappedDate As Date
-    
-    'Init remainingHours and starting time
-    previousRemainingHours = 0
-    startingTime = Now
-    
     Dim hourIdx As Integer
     
-    For hourIdx = 0 To UBound(multiRemainingHours)
-        'Cycle through all passed hours and calc a date for each of them
+    Dim chosenStart As Date
+    Dim associatedRemainingHours As Double
+    Dim chosenHours As Double
+    
+    Dim thisProcessedHours As Variant
+    Dim thisMappedDates As Variant
+    
+    Dim allHourSetpoints() As Double
+    Dim allDateSetpoints() As Date
+    
+    For hourIdx = 0 To UBound(inHours)
+        'Map hours to date for every given input
+        Dim improveSpeed As Boolean: improveSpeed = False
         
-        'Read the value out of the array
-        remainingHours = multiRemainingHours(hourIdx)
+        thisProcessedHours = Base.ExtractSubArray(inHours, LBound(inHours), LBound(inHours) + hourIdx - 1)
+        thisMappedDates = allMappedDates 'Use allMappedDates directly without sub array extraction as the allMappedDates-array only contains processed results
+            
+        If useSetpoints Then
+            'If external setpoints are available: Concatenate the internal (the already processed 'inHours' / 'mappedDates') setpoints and
+            'external setpoints
+            allHourSetpoints = Utils.CopyVarArrToDoubleArr(Base.ConcatToArray(inHourSetpoints, thisProcessedHours))
+            allDateSetpoints = Utils.CopyVarArrToDateArr(Base.ConcatToArray(inDateSetpoints, thisMappedDates))
+        Else
+            'Only use internal setpoints here
+            allHourSetpoints = Utils.CopyVarArrToDoubleArr(thisProcessedHours)
+            allDateSetpoints = Utils.CopyVarArrToDateArr(thisMappedDates)
+        End If
         
+        If Base.IsArrayAllocated(allHourSetpoints) And Base.IsArrayAllocated(allDateSetpoints) Then
+            'If any setpoint is given (interal or external)
+            Call Base.QuickSort(allDateSetpoints, ceDescending, , , allHourSetpoints)
+            
+            'Now search for a setpoint that has lower 'inHour' value. From this starting point the remaining hours can be mapped to a date
+            Dim searchIdx As Integer: searchIdx = 0
+            Dim lowerValueFound As Boolean: lowerValueFound = True
+            While allHourSetpoints(searchIdx) > inHours(hourIdx) And lowerValueFound
+                searchIdx = searchIdx + 1
+                If searchIdx < UBound(allHourSetpoints) Then
+                    'Even at the end of the array no value could be found which is lower than the hours to map. Search unsuccessful
+                    lowerValueFound = False
+                End If
+            Wend
+            
+            'Check if the date belonging to the found hour setpoint is not zero. If it is, then the date has not been mapped successfully.
+            '(inHour = 0 <=> mappedDate = inStart) therefore 'normal / non improved mode' can be used
+            If lowerValueFound And (allDateSetpoints(searchIdx) <> CDate(0)) Then improveSpeed = True
+        Else
+            improveSpeed = False
+        End If
+        
+        If improveSpeed Then
+            'The closest starting time will be taken for the next map: The algorithm either chooses the common starting time given
+            '   inStart(n) -> remainingHours(n) => mappedDate(n)
+            '
+            'OR a setpoint of a later starting time in conjuction with already mapped hours. With the 'later' starting time the amount of remaining
+            'hours is reduced -> calculation speed will increase
+            '   mappedDate(x) + map([remainingHours(n) - remainingHours(x)]) => mappedDate(n)
+            '   Condition: The remaining hours of n are greater than the remaining hours of x. Both n and x have to share a common starting time
+            
+            chosenStart = allDateSetpoints(searchIdx)
+            chosenHours = inHours(hourIdx) - allHourSetpoints(searchIdx)
+        Else
+            'Just use the normal starting time with the hours you want to map, no speed improvement
+            chosenStart = inStart
+            chosenHours = inHours(hourIdx)
+        End If
+        
+        'Finally map the (chosen)hours to a date
         mappedDate = CalendarUtils.MapHoursToDate( _
             contributor, _
             appointmentList, _
-            remainingHours - previousRemainingHours, _
-            startingTime, _
+            chosenHours, _
+            chosenStart, _
             appointmentOnsetHours, _
             appointmentOffsetHours, _
             maxIterations)
-
-        allMappedDates(hourIdx) = mappedDate
         
-        'Prepare variables for next run
-        previousRemainingHours = remainingHours
-        startingTime = mappedDate
+        'Increase the resulting array with every run
+        ReDim Preserve allMappedDates(0 To hourIdx)
+        allMappedDates(hourIdx) = mappedDate
     Next hourIdx
     
     MultiMapHoursToDate = allMappedDates
 End Function
-    
+
 
 
 Function MapHoursToDate( _
@@ -257,14 +377,14 @@ Function MapHoursToDate( _
     'can be calculated. Steps of the following algorithm can be described as:
     '  (0) Set initial values and sort data structures
     '  (1) While the final value has not been calculated (remainingHours > 0), iterate
-    '      (1.1)   Fetch event from calendar, fetch leisure times from calendar ('events'which block you from working after you left work)
+    '      (1.1)   Fetch event from calendar, fetch leisure times from calendar ('events' which block you from working after you left work)
     '      (1.2)   Sort the events and blockify them (overlapping events and events too close to each other become a block to make further calculation easier
     '      (1.3)   From the given start time calculate the time difference up to the next coming event block. The time difference is substracted
     '              from remainingHours and eventually leads to exiting the loop
     '  (2) Do post processing of value
     
     'Data fetching approach:
-    '  (1) Data from outlook and from 'Settings'sheet
+    '  (1) Data from outlook and from 'Settings' sheet
     '  (2) No outlook events but working hours and on-offset hours from the 'Settings'sheet
     '  (3) No outlook events but working hours, and on-offset hours from defined constants in code
     '
@@ -277,14 +397,12 @@ Function MapHoursToDate( _
     '  apptoinmentOffsetHours: The hours one needs after the event to analyze the event
     '  maxIterations:          The iteration count after which calculation stops. For the default 32768 events are examined at max.
     '                          Prohibits while loop to get out of control
-    '  (arg list is the same as in 'MapHoursToDate'
     '
     'Output args:
     '  MapHoursToDate:  Date mapped from input time
     
     'Init output
-    Dim endDate As Date
-    MapHoursToDate = startingTime - 1
+    MapHoursToDate = CDate(0)
     
     'Check args
     If remainingHours < 0 Or _
@@ -295,21 +413,27 @@ Function MapHoursToDate( _
     End If
     
     Dim iterIdx As Integer
-    Dim nextBlock As Outlook.AppointmentItem
+        
     Dim deltaHoursToBlock As Double
     Dim spanRestriction As String
-    Dim restrictedList As Outlook.Items
+    Dim sortedList As Outlook.Items
     
-    Dim preWorkLeisure As Outlook.AppointmentItem
-    Dim postWorkLeisure As Outlook.AppointmentItem
+    Dim blockEnd As Date
+    Dim blockStart As Date
+    
+    Dim preWorkLeisureStart As Date
+    Dim preWorkLeisureEnd As Date
+    
+    Dim postWorkLeisureStart As Date
+    Dim postWorkLeisureEnd As Date
     
     'Use a copy of the passed list to prohibit modification of the passed list
-    Set restrictedList = appointmentList
+    Set sortedList = appointmentList
     
     'This flag marks if no outlook calendar items are available (anymore). If true expensive and errornous calls to outlook can be omitted.
     Dim noCalItemsFlag As Boolean
     
-    If restrictedList Is Nothing Then
+    If sortedList Is Nothing Then
         noCalItemsFlag = True
     Else
         noCalItemsFlag = False
@@ -317,65 +441,60 @@ Function MapHoursToDate( _
     
     If Not noCalItemsFlag Then
         'A sorted list is needed for the algorithm to work
-        restrictedList.Sort "[Start]"
+        sortedList.Sort "[Start]"
     End If
     
-    'Iterate as long as 'remainingHours'have got shrinked to zero.
+    'Iterate as long as 'remainingHours' are haven't been decreased to zero.
     iterIdx = 0
     While remainingHours >= 0 And iterIdx < maxIterations
         'Debug info
         'Debug.Print "run: " & iterIdx & "," & Format(startingTime, "mm/dd/yyyy hh:mm AMPM")
         
-        'Reset next event block
-        Set nextBlock = Nothing
+        'Reset next event block limits
+        blockStart = CDate(0)
+        blockEnd = CDate(0)
         
         If Not noCalItemsFlag Then
-            'Only use appointments that have an ending date after the (iteration) starting date. The date changes every loop cycle.
-            'If the list is already empty further restriction is causing an error.
-            spanRestriction = "[End] > '" & Format(startingTime, "mm/dd/yyyy hh:mm AMPM") & "'"
-            Set restrictedList = restrictedList.Restrict(spanRestriction)
-            
-            If restrictedList.Count = 0 Then
-                'Problems can occur if the resticted list item count is zero and restriction is applied again in the next iteration.
-                'Prohibit this with setting a flag.
+            'Get the next event block from outlook cal.
+            Call CalendarUtils.GetNextAppointmentBlock(sortedList, startingTime, _
+                blockStart, blockEnd, _
+                appointmentOnsetHours, appointmentOffsetHours)
+            If blockStart = CDate(0) Or blockEnd = CDate(0) Then
                 noCalItemsFlag = True
-            Else
-                'Get the next event block from outlook cal.
-                Set nextBlock = CalendarUtils.GetNextAppointmentBlock(restrictedList, appointmentOnsetHours, appointmentOffsetHours)
-                        
-                'Debug info
-                'If Not blockAppointment Is Nothing Then
-                '   blockAppointment.Subject = "created block"
-                '   blockAppointment.Save
-                'End If
             End If
+
         End If
         
         'Take working hours into account. As one cannot add code leisure events to the restricted list the above actions (sorting and restricting)
         'have to be done here again manually.
-        Call CalendarUtils.GetLeisureAppointments(startingTime, contributor, preWorkLeisure, postWorkLeisure)
-        Set preWorkLeisure = CalendarUtils.FilterAppointmentForMinEnd(preWorkLeisure, startingTime) 'see also restriction from above
-        Set postWorkLeisure = CalendarUtils.FilterAppointmentForMinEnd(postWorkLeisure, startingTime) 'see also restriction from above
+        Call CalendarUtils.GetLeisureAppointments(startingTime, contributor, _
+            preWorkLeisureStart, preWorkLeisureEnd, _
+            postWorkLeisureStart, postWorkLeisureEnd)
+            
+        Call CalendarUtils.FilterAppointmentForMinEnd(startingTime, preWorkLeisureStart, preWorkLeisureEnd) 'see also restriction from above
+        Call CalendarUtils.FilterAppointmentForMinEnd(startingTime, postWorkLeisureStart, postWorkLeisureEnd) 'see also restriction from above
         
         'Blockify the outlook and leisure time events or return the earliest of them if they are not overlapping. Question here: What is the next event?
-        Set nextBlock = CalendarUtils.MergeOrReturnEarliest(nextBlock, preWorkLeisure) 'combine leisure times with 'normal'events to a block
-        Set nextBlock = CalendarUtils.MergeOrReturnEarliest(nextBlock, postWorkLeisure) 'combine leisure times with 'normal'events to a block
-        
+        Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, preWorkLeisureStart, preWorkLeisureEnd, _
+            blockStart, blockEnd) 'combine leisure times with 'normal'events to a block
+        Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, postWorkLeisureStart, postWorkLeisureEnd, _
+            blockStart, blockEnd)
+
         'Start calculating the remaining time left from the captured data
-        If nextBlock Is Nothing Then
-            'Stop if no next block is found. Calculate straight forward from starting time
+        If blockStart = CDate(0) Then
+            'Stop if no next block limit is found. Calculate straight forward from starting time
             MapHoursToDate = startingTime + remainingHours / 24
             Exit Function
-        ElseIf Not (nextBlock.Start <= startingTime) Then
+        ElseIf Not (blockStart <= startingTime) Then
             'Calculate the remaining time.
-            deltaHoursToBlock = (nextBlock.Start - startingTime) * 24
+            deltaHoursToBlock = (blockStart - startingTime) * 24
             remainingHours = remainingHours - deltaHoursToBlock
         End If
         'If non of the above applied: Skipped remaining time calculation because starting time is in the middle of the appointment block
         'and continue with updated starting time. This happens in first iteration if the starting time was chosen to be during an appointment.
         
         'Update the starting time for the next run (do this in every case)
-        startingTime = nextBlock.End
+        startingTime = blockEnd
         iterIdx = iterIdx + 1
     Wend
     
@@ -383,9 +502,9 @@ Function MapHoursToDate( _
         'Error reached max iterations
         Exit Function
     End If
-    'Remaining hours are only zero or negative here. 'Negative'remaining hours determine the point of time
+    'Remaining hours are only zero or negative here. 'Negative' remaining hours determine the point of time
     'in between two appointment blocks and are 'added'to the next block's start time to give a value prior to the next block's start time.
-    MapHoursToDate = nextBlock.Start + remainingHours / 24
+    MapHoursToDate = blockStart + remainingHours / 24
     
     'Debug info
     'Debug.Print MapHoursToDate
@@ -432,7 +551,7 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     '  (arg list is the same as in 'MapHoursToDate'
     '
     'Output args:
-    '  MapDateToHours:         Time between to points of time which you can use to work
+    '  LeanMapDateToHours:         Time between to points of time which you can use to work
     
     'Init output
     MapDateToHours = -1
@@ -451,19 +570,28 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     timeDifference = endingDate - startingDate
         
     Dim iterIdx As Integer
-    Dim nextBlock As Outlook.AppointmentItem
     Dim deltaHoursToBlock As Double
     Dim spanRestriction As String
-    Dim restrictedList As Outlook.Items
+    Dim sortedList As Outlook.Items
 
+    Dim nextBlock As Outlook.AppointmentItem
     Dim preWorkLeisure As Outlook.AppointmentItem
     Dim postWorkLeisure As Outlook.AppointmentItem
+    
+    Dim blockStart As Date
+    Dim blockEnd As Date
+    
+    Dim preWorkLeisureStart As Date
+    Dim preWorkLeisureEnd As Date
+    
+    Dim postWorkLeisureStart As Date
+    Dim postWorkLeisureEnd As Date
 
     'Use a copy of the passed list to prohibit modification of the passed list
-    Set restrictedList = appointmentList
+    Set sortedList = appointmentList
 
     Dim noCalItemsFlag As Boolean
-    If restrictedList Is Nothing Then
+    If sortedList Is Nothing Then
         noCalItemsFlag = True
     Else
         noCalItemsFlag = False
@@ -471,7 +599,7 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
 
     'A sorted list is needed for the algorithm to work
     If Not noCalItemsFlag Then
-        restrictedList.Sort "[Start]"
+        sortedList.Sort "[Start]"
     End If
 
     iterIdx = 0
@@ -482,69 +610,59 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     Do
         'Loop through all events ending in between the starting and end date - substract the hours from the total difference
         'Debug info
-        'Debug.Print "Run of MapDateToHours: " & iterIdx & "," & Format(startingDate, "mm/dd/yyyy hh:mm AMPM")
+        'Debug.Print "Run of LeanMapDateToHours: " & iterIdx & "," & Format(startingDate, "mm/dd/yyyy hh:mm AMPM")
 
         'Reset next block
-        Set nextBlock = Nothing
+        blockStart = CDate(0)
+        blockEnd = CDate(0)
 
         If noCalItemsFlag Then
             'There are no further outlook events that have to be taken into consideration.
             'Still leisure time (pseudo) events are generated below
         Else
-            'Only use appointments that have an ending date after the (iteration) starting date. The date changes every loop cycle
-            spanRestriction = "[End] > '" & Format(startingDate, "mm/dd/yyyy hh:mm AMPM") & "'"
-            Set restrictedList = restrictedList.Restrict(spanRestriction)
-            If restrictedList.Count = 0 Then
-                'Problems can occur if the resticted list item count is zero and restriction is applied again. Prohibit this with setting the flag
-                noCalItemsFlag = True
-            Else
-                Set nextBlock = CalendarUtils.GetNextAppointmentBlock(restrictedList, appointmentOnsetHours, appointmentOffsetHours)
-                'Debug info
-                'If Not blockAppointment Is Nothing Then
-                '   blockAppointment.Subject = "created block"
-                '   blockAppointment.Save
-                'End If
-            End If
+            'Search for the next outlook event block start and end limits
+            Call CalendarUtils.GetNextAppointmentBlock(sortedList, startingDate, _
+                blockStart, blockEnd, _
+                appointmentOnsetHours, appointmentOffsetHours)
         End If
 
         'Take working hours into account
-        Call CalendarUtils.GetLeisureAppointments(startingDate, contributor, preWorkLeisure, postWorkLeisure)
-        Set preWorkLeisure = CalendarUtils.FilterAppointmentForMinEnd(preWorkLeisure, startingDate)
-        Set postWorkLeisure = CalendarUtils.FilterAppointmentForMinEnd(postWorkLeisure, startingDate)
+        Call CalendarUtils.GetLeisureAppointments(startingDate, contributor, preWorkLeisureStart, preWorkLeisureEnd, postWorkLeisureStart, postWorkLeisureEnd)
+        Call CalendarUtils.FilterAppointmentForMinEnd(startingDate, preWorkLeisureStart, preWorkLeisureEnd)
+        Call CalendarUtils.FilterAppointmentForMinEnd(startingDate, postWorkLeisureStart, postWorkLeisureEnd)
         
-        'Blockify the outlook and leisure time events or return the earliest of them if they are not overlapping. Question here: What is the next event?
-        Set nextBlock = CalendarUtils.MergeOrReturnEarliest(nextBlock, preWorkLeisure)
-        Set nextBlock = CalendarUtils.MergeOrReturnEarliest(nextBlock, postWorkLeisure)
-
+        'Blockify the outlook and leisure time events or return the limits of the earliest event if they are not overlapping. Question here: What is the next event?
+        Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, preWorkLeisureStart, preWorkLeisureEnd, blockStart, blockEnd) 'Error here
+        Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, postWorkLeisureStart, postWorkLeisureEnd, blockStart, blockEnd)
         Dim blockTime As Double
         
-        'Now calculate how much time the next block 'removes'from the remaining max hours / time difference (the remaining hours decrease every iteration)
-        If Not nextBlock Is Nothing Then
-            If nextBlock.End > endingDate Then
-                If nextBlock.Start > endingDate Then
+        'Now calculate how much time the next block 'removes' from the remaining max hours / time difference (the remaining hours decrease every iteration)
+        If blockStart <> CDate(0) Then
+            If blockEnd > endingDate Then
+                If blockStart > endingDate Then
                     'The next found event starts and ends after the ending date so it does not reduce the time difference (it is not taken into account)
                     blockTime = 0
                 Else
                     'The given initial endingDate lies within the found event. Use the found event-end as time limit otherwise you would substract a value too high
-                    blockTime = endingDate - nextBlock.Start
+                    blockTime = endingDate - blockStart
                 End If
                 
                 'Break the loop as we are finished.
                 stopFlag = True
-            ElseIf nextBlock.Start < startingDate Then
+            ElseIf blockStart < startingDate Then
                 'The starting time intersects with the found block. Only use the time span between starting time and block end as substracted time span.
                 '(This should only be the case in first iteration if the passed starting time intersects an event)
-                blockTime = nextBlock.End - startingDate
+                blockTime = blockEnd - startingDate
             Else
                 'Substract time of block from total time difference.
-                blockTime = nextBlock.End - nextBlock.Start
+                blockTime = blockEnd - blockStart
             End If
             
             'Decrease the searched timeDifference (will be output when no events are left to iterate over)
             timeDifference = timeDifference - blockTime
             
             'Update the starting time for the next run to search for the next events
-            startingDate = nextBlock.End
+            startingDate = blockEnd
         End If
 
         iterIdx = iterIdx + 1
@@ -565,98 +683,104 @@ End Function
 
 
 Function GetNextAppointmentBlock( _
-    appointmentList As Outlook.Items, _
+    appointmentList As Outlook.Items, ByVal startTime As Date, _
+    ByRef blockStart As Date, ByRef blockEnd As Date, _
     Optional appointmentOnsetHours As Double = 0, _
-    Optional appointmentOffsetHours As Double = 0) As Outlook.AppointmentItem
+    Optional appointmentOffsetHours As Double = 0)
     
-    'This function returns the next 'block'of appointments. A block is a bunch of appointments overlapping or nearly overlapping
-    'with a threshhold. The threshold is a sum of the time which you need to analyze a previous event + the time you need to prepare for the next event.
+    'This function returns the limits of the next 'block' of appointments. A block is a bunch of appointments overlapping or nearly overlapping
+    'within a threshhold. The threshold is a sum of the time which you need to analyze a previous event + the time you need to prepare for the next event.
     '
     'Input args:
-    '  appointmentList:            List of all outlook events
-    '  appointmentOnsetHours:      The hours one needs prior to the event to prepare
-    '  apptoinmentOffsetHours:     The hours one needs after the event to analyze the event
+    '   appointmentList:            List of all outlook events. The list has to be sorted according to appointments' start dates
+    '   startTime:                  The point of time the next block is searched from
+    '   appointmentOnsetHours:      The hours one needs prior to the event to prepare
+    '   apptoinmentOffsetHours:     The hours one needs after the event to analyze the event
     '
     'Output args:
-    '  GetNextAppointmentBlock:    The 'blockified'bunch of events which are very close to each other or overlapping
+    '   blockStart:                 The start date of the block
+    '   blockEnd:                   The end date of the block
     
-    'Init output - init start before end otherwise errors will occur
-    Set GetNextAppointmentBlock = Nothing
-    Dim block As Outlook.AppointmentItem
+    'Init output
+    blockStart = CDate(0)
+    blockEnd = CDate(0)
         
     'Check args
     If appointmentList Is Nothing Then
         Exit Function
     End If
         
-    'Start block detection
+    'Start block detection: Find event starting after or at the given time
     Dim appointment As Outlook.AppointmentItem
-            
-    For Each appointment In appointmentList
-        If block Is Nothing Then
-            'Init the block in first loop run
-            Set block = Outlook.CreateItem(olAppointmentItem)
-            Set block = CalendarUtils.ChangeAppointmentTimeFixedDates(block, appointment.Start, appointment.End)
-            'Set GetNextAppointmentBlock = block
-        Else
-            'Debug info
-            'Debug.Print "Checking block against: '" + appointment.Subject + "'"
-            
-            If CalendarUtils.AppointmentsAreOverlapping(block, appointment, appointmentOnsetHours + appointmentOffsetHours) Then
-                'Let the block grow with every match
-                If block.End < appointment.End Then
-                    'Update the block end time if the next item has a later ending time
-                    block.End = appointment.End
-                End If
-
-            Else
-                'The events are not overlapping. Stop cycling through them
-                'Set GetNextAppointmentBlock = block
-                GoTo t3aGetNextAppointmentBlockEnd
-            End If
-        End If
-    Next appointment
+    Set appointment = appointmentList.Find("[Start] >= '" & Format(startTime, "mm/dd/yyyy hh:mm AMPM") & "'")
     
-t3aGetNextAppointmentBlockEnd:
-    If Not block Is Nothing Then
-        'Add the onset and offset time values (prepare time and follow-up time)
-        'block.Start = block.Start - appointmentOnsetHours / 24
-        'block.End = block.End + appointmentOffsetHours / 24
-        'Set GetNextAppointmentBlock = block
-        Set GetNextAppointmentBlock = ChangeAppointmentTimeFixedDates(block, block.Start - appointmentOnsetHours / 24, _
-            block.End + appointmentOffsetHours / 24)
-    End If
+    If appointment Is Nothing Then Exit Function
+    startTime = appointment.Start - appointmentOnsetHours / 24
+    blockStart = startTime
+    
+    Dim oneStart As Date
+    Dim oneEnd As Date
+    Dim twoStart As Date
+    Dim twoEnd As Date
+    
+    Dim apptsAreOverlapping As Boolean: apptsAreOverlapping = True
+    Do Until Not apptsAreOverlapping
+        'Loop while events are overlapping. Call 'FindNext' to get the next event in the row
+        oneStart = appointment.Start
+        oneEnd = appointment.End
+        Set appointment = appointmentList.FindNext ''GetNext' won't work here
+        
+        If Not appointment Is Nothing Then
+            twoStart = appointment.Start
+            twoEnd = appointment.End
+            apptsAreOverlapping = _
+                CalendarUtils.AppointmentsAreOverlapping(oneStart, oneEnd, twoStart, twoEnd, appointmentOnsetHours + appointmentOffsetHours)
+        Else
+            'Appointments are not overlapping anymore - stop search
+            apptsAreOverlapping = False
+        End If
+    Loop
+    
+    blockEnd = oneEnd + appointmentOffsetHours / 24
 End Function
 
 
 
-Function AppointmentsAreOverlapping(apptOne As Outlook.AppointmentItem, _
-    apptTwo As Outlook.AppointmentItem, _
+Function AppointmentsAreOverlapping( _
+    ByVal startOne As Date, ByVal endOne As Date, _
+    ByVal startTwo As Date, ByVal endTwo As Date, _
     Optional minDeltaHours As Double = 0#) As Boolean
     
-    'This function tells you if two appointments are overlapping.
+    'This function checks if two appointments are overlapping. A threshold can be defined to mark close events as overlapping.
     '
     'Input args:
-    '  apptOne:        firstAppointment
-    '  apptTwo:        secondAppointment
-    '  minDeltaHours:  Threshold. Events have at least to have a time span of 'minDeltaHours'in between them to not to be set as overlapping
+    '   startOne:       Start time of first appointment
+    '   endOne:         End time of first appointment
+    '   startTwo:       Start time of second appointment
+    '   endTwo:         End time of second appointment
+    '   minDeltaHours:  Threshold. Events have at least to have a time span of 'minDeltaHours'in between them to not to be set as overlapping
     '
     'Output args:
     '  AppointmentsAreOverlapping:    True/False
     
-    Dim hAppt As Outlook.AppointmentItem
+    Dim hStart As Date
+    Dim hEnd As Date
     
     'Debug info
     'Debug.Print "Checking against: '" + apptOne.Subject + "'and '"; apptTwo.Subject + "'"
     
-    If apptTwo.Start < apptOne.Start Then
-        'Swap appointments to make apptOne the first event. This is the standard for the comparison
-        Set hAppt = apptTwo
-        Set apptTwo = apptOne
-        Set apptOne = hAppt
+    If startTwo < startOne Then
+        'Swap appointments to make the earlier event the first event. This is the standard for the comparison
+        hStart = startTwo
+        startTwo = startOne
+        startOne = hStart
+        
+        hEnd = endTwo
+        endTwo = endOne
+        endOne = hEnd
     End If
     
-    If apptTwo.Start < apptOne.End + minDeltaHours / 24 Then
+    If startTwo < endOne + minDeltaHours / 24 Then
         'Check whether the events are overlapping or close together with a certain time threshold. Convert to days
         AppointmentsAreOverlapping = True
     Else
@@ -664,21 +788,6 @@ Function AppointmentsAreOverlapping(apptOne As Outlook.AppointmentItem, _
     End If
 End Function
 
-
-
-Function ChangeAppointmentTimeFixedDates(appt As Outlook.AppointmentItem, newStart As Date, newEnd As Date) As Outlook.AppointmentItem
-    'This function sets fixed dates to a start and end point in time. Changing the start time also changes the end time of an event normally.
-    'To avoid this call this function
-    
-    Dim changedAppt As Outlook.AppointmentItem
-
-    Set changedAppt = appt
-    changedAppt.Start = newStart
-    changedAppt.End = newEnd
-    
-    Set ChangeAppointmentTimeFixedDates = changedAppt
-
-End Function
 
 
 Function GetWorkingHours(contributor As String, ByVal refDay As Date, ByRef workStart As Date, ByRef workEnd As Date)
@@ -723,22 +832,29 @@ End Function
 
 
 Function GetLeisureAppointments(ByVal refDay As Date, contributor As String, _
-    ByRef preWorkLeisure As Outlook.AppointmentItem, _
-    ByRef postWorkLeisure As Outlook.AppointmentItem)
+    ByRef preWorkLeisureStart As Date, ByRef preWorkLeisureEnd As Date, _
+    ByRef postWorkLeisureStart As Date, ByRef postWorkLeisureEnd As Date)
     
-    'This function returns two events to block a day with leisure time to mark on which time spans a contributor is not working:
+    'This function returns two events' limits to block a day with leisure time to mark on which time spans a contributor is not working:
     '  (1) First event e.g. from 21/01/2019 0:00 to 21/01/2019 08:00 (time prior to start working)
     '  (2) Second event e.g. from 21/01/2019 6:00pm to 22/01/2019 00:00 (time after finishing work)
     '
     'Input args:
-    '  refDay:             The day for which the appointment items should be calculated. You can pass any clock time, day date counts
-    '  preWorkLeisure:     The returned pre work blocker appointment
-    '  postWorkLeisure:    The returned post work blocker appointment
+    '   refDay:                 The day for which the appointment limits should be calculated. You can pass any clock time, day date counts
+    '   contributor:            The contributor whose leisure times shall be read
+    '
+    'Output args:
+    '   preWorkLeisureStart:    The start date of leisure time before work
+    '   preWorkLeisureEnd:      The end date of leisure time before work
+    '   postWorkLeisureStart:   The start date of leisure time after work
+    '   postWorkLeisureEnd:     The end date of leisure time after work
     
     'Init output
-    Set preWorkLeisure = Outlook.CreateItem(olAppointmentItem)
-    Set postWorkLeisure = Outlook.CreateItem(olAppointmentItem)
-    
+    preWorkLeisureStart = CDate(0)
+    preWorkLeisureEnd = CDate(0)
+    postWorkLeisureStart = CDate(0)
+    postWorkLeisureEnd = CDate(0)
+        
     'Check args
     'Do not check contributor name here - the standard values can also be returned if contributor name is empty if one whishes to do so.
     Dim workStart As Date
@@ -749,45 +865,56 @@ Function GetLeisureAppointments(ByVal refDay As Date, contributor As String, _
     
     If workStart = workEnd Then
         'No working hours for the given day received - block the whole day
-        Set preWorkLeisure = CalendarUtils.ChangeAppointmentTimeFixedDates(preWorkLeisure, _
-            CalendarUtils.GetStartOfDay(refDay), _
-            CalendarUtils.GetEndOfDay(refDay))
-        Set postWorkLeisure = Nothing
+        preWorkLeisureStart = CalendarUtils.GetStartOfDay(refDay)
+        preWorkLeisureEnd = CalendarUtils.GetEndOfDay(refDay)
     Else
-        Set preWorkLeisure = CalendarUtils.ChangeAppointmentTimeFixedDates(preWorkLeisure, refDay, workStart)
-        Set postWorkLeisure = CalendarUtils.ChangeAppointmentTimeFixedDates(postWorkLeisure, workEnd, refDay + 1)
+        preWorkLeisureStart = refDay
+        preWorkLeisureEnd = workStart
+        
+        postWorkLeisureStart = workEnd
+        postWorkLeisureEnd = refDay + 1
     End If
 End Function
 
 
 
-Function MergeOrReturnEarliest(ByVal apptOne As Outlook.AppointmentItem, ByVal apptTwo As Outlook.AppointmentItem) As Outlook.AppointmentItem
+Function MergeOrReturnEarliest( _
+    ByVal apptOneStart As Date, ByVal apptOneEnd As Date, ByVal apptTwoStart As Date, ByVal apptTwoEnd As Date, _
+    ByRef apptReturnStart As Date, ByRef apptReturnEnd As Date)
 
-    'This function checks two passed events for overlapping. If they are not overlapping the earliest event is returned, otherwise the whole
-    'merged block is returned
+    'This function checks two passed events limits overlap. If the events are not overlapping the limits of the earliest event are returned, otherwise the
+    'limits of the whole merged block are returned
     '
     'Input args:
-    '  refDay:             The day for which the appointment items should be calculated. You can pass any clock time, day date counts
-    '  preWorkLeisure:     The returned pre work blocker appointment
-    '  postWorkLeisure:    The returned post work blocker appointment
+    '   apptOneStart:       The start time of the first event
+    '   apptOneEnd:         The end time of the first event
+    '   apptTwoStart:       The start time of the second event
+    '   apptTwoEnd:         The end time of the second event
+    'Output args:
+    '   apptReturnStart:    In case of overlapping events: The start date of the block. Otherwise: The start date of the earlier event
+    '   apptReturnEnd:      In case of overlapping events: The end date of the block. Otherwise: The end date of the earlier event
     
     'Init output
-    Set MergeOrReturnEarliest = Nothing
+    apptReturnStart = CDate(0)
+    apptReturnEnd = CDate(0)
     
-    'Check args
-    If apptOne Is Nothing And apptTwo Is Nothing Then
+    'Check args. Any date not initialized?
+    Dim apptOneInvalid As Boolean: apptOneInvalid = (apptOneStart = CDate(0)) Or (apptOneEnd = CDate(0))
+    Dim apptTwoInvalid As Boolean: apptTwoInvalid = (apptTwoStart = CDate(0)) Or (apptTwoEnd = CDate(0))
+    
+    If apptOneInvalid And apptTwoInvalid Then
+        'Input contains two invalid appointments
         Exit Function
     End If
-    
-    Dim mergedEarliest As Outlook.AppointmentItem
-    Set mergedEarliest = Outlook.CreateItem(olAppointmentItem)
-        
-    'If one event is nothing return the dates of the other one
-    If apptOne Is Nothing Then
-        Set MergeOrReturnEarliest = CalendarUtils.ChangeAppointmentTimeFixedDates(mergedEarliest, apptTwo.Start, apptTwo.End)
+      
+    'If one event is invalid return the dates of the other one
+    If apptOneInvalid Then
+        apptReturnStart = apptTwoStart
+        apptReturnEnd = apptTwoEnd
         Exit Function
-    ElseIf apptTwo Is Nothing Then
-        Set MergeOrReturnEarliest = CalendarUtils.ChangeAppointmentTimeFixedDates(mergedEarliest, apptOne.Start, apptOne.End)
+    ElseIf apptTwoInvalid Then
+        apptReturnStart = apptOneStart
+        apptReturnEnd = apptOneEnd
         Exit Function
     End If
     
@@ -796,71 +923,37 @@ Function MergeOrReturnEarliest(ByVal apptOne As Outlook.AppointmentItem, ByVal a
     Dim earliestEnd As Date
     Dim latestEnd As Date
     
-    earliestStart = CalendarUtils.GetDateExtremum(apptOne.Start, apptTwo.Start, ceEarliest)
+    earliestStart = Base.Min(apptOneStart, apptTwoStart)
     
-    If CalendarUtils.AppointmentsAreOverlapping(apptOne, apptTwo) Then
-        latestEnd = CalendarUtils.GetDateExtremum(apptOne.End, apptTwo.End, ceLatest)
-        Set mergedEarliest = CalendarUtils.ChangeAppointmentTimeFixedDates(mergedEarliest, earliestStart, latestEnd)
+    If CalendarUtils.AppointmentsAreOverlapping(apptOneStart, apptOneEnd, apptTwoStart, apptTwoEnd) Then
+        latestEnd = Base.Max(apptOneEnd, apptTwoEnd)
+        apptReturnStart = earliestStart
+        apptReturnEnd = latestEnd
     Else
-        earliestEnd = CalendarUtils.GetDateExtremum(apptOne.End, apptTwo.End, ceEarliest)
-        Set mergedEarliest = CalendarUtils.ChangeAppointmentTimeFixedDates(mergedEarliest, earliestStart, earliestEnd)
+        earliestEnd = Base.Min(apptOneEnd, apptTwoEnd)
+        apptReturnStart = earliestStart
+        apptReturnEnd = earliestEnd
     End If
-    
-    Set MergeOrReturnEarliest = mergedEarliest
 End Function
 
 
 
-Function GetDateExtremum(dateOne As Date, dateTwo As Date, Optional ceExtremum As DateExtremum) As Date
+Function FilterAppointmentForMinEnd(ByVal dateMinLimit As Date, ByRef apptStart As Date, ByRef apptEnd As Date)
     
-    'This function either returns the latest or earliest of the passed dates according to the selected extremum enum switch
+    'This function returns invalid appointment limits (CDate(0)) if a passed appointment ends prior to a given date
+    'Only limits of appointments occuring after the given date or overlapping with it will be returned
     '
     'Input args:
-    '  dateOne:
-    '  dateTwo:
-    '  ceExtremum: The enum switch so select the earliest or the latest date
-    
-    Select Case ceExtremum
-        Case DateExtremum.ceEarliest
-            GetDateExtremum = CDate(Base.Min(CDbl(dateOne), CDbl(dateTwo)))
-        Case DateExtremum.ceLatest
-            GetDateExtremum = CDate(Base.Max(CDbl(dateOne), CDbl(dateTwo)))
-    End Select
-    
-    'working but ugly. ToDo: Delete if working
-    '   If CDbl(dateOne) * ceExtremum > CDbl(dateTwo) * ceExtremum Then
-    '       'Flip direction with enum var
-    '       GetDateExtremum = dateTwo
-    '   Else
-    '       GetDateExtremum = dateOne
-    '   End If
-End Function
+    '   dateMinLimit:   The given date used to filter the appointment
+    '   apptStart:      The event start time
+    '   apptEnd:        The event end time
 
-
-
-Function FilterAppointmentForMinEnd(ByVal appt As Outlook.AppointmentItem, _
-    ByVal dateMinLimit As Date) As Outlook.AppointmentItem
-    
-    'This function returns an empty item if a passed appointment ends prior to a given date (only events occuring after the given date or overlapping
-    'with it)
-    '
-    'Input args:
-    '  appt:           The event
-    '  dateMinLimit:   The given date used to filter
-    
-    'Init output
-    Set FilterAppointmentForMinEnd = Nothing
-    
     'Check args
-    If appt Is Nothing Then
-        Exit Function
-    End If
-    
-    'If the appointment is below date limit - reject it
-    If appt.End <= dateMinLimit Then
-        Set FilterAppointmentForMinEnd = Nothing
-    Else
-        Set FilterAppointmentForMinEnd = appt
+    If (apptStart = CDate(0)) Or (apptEnd = CDate(0)) Or (apptEnd <= dateMinLimit) Then
+        'Return invalid dates if any date is zero (wrong input)
+        'Check functionality: Return invalid dates if the appointment's end is below date limit
+        apptStart = CDate(0)
+        apptEnd = CDate(0)
     End If
 End Function
 
@@ -881,8 +974,8 @@ End Function
 
 
 Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outlook.Items
-
-    'This function returns calendar items to a given mail address. These appointments are filtered by busy status and category
+    'This function returns calendar items of a contributor if a folder id was specified. These appointments are filtered by busy status and category.
+    'Recurrent appointments are included
     '
     'Input args:
     '  contributor:            The contributor whose events / calendar items shall be fetched
@@ -896,126 +989,60 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
     
     'Check args
     If StrComp(contributor, "") = 0 Then Exit Function
-    
-    Dim oNs As Outlook.Namespace
+
     Dim filteredItems As Outlook.Items
     Dim cal As Outlook.Folder
-    Dim recp As Outlook.Recipient
     Dim restriction As String
     restriction = ""
     
-    'Read the mail address of the current contributor
-    Dim mail As String
-    mail = SettingUtils.GetContributorMailSetting(contributor)
+    'Read the calendar id of the current contributor. This seems to be more robust than reading the mail address, receiving the outlook recipient and
+    'reading the shared calendar folder afterwards.
     
-    'Try to resolve the recipient first
-    Dim recpIsResolved As Boolean
-    recpIsResolved = False
+    Dim calId As String
+    calId = SettingUtils.GetContributorCalIdSetting(contributor)
     
-    If Not recpIsResolved And StrComp(mail, "") <> 0 Then
-        Set recp = Outlook.Session.CreateRecipient(mail)
-        recp.resolve
-        recpIsResolved = recp.Resolved
-    End If
+    If StrComp(calId, "") = 0 Then Exit Function
     
-    If Not recpIsResolved And StrComp(contributor, "") <> 0 Then
-        'If mail is not resolved try to resolve contributor data via contributor name
-        Set recp = Outlook.Session.CreateRecipient(contributor)
-        recp.resolve
-        recpIsResolved = recp.Resolved
-    End If
-
-    If recpIsResolved Then
-        'The account of the contributor could be retrieved. Now collect items with multiple approaches
+    'Catch error reading calendar id
+    On Error Resume Next
+    Set cal = Outlook.Session.GetFolderFromID(calId)
+    If Err.Number > 0 Then Debug.Print "Error reading calendar of cal id: " & calId
+    Err.Clear
+    On Error GoTo 0
+    
+    If Not cal Is Nothing Then
+        'The calendar folder could be resolved. now read items
+        Set filteredItems = cal.Items
         
-        Dim calendarIsResolved As Boolean: calendarIsResolved = False
-        
-        'Try to get default shared folder (error based approach)
-        On Error Resume Next
-        If Not calendarIsResolved Then
-            Set cal = Outlook.Application.Session.GetSharedDefaultFolder(recp, olFolderCalendar)
-            If Err.Number = 0 Then calendarIsResolved = True
-            Err.Clear
-        End If
-        On Error GoTo 0
-
-        If Not calendarIsResolved And CalendarUtils.IsFolderAvailable(oNs, recp.name) Then
-            'Check folders of resolved recipient manually if 'GetSharedDefaultFolder' failed.
+        'Set restriction to get all appointments that make the user busy
+        restriction = "[BusyStatus] = '" + CStr(olBusy) + "'" 'user is busy"
+        restriction = restriction + " OR " + "[BusyStatus] = '" + CStr(olOutOfOffice) + "'" 'user is out of office
             
-            Dim recpFolder As Outlook.Folder
-            Set recpFolder = oNs.Folders(recp.name)
-            
-            Dim calName As String
-            calName = SettingUtils.GetContributorCalIdSetting(contributor)
-            If Not calendarIsResolved And CalendarUtils.IsFolderAvailable(recpFolder, calName) Then
-                Set cal = recpFolder.Folders.item(calName)
-                calendarIsResolved = True
-            End If
-        End If
-        
-        If calendarIsResolved Then
-            'The calendar folder could be resolved. now read items
-            Set filteredItems = cal.Items
-            
-            'Set restriction to get all appointments that make the user busy
-            restriction = "[BusyStatus] = '" + CStr(olBusy) + "'" 'user is busy"
-            restriction = restriction + " OR " + "[BusyStatus] = '" + CStr(olOutOfOffice) + "'" 'user is out of office
-                
-            If useOptionalAppts Then
-                restriction = restriction + " OR " + "[BusyStatus] = '" + CStr(olTentative) + "'" 'user tentative
-            Else
-                'Do not add any further restrictions here.
-            End If
-            
-            'Set restriction to not use appointments with a specificied 'blocker category'(marks that the appointment is used to get work done)
-            Dim blockerCat As String
-            blockerCat = SettingUtils.GetContributorGetWorkDoneCat(contributor)
-            
-            If StrComp(blockerCat, "") <> 0 Then
-                restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
-            End If
-            
-            'Filter the items according to their restrictions
-            Set filteredItems = filteredItems.Restrict(restriction)
-            Set GetCalItems = filteredItems
+        If useOptionalAppts Then
+            restriction = restriction + " OR " + "[BusyStatus] = '" + CStr(olTentative) + "'" 'user tentative
         Else
-            Set GetCalItems = Nothing
+            'Do not add any further restrictions here.
         End If
+        
+        'Set restriction to not use appointments with a specificied 'blocker category'(marks that the appointment is used to get work done)
+        Dim blockerCat As String
+        blockerCat = SettingUtils.GetContributorGetWorkDoneCat(contributor)
+        
+        If StrComp(blockerCat, "") <> 0 Then
+            restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
+        End If
+        
+        filteredItems.IncludeRecurrences = True
+        
+        'Filter the items according to their restrictions
+        Set filteredItems = filteredItems.Restrict(restriction)
+        Set GetCalItems = filteredItems
     Else
         Set GetCalItems = Nothing
     End If
     
     'Debug info
     'Debug.Print "Count of filtered items is: " & filteredItems.Count
-End Function
-
-
-
-Function IsFolderAvailable(parent As Variant, inName As String) As Boolean
-    'Check if outlook folders of an object are available or not by searching for their name
-    '
-    'Input args:
-    '   parent: Can be Outlook.Folder or Outlook.Namespace
-    
-    'Init output
-    IsFolderAvailable = False
-    
-    'Check input
-    If parent Is Nothing Then Exit Function
-    
-    'Get the folders from parent
-    Dim allCals As Outlook.Folders
-    Set allCals = parent.Folders
-    
-    Dim cal As Outlook.Folder
-    
-    For Each cal In allCals
-        'Search for the name
-        If StrComp(cal.name, inName) = 0 Then
-            IsFolderAvailable = True
-            Exit Function
-        End If
-    Next cal
 End Function
 
 
@@ -1046,3 +1073,4 @@ Function GetSelectedCalendarId(Optional ByRef folderPath As String) As String
     'Debug.Print "Folder ID is: " & id
     'Debug.Print "Folder path is: " & folderPath
 End Function
+

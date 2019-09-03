@@ -73,7 +73,7 @@ Public Const TASK_SHEET_ACTION_ONE_NAME As String = "SetPlainDelta()"
 Public Const TASK_SHEET_ACTION_TWOO_NAME As String = "SetCalendarDelta()"
 
 'EBS sheet
-Public Const EBS_SHEET_PREFIX As String = "Sheduling"
+Public Const EBS_SHEET_PREFIX As String = "EbsSheet"
 Public Const EBS_SHEET_REGEX As String = EBS_SHEET_PREFIX + " \(.+\)"
 Public Const EBS_SHEET_TEMPLATE_NAME As String = EBS_SHEET_PREFIX + " template"
 Public Const EBS_MAIN_LIST_IDX As Integer = 1
