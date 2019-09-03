@@ -29,12 +29,7 @@ Enum PropabilityChartScale
     ceChartScaleTime = -1
     ceChartScaleDate = 1
 End Enum
-Sub test_runDate()
-    Dim d As Date
-    Dim run As String
-    run = EbsUtils.GetLatestEbsRun(EbsUtils.GetEbsSheet("Me"), d)
-    Debug.Print "Latest run: " & run & " on " & CStr(d)
-End Sub
+
 
 
 Function HandleEbsSheetChanges(Target As Range)
@@ -853,11 +848,11 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
         hashCells.EntireRow, _
         PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
     
-    'Sort the hashes by their tasks'prios
+    'Sort the hashes by their tasks' prios
     Dim hashes As Variant
     Dim prios As Variant
     hashes = Utils.ConvertRangeValsToArr(hashCells)
-    prios = Utils.ConvertRangeValsToArr(unfinishedTasksPrioCells)
+    prios = Utils.CopyVarArrToDoubleArr(Utils.ConvertRangeValsToArr(unfinishedTasksPrioCells))
 
     Call Base.QuickSort(prios, ceDescending, , , hashes)
     
@@ -890,6 +885,10 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
     Dim monteCarloTimeEstimates() As Double
     Dim remainingTimeEstimates() As Double
     
+    'Stored values to increase speed for 'MultiMapHoursToDate' algorithm
+    Dim lastRemainingHours() As Double
+    Dim lastMappedDates() As Date
+            
     Dim entriesWritten As Long
     entriesWritten = 0
     
@@ -939,13 +938,19 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
             
             'Reset the values and calc dates
             Erase interpolatedDateEstimates
+
             interpolatedDateEstimates = CalendarUtils.MultiMapHoursToDate( _
                 contributor, _
                 calendarItems, _
                 interpolatedHourEstimates, _
                 Now, _
+                lastRemainingHours, lastMappedDates, _
                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                
+            'Store the mapped dates and its' input values for next iteration to improve speed
+            lastRemainingHours = interpolatedHourEstimates
+            lastMappedDates = interpolatedDateEstimates
         Else
             'No valid estimate found
             Debug.Print ("Skipped hash for ebs calculation: " + currentHash)
@@ -1496,7 +1501,7 @@ Function GetDataForLongtimeGraph(sheet As Worksheet, mode As PropabilityChartMod
             Case PropabilityChartScale.ceChartScaleTime
                 estimates = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(curTimeEstsVal))
             Case PropabilityChartScale.ceChartScaleDate
-                estimates = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(curTimeEstsVal))
+                estimates = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(curTimeEstsVal)))
         End Select
                                 
         If Not Base.IsArrayAllocated(estimates) Then Exit Function
@@ -1583,7 +1588,7 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         
         If x1Cells Is Nothing Then Exit Function
         
-        x1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x1Cells.Value))
+        x1 = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(x1Cells.Value)))
         
         If Not Base.IsArrayAllocated(x1) Then Exit Function
         
