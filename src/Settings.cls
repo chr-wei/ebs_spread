@@ -19,20 +19,26 @@ Sub UI_StoreSelectedCalendarId()
     If sheet Is Nothing Then Exit Sub
     
     Dim calId As String
+    Dim storId As String
     Dim calPath As String
-    calId = CalendarUtils.GetSelectedCalendarId(calPath)
+    calId = CalendarUtils.GetSelectedCalendarId(storId, calPath)
     
     If StrComp(calId, "") <> 0 Then
         Dim idCell As Range
-        
-        Call Utils.GetSingleDataCellVal(sheet, Constants.CAL_ID_HEADER, idCell)
+        Call Utils.GetSingleDataCellVal(sheet, Constants.CAL_ID_TEMP_HEADER, idCell)
         If Not idCell Is Nothing Then idCell.Value = calId
+    End If
+    
+    If StrComp(storId, "") <> 0 Then
+        Dim storCell As Range
+        Call Utils.GetSingleDataCellVal(sheet, Constants.STORE_ID_TEMP_HEADER, storCell)
+        If Not storCell Is Nothing Then storCell.Value = storId
     End If
     
     If StrComp(calPath, "") <> 0 Then
         Dim pathCell As Range
-        Call Utils.GetSingleDataCellVal(sheet, Constants.CAL_PATH_HEADER, pathCell)
-        If Not idCell Is Nothing Then pathCell.Value = calPath
+        Call Utils.GetSingleDataCellVal(sheet, Constants.CAL_PATH_TEMP_HEADER, pathCell)
+        If Not pathCell Is Nothing Then pathCell.Value = calPath
     End If
 End Sub
 
