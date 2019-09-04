@@ -712,7 +712,17 @@ Function GetNextAppointmentBlock( _
         
     'Start block detection: Find event starting after or at the given time
     Dim appointment As Outlook.AppointmentItem
-    Set appointment = appointmentList.Find("[Start] >= '" & Format(startTime, "mm/dd/yyyy hh:mm AMPM") & "'")
+    Dim dFormatString As String
+    Dim dSep As String: dSep = Application.International(xlDateSeparator)
+    Select Case Application.International(xlDateOrder)
+        Case 0 ' = month-day-year
+            dFormatString = "mm" & dSep & "dd" & dSep & "yyyy hh:mm AMPM"
+        Case 1 ' = day-month-year
+            dFormatString = "dd" & dSep & "mm" & dSep & "yyyy hh:mm AMPM"
+        Case 2 ' = year-month-day
+            dFormatString = "yyyy" & dSep & "mm" & dSep & "dd hh:mm AMPM"
+    End Select
+    Set appointment = appointmentList.Find("[Start] >= '" & Format(startTime, dFormatString) & "'")
     
     If appointment Is Nothing Then Exit Function
     startTime = appointment.Start - appointmentOnsetHours / 24
@@ -999,17 +1009,25 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
     'reading the shared calendar folder afterwards.
     
     Dim calId As String
-    calId = SettingUtils.GetContributorCalIdSetting(contributor)
-    
-    If StrComp(calId, "") = 0 Then Exit Function
+    Dim storId As String
+    calId = SettingUtils.GetContributorCalIdSetting(contributor, storId)
     
     'Catch error reading calendar id
     On Error Resume Next
-    Set cal = Outlook.Session.GetFolderFromID(calId)
-    If Err.Number > 0 Then Debug.Print "Error reading calendar of cal id: " & calId
+    If (StrComp(calId, "") <> 0) And StrComp(storId, "") <> 0 Then
+        'Use cal id and store id to read calendar
+        Set cal = Outlook.Session.GetFolderFromID(calId, storId)
+    ElseIf (StrComp(calId, "") <> 0) Then
+        'Use only cal id to read calendar
+        Set cal = Outlook.Session.GetFolderFromID(calId)
+    Else
+        Exit Function
+    End If
+    If Err.Number <> 0 Then Debug.Print "Error reading calendar of cal id: " & calId
     Err.Clear
     On Error GoTo 0
-    
+
+
     If Not cal Is Nothing Then
         'The calendar folder could be resolved. now read items
         Set filteredItems = cal.Items
@@ -1047,7 +1065,7 @@ End Function
 
 
 
-Function GetSelectedCalendarId(Optional ByRef folderPath As String) As String
+Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef folderPath As String) As String
     'Source: https://stackoverflow.com/questions/48789601/how-to-find-calendar-id
     
     'This function returns the id of a selected calendar folder as well as its path. Please do select the folder inside the explorer view
@@ -1058,13 +1076,14 @@ Function GetSelectedCalendarId(Optional ByRef folderPath As String) As String
     folderPath = ""
     
     Dim fold As Outlook.Folder
-    Set fold = Outlook.ActiveExplorer.CurrentFolder
+    Set fold = Outlook.Application.ActiveExplorer.CurrentFolder
     
     If Not fold Is Nothing Then
         If fold.DefaultItemType = OlItemType.olAppointmentItem Then
             'Check if folder holds appointment items (one can also select mail folders etc.)
             id = fold.EntryID
             GetSelectedCalendarId = id
+            storId = fold.storeId
             folderPath = fold.folderPath
         End If
     End If
