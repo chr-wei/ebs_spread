@@ -915,7 +915,7 @@ Function GetSingleDataCellVal(sheet As Worksheet, headerText As String, Optional
     
     Dim headerCell As Range
     
-    Set headerCell = Utils.FindSheetCell(sheet, headerText)
+    Set headerCell = Utils.GetTopLeftCell(Utils.FindSheetCell(sheet, headerText))
     Set dataCell = Utils.GetRightNeighbour(headerCell)
     
     If Not IsError(dataCell.Value) Then
