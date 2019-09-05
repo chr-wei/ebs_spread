@@ -150,6 +150,15 @@ Sub Test_MultiMapHoursToDate()
     SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
     SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
+    
+    startingTime = CDate("04/09/2019 11:00")
+    mapHour = 1
+    retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
+    mapHour, _
+    startingTime, _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 End Sub
 
 
@@ -214,6 +223,13 @@ Sub Test_MapDateToHours()
     startingDate = CDate("11/08/2019 17:20")
     endingDate = CDate("14/08/2019 17:20")
     Debug.Print "Testing 7: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
+        endingDate, startingDate, _
+        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+        
+    startingDate = CDate("03/09/2019 00:00")
+    endingDate = CDate("06/09/2019 23:30")
+    Debug.Print "Testing 8: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
         endingDate, startingDate, _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
         SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
@@ -692,7 +708,8 @@ Function GetNextAppointmentBlock( _
     'within a threshhold. The threshold is a sum of the time which you need to analyze a previous event + the time you need to prepare for the next event.
     '
     'Input args:
-    '   appointmentList:            List of all outlook events. The list has to be sorted according to appointments' start dates
+    '   appointmentList:            List of all outlook events. The list has to be sorted according to appointments' start dates. The list also has to
+    '                               'IncludeRecurrences' as appointment search will run into problems if it is turned off
     '   startTime:                  The point of time the next block is searched from
     '   appointmentOnsetHours:      The hours one needs prior to the event to prepare
     '   apptoinmentOffsetHours:     The hours one needs after the event to analyze the event
@@ -716,13 +733,15 @@ Function GetNextAppointmentBlock( _
     Dim dSep As String: dSep = Application.International(xlDateSeparator)
     Select Case Application.International(xlDateOrder)
         Case 0 ' = month-day-year
-            dFormatString = "mm" & dSep & "dd" & dSep & "yyyy hh:mm AMPM"
+            dFormatString = "mm" & dSep & "dd" & dSep & "yyyy hh:nn AMPM"
         Case 1 ' = day-month-year
-            dFormatString = "dd" & dSep & "mm" & dSep & "yyyy hh:mm AMPM"
+            dFormatString = "dd" & dSep & "mm" & dSep & "yyyy hh:nn AMPM"
         Case 2 ' = year-month-day
-            dFormatString = "yyyy" & dSep & "mm" & dSep & "dd hh:mm AMPM"
+            dFormatString = "yyyy" & dSep & "mm" & dSep & "dd hh:nn AMPM"
     End Select
-    Set appointment = appointmentList.Find("[Start] >= '" & Format(startTime, dFormatString) & "'")
+    'Be careful here: Searching without 'IncludeRecurrences' = True will produce wrong results: If an recurring appointment is found the start and end
+    'date of the first element of the series will be returned
+    Set appointment = appointmentList.Find("[End] >= '" & Format(startTime, dFormatString) & "'")
     
     If appointment Is Nothing Then Exit Function
     startTime = appointment.Start - appointmentOnsetHours / 24
@@ -1049,11 +1068,12 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
         If StrComp(blockerCat, "") <> 0 Then
             restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
         End If
-        
-        filteredItems.IncludeRecurrences = True
-        
+          
         'Filter the items according to their restrictions
         Set filteredItems = filteredItems.Restrict(restriction)
+        
+        'Include recurrences after filtering as it sets include recurrences to 'false'
+        filteredItems.IncludeRecurrences = True
         Set GetCalItems = filteredItems
     Else
         Set GetCalItems = Nothing
