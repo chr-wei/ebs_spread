@@ -742,6 +742,7 @@ Function GetNextAppointmentBlock( _
     'Be careful here: Searching without 'IncludeRecurrences' = True will produce wrong results: If an recurring appointment is found the start and end
     'date of the first element of the series will be returned. This may result in a setback in time (before starting time), since the recurring appointments
     'are still encountered
+
     Set appointment = appointmentList.Find("[End] >= '" & Format(startTime, dFormatString) & "'")
     
     If appointment Is Nothing Then Exit Function
