@@ -1,16 +1,16 @@
-baseurl: /EbsSpread/
+baseurl: /EbsSpread
 site: Made Jekyll Theme
 
 collections:
   pages:
     output: true
-    permalink: /EbsSpread/:name
+    permalink: /:name
   posts:
     output: true
-    permalink: /EbsSpread/blog/:slug
+    permalink: /blog/:slug #if /EbsSpread is preceded the page is not put at /EbsSpread/blog/... otherwise the page is put there but the url of clicking is wrong
   projects:
     output: true
-    permalink: /EbsSpread/project/:slug
+    permalink: /project/:slug
 
 defaults:
   -
@@ -56,4 +56,4 @@ plugins:
   - jekyll-sitemap
 
 paginate: 7
-paginate_path: "/EbsSpread/blog/page-:num/"
+paginate_path: "/blog/page-:num/"
