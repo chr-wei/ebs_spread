@@ -1,7 +1,7 @@
 basic_settings:
   site_title: Made
   favicon_image: /EbsSpread/images/favicon.png
-
+  
 header_settings:
   logo_image: 
   logo_width: 100
