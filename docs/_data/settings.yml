@@ -1,6 +1,6 @@
 basic_settings:
   site_title: Made
-  favicon_image: /images/favicon.png
+  favicon_image: /EbsSpread/images/favicon.png
 
 header_settings:
   logo_image: 
@@ -9,9 +9,9 @@ header_settings:
 menu_settings:
   menu_items:
     - title: 'Projects'
-      url: '/'
+      url:  '/EbsSpread/'
     - title: 'Blog'
-      url: '/blog/'
+      url: '/EbsSpread/blog/'
 
 footer_settings:
   logo_image: 
@@ -19,7 +19,7 @@ footer_settings:
   tagline: A beautiful, minimal portfolio Jekyll theme
 
 hero_settings:
-  background_image: /images/backgrounds/background-hero.svg
+  background_image: /EbsSpread/images/backgrounds/background-hero.svg
 
 post_settings:
   grid_spacing: 10
@@ -27,7 +27,7 @@ post_settings:
 contact_settings:
   email_address: 'hello@jekyllthemes.io'
   form_action: 'https://formspree.io/hello@jekyllthemes.io'
-  confirmation_url: '/thanks'
+  confirmation_url: '/EbsSpread/thanks'
   email_subject: 'Contact form submission'
   send_button_text: 'Get in Touch'
 

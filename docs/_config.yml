@@ -1,16 +1,16 @@
-baseurl: /EbsSpread
+baseurl: /EbsSpread/
 site: Made Jekyll Theme
 
 collections:
   pages:
     output: true
-    permalink: /:name
+    permalink: /EbsSpread/:name
   posts:
     output: true
-    permalink: /blog/:slug
+    permalink: /EbsSpread/blog/:slug
   projects:
     output: true
-    permalink: /project/:slug
+    permalink: /EbsSpread/project/:slug
 
 defaults:
   -
@@ -56,4 +56,4 @@ plugins:
   - jekyll-sitemap
 
 paginate: 7
-paginate_path: "/blog/page-:num/"
+paginate_path: "/EbsSpread/blog/page-:num/"
