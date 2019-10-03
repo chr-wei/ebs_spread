@@ -20,20 +20,20 @@
 
 	<!-- Page Info -->
 	<link rel="shortcut icon" href="{{ site.data.settings.basic_settings.favicon_image }}">
-	<title>{% if page.url == "/" %}{{ site.data.settings.basic_settings.site_title }} –
+	<title>{% if page.url == "/EbsSpread/" %}{{ site.data.settings.basic_settings.site_title }} –
 		{{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}</title>
 	<meta name="description" content="{{ page.description }}">
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:title"
-		content="{% if page.url == "/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}">
+		content="{% if page.url == "/EbsSpread/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}">
 	<meta name="twitter:description" content="{{ page.description }}">
 	<meta name="twitter:image:src" content="{{ site.url }}{{ page.featured_image }}">
 
 	<!-- Facebook OpenGraph -->
 	<meta property="og:title"
-		content="{% if page.url == "/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}" />
+		content="{% if page.url == "/EbsSpread/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}" />
 	<meta property="og:description" content="{{ page.description }}" />
 	<meta property="og:image" content="{{ site.url }}{{ page.featured_image }}" />
 
@@ -44,7 +44,7 @@
 
 	<!-- Styles -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="/css/style.css">
+	<link rel="stylesheet" href="/EbsSpread/css/style.css">
 
 	<!-- Icons -->
 	<script defer src="https://use.fontawesome.com/releases/v5.1.1/js/brands.js"
@@ -107,7 +107,7 @@
 
 	<div class="page">
 		<div class="page__content"
-			data-page-title="{% if page.url == "/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}">
+			data-page-title="{% if page.url == "/EbsSpread/" %}{{ site.data.settings.basic_settings.site_title }} – {{ page.title }}{% else %}{{ page.title }} – {{ site.data.settings.basic_settings.site_title }}{% endif %}">
 			
 			{% include component__contact.html %}
 			
@@ -122,14 +122,14 @@
 
 	<!-- Javascript Assets -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script src="/js/plugins/debounce.js"></script>
-	<script src="/js/plugins/fluidbox.js"></script>
-	<script src="/js/plugins/history.js"></script>
-	<script src="/js/plugins/imagesloaded.js"></script>
-	<script src="/js/plugins/masonry.js"></script>
-	<script src="/js/plugins/owl.js"></script>
-	<script src="/js/plugins/waypoints.js"></script>
-	<script src="/js/made.js"></script>
+	<script src="/EbsSpread/js/plugins/debounce.js"></script>
+	<script src="/EbsSpread/js/plugins/fluidbox.js"></script>
+	<script src="/EbsSpread/js/plugins/history.js"></script>
+	<script src="/EbsSpread/js/plugins/imagesloaded.js"></script>
+	<script src="/EbsSpread/js/plugins/masonry.js"></script>
+	<script src="/EbsSpread/js/plugins/owl.js"></script>
+	<script src="/EbsSpread/js/plugins/waypoints.js"></script>
+	<script src="/EbsSpread/js/made.js"></script>
 
 	{% if site.data.settings.advanced_settings.footer_js %}
 	<!-- Extra Footer JS Code -->
