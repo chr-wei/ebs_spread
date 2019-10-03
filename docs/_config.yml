@@ -7,7 +7,7 @@ collections:
     permalink: /:name
   posts:
     output: true
-    permalink: /blog/:slug #if /EbsSpread is preceded the page is not put at /EbsSpread/blog/... otherwise the page is put there but the url of clicking is wrong
+    permalink: /blog/:slug
   projects:
     output: true
     permalink: /project/:slug
