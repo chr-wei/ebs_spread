@@ -34,11 +34,11 @@ featured_image: /EbsSpread/images/social.jpg
 			{% if project.accent_color %}{% capture accent_color %}{{ project.accent_color }}{% endcapture %}{% endif %}
 
 			<article class="project__preview">
-				<h3 class="project__title"><a href="{{ project.url }}" style="--accent: {{ accent_color }}">{{ project.title }}</a></h3>
+				<h3 class="project__title"><a href="{{ project.url | relative_url }}" style="--accent: {{ accent_color }}">{{ project.title }}</a></h3>
 
 				<div class="project__images owl-carousel" style="--accent: {{ accent_color }}">
 					{% for image in project.gallery_images %}
-					<a href="{{ project.url }}"><img src="/EbsSpread/images/projects/{{ image }}" alt="" class="project__image"></a>
+					<a href="{{ project.url | relative_url}}"><img src="/EbsSpread/images/projects/{{ image }}" alt="" class="project__image"></a>
 					{% endfor %}
 				</div>
 
@@ -46,7 +46,7 @@ featured_image: /EbsSpread/images/social.jpg
 					<p class="project__subtitle subtitle--light">{{ project.subtitle }}</p>
 					<p class="project__description --small">
 						{{ project.description }}
-						<a href="{{ project.url }}" class="project__link button--text --right"
+						<a href="{{ project.url | relative_url }}" class="project__link button--text --right"
 							style="color: {{ accent_color }}; --color-var: {{ accent_color }}">View Case Study</a>
 					</p>
 				</div>
