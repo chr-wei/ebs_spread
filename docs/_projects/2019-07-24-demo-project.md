@@ -54,7 +54,7 @@ Here's a really neat custom feature we added – galleries:
 {% include post-components/gallery.html
 	columns = 2
 	full_width = true
-	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/images/demo.jpg,
+	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,
 	"
 %}
 
@@ -65,7 +65,7 @@ Inspired by the Galleries feature from WordPress, we've made it easy to create g
 {% include post-components/gallery.html
 	columns = 2
 	full_width = true
-	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/images/demo.jpg,
+	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,
 	"
 %}
 ```
