@@ -147,6 +147,9 @@ $footer-logo-width: {{ site.data.settings.footer_settings.logo_width }}px;
 // Post details
 $grid-spacing: {{ site.data.settings.post_settings.grid_spacing }}px;
 
+// Copy baseurl to sass var
+
+$baseurl: {{ site.baseurl }};
 
 
 // - - - - - - - - - - Global styles

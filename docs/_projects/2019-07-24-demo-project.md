@@ -15,7 +15,7 @@ This page is a demo that shows everything you can do inside portfolio and blog p
 
 We've included everything you need to create engaging posts about your work, and show off your case studies in a beautiful way.
 
-![](/EbsSpread/images/demo.jpg)
+![]({{ '/images/demo.jpg' | relative_url }})
 
 **Obviously,** we’ve styled up *all the basic* text formatting options [available in markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet).
 
@@ -54,8 +54,7 @@ Here's a really neat custom feature we added – galleries:
 {% include post-components/gallery.html
 	columns = 2
 	full_width = true
-	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,
-	"
+	images = "/images/demo.jpg,/images/demo.jpg,/images/demo.jpg"
 %}
 
 Inspired by the Galleries feature from WordPress, we've made it easy to create grid layouts for your images. Just use a simple Liquid snippet in your post to create a masonry grid image layout:
@@ -65,8 +64,7 @@ Inspired by the Galleries feature from WordPress, we've made it easy to create g
 {% include post-components/gallery.html
 	columns = 2
 	full_width = true
-	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,
-	"
+	images = "/images/demo.jpg,/images/demo.jpg,/images/demo.jpg,/images/demo.jpg"
 %}
 ```
 {% endraw %}
@@ -85,8 +83,7 @@ A nice little feature: the carousel only advances when it is in view, so your vi
 {% include post-components/gallery.html
 	columns = 1
 	full_width = true
-	images = "/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg,/EbsSpread/images/demo.jpg
-	"
+	images = "/images/demo.jpg,/images/demo.jpg,/images/demo.jpg"
 %}
 
 #### What about videos?
