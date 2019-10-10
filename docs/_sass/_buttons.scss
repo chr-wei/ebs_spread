@@ -4,7 +4,6 @@
 
 // - - - - - - - - - - - - - - - - - -
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Basics
 
 .button {
@@ -27,8 +26,8 @@
         display: inline-block;
         width: 20px;
         height: 10px;
-        mask: url("/EbsSpread/images/icons/arrow-right-accent.svg") right center no-repeat;
-        -webkit-mask: url("/EbsSpread/images/icons/arrow-right-accent.svg") right center no-repeat;
+        mask: url($baseurl + '/images/icons/arrow-right-accent.svg') right center no-repeat;
+        -webkit-mask: url($baseurl + '/images/icons/arrow-right-accent.svg') right center no-repeat;
         margin-left: 4px;
         background-color: var(--color-var);
       }
@@ -47,8 +46,8 @@
         display: inline-block;
         width: 20px;
         height: 10px;
-        mask: url("/EbsSpread/images/icons/arrow-right-accent.svg") right center no-repeat;
-        -webkit-mask: url("/EbsSpread/images/icons/arrow-right-accent.svg") right center no-repeat;
+        mask: url($baseurl + '/images/icons/arrow-right-accent.svg') right center no-repeat;
+        -webkit-mask: url($baseurl + '/images/icons/arrow-right-accent.svg') right center no-repeat;
         margin-right: 4px;
         background-color: var(--color-var);
         transform: rotate(180deg);
@@ -93,7 +92,7 @@
   }
 
   &--close-modal {
-    background: url("/EbsSpread/images/icons/arrow-cross-accent.svg") transparentize($accent-color, 0.92) center center no-repeat;
+    background: url($baseurl + '/images/icons/arrow-cross-accent.svg') transparentize($accent-color, 0.92) center center no-repeat;
     width: 40px;
     height: 40px;
     border-radius: 8px;

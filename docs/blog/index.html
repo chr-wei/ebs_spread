@@ -2,7 +2,7 @@
 layout: default
 title: Blog
 description: Made includes a beautiful grid-based blog with pagination.
-featured_image:  {{ /images/social.jpg | relative_url }}
+featured_image: /images/social.jpg
 ---
 
 <div class="page-blog">
@@ -22,7 +22,7 @@ featured_image:  {{ /images/social.jpg | relative_url }}
 					<div class="grid">
 						<a href="{{ post.url | relative_url }}">
 							<div class="post__image{% if paginator.page == 1 %} post__image--new{% endif %}"
-								style="background-image: url({{ post.featured_image }})">
+								style="background-image: url({{ post.featured_image | relative_url }})">
 							</div>
 						</a>
 
@@ -50,11 +50,11 @@ featured_image:  {{ /images/social.jpg | relative_url }}
 	<section class="pagination">
 		<div class="wrap">
 			{% if paginator.previous_page %}
-			<a href="{{ paginator.previous_page_path | prepend: site.baseurl }}"
+			<a href="{{ paginator.previous_page_path | relative_url }}"
 				class="button--text--accent --left pagination__prev">Newer Posts</a>
 			{% endif %}
 			{% if paginator.next_page %}
-			<a href="{{ paginator.next_page_path | prepend: site.baseurl }}"
+			<a href="{{ paginator.next_page_path | relative_url }}"
 				class="button--text--accent --right pagination__next">Older Posts</a>
 			{% endif %}
 		</div>
