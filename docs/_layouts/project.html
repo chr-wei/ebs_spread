@@ -13,7 +13,7 @@ layout: default
 			<h2 class="post__subtitle subtitle--light">{{ page.subtitle }}</h2>
 		</div>
 
-		<img src="/EbsSpread/images/projects/{{ page.featured_image }}" class="post__featured-image">
+		<img src="{{ 'images/projects/' | relative_url }}{{ page.featured_image }}" class="post__featured-image">
 
 	</header>
 
