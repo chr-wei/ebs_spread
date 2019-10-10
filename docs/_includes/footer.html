@@ -2,11 +2,11 @@
 	<div class="wrap grid">
 
 		{% if site.data.settings.footer_settings.logo_image %}
-		<a href="/EbsSpread/" class="footer__logo">
+		<a href="{{ relative_url }}" class="footer__logo">
 			<img src="{{ site.data.settings.footer_settings.logo_image }}" class="footer__logo__img">
 		</a>
 		{% else %}
-		<a href="/EbsSpread/" class="footer__title">
+		<a href="{{ relative_url }}" class="footer__title">
 			{{ site.data.settings.basic_settings.site_title }}
 		</a>
 		{% endif %}
