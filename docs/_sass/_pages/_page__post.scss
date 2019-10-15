@@ -256,7 +256,7 @@
     display: block;
     width: 20px;
     height: 12px;
-    background: url("/images/icons/arrow-left-gray.svg") center center no-repeat;
+    background: url($baseurl + "/images/icons/arrow-left-gray.svg") center center no-repeat;
     position: absolute;
     top: calc(50% - 6px);
   }
