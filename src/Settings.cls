@@ -50,3 +50,30 @@ Sub UI_EnableEvents()
     Application.screenUpdating = True
 End Sub
 
+
+
+Sub UI_ExportTasks()
+    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ExportVisibleTasks", screenUpdating:=False)
+End Sub
+
+
+
+Sub UI_ImportTasks()
+    
+    Dim importWorkbookName As String
+    importWorkbookName = Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.IMPORT_SHEET_HEADER)
+
+    Dim sourceWb As Workbook
+    On Error Resume Next
+    Set sourceWb = Workbooks(importWorkbookName)
+    
+    If Err.Number <> 0 Then
+        Debug.Print "Importing from workbook '" & importWorkbookName & "' failed."
+        Err.Clear
+        Exit Sub
+    Else
+        On Error GoTo 0
+    End If
+    
+    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", arg1:=sourceWb, screenUpdating:=False)
+End Sub

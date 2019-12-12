@@ -742,11 +742,10 @@ Function GetNextAppointmentBlock( _
     'Be careful here: Searching without 'IncludeRecurrences' = True will produce wrong results: If an recurring appointment is found the start and end
     'date of the first element of the series will be returned. This may result in a setback in time (before starting time), since the recurring appointments
     'are still encountered
-
     Set appointment = appointmentList.Find("[End] >= '" & Format(startTime, dFormatString) & "'")
     
     If appointment Is Nothing Then Exit Function
-    startTime = appointment.Start - appointmentOnsetHours / 24
+    startTime = appointment.start - appointmentOnsetHours / 24
     blockStart = startTime
     
     Dim oneStart As Date
@@ -757,12 +756,12 @@ Function GetNextAppointmentBlock( _
     Dim apptsAreOverlapping As Boolean: apptsAreOverlapping = True
     Do Until Not apptsAreOverlapping
         'Loop while events are overlapping. Call 'FindNext' to get the next event in the row
-        oneStart = appointment.Start
+        oneStart = appointment.start
         oneEnd = appointment.End
         Set appointment = appointmentList.FindNext ''GetNext' won't work here
         
         If Not appointment Is Nothing Then
-            twoStart = appointment.Start
+            twoStart = appointment.start
             twoEnd = appointment.End
             apptsAreOverlapping = _
                 CalendarUtils.AppointmentsAreOverlapping(oneStart, oneEnd, twoStart, twoEnd, appointmentOnsetHours + appointmentOffsetHours)

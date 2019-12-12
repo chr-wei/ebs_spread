@@ -29,7 +29,10 @@ Enum EstimateType
     ceDate = 1
 End Enum
 
-
+Public Enum CopySource
+    ceCopyFromPlanningList = 1
+    ceCopyFromWorksheetData = -1
+End Enum
 
 Function GetPlanningSheet() As Worksheet
     'Return the main planning sheet of this project
@@ -93,7 +96,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
         'Create a new task sheet
         Call TaskUtils.GetTaskSheet(newHash)
         
-        'Select the title of the created task
+        'Select the title of the created taskb
         Dim title As Range
         Set title = PlanningUtils.IntersectHashAndListColumn(newHash, Constants.TASK_NAME_HEADER)
         
@@ -175,7 +178,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     
     'Add a hyperlink to the sheet which will be generated in the next step
     Dim subAddress As String
-    subAddress = "'" & hash & "'!A1"
+    subAddress = Constants.TASK_SHEET_STD_LINK
     
     'Add a hyperlink with custom format
     Call Utils.AddSubtileHyperlink(taskNameCell, subAddress)
@@ -219,7 +222,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     Dim hashOfTask As Range
     
     'Check if we are in task sheet and reset range if condition does not apply
-    If StrComp(rng.parent.name, Constants.PLANNING_SHEET_NAME) <> 0 Then
+    If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) <> 0 Then
         Debug.Print "Please give/select a range of the main sheet called '" & Constants.PLANNING_SHEET_NAME & "'."
         Set rng = Nothing
         Exit Function
@@ -319,14 +322,7 @@ Function DeleteSelectedTask()
     If Not SanityChecks.CheckHash(hash) Then
         Exit Function
     Else
-        If Utils.SheetExists(hash) Then
-            'Delete worksheet and suppress warnings
-            Application.DisplayAlerts = False
-            TaskUtils.GetTaskSheet(hash).Delete
-            Application.DisplayAlerts = True
-        End If
-
-    
+        Call Utils.DeleteWorksheetSilently(TaskUtils.GetTaskSheet(hash))
         Call Utils.DeleteFilteredListObjectRow(entryCell)
     End If
 End Function
@@ -570,13 +566,15 @@ Function GetAllListValidatedCols() As Range
     
     'Collect all resetable cols according to defined tags of columns
     Dim tagHeaderCells As Range
-    Set tagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX)
-
-    Dim tagCell As Range
-    For Each tagCell In tagHeaderCells
-        Set listValidatedCol = PlanningUtils.GetTaskListColumn(tagCell.Value, ceData)
-        Set allListValidatedCols = Base.UnionN(allListValidatedCols, listValidatedCol)
-    Next tagCell
+    Set tagHeaderCells = PlanningUtils.GetTagHeaderCells
+    
+    If Not tagHeaderCells Is Nothing Then
+        Dim tagCell As Range
+        For Each tagCell In tagHeaderCells
+            Set listValidatedCol = PlanningUtils.GetTaskListColumn(tagCell.Value, ceData)
+            Set allListValidatedCols = Base.UnionN(allListValidatedCols, listValidatedCol)
+        Next tagCell
+    End If
     
     Set allListValidatedCols = Base.UnionN(allListValidatedCols, PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData))
     Set GetAllListValidatedCols = allListValidatedCols
@@ -584,15 +582,29 @@ End Function
 
 
 
-Function CopyTask(copiedTaskHash As String, newHash As String)
+Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceListHash As String, Optional sourceSheet As Worksheet)
     'Copy a selected task with specific column values (its name, tags, priority, estimated time, comment, due date and contributor)
     '
     'Input args:
-    '  copiedTashHash: The task of the hash that you want to copy
-    '  newHash:        The new hash that will be used for the copied task
+    '   cpSource:       Switch to select copy source from: Either planning sheet list or an (external) task sheet
+    '   sourceListHash: The task of the hash that you want to copy. Mandatory if copying from planning list was selected
+    '   sourceSheet:    The (external) sheet that holds data you want to copy. Mandatory if copying from source sheet was selected
+    '   newHash:        The new hash that will be used for the copied task (given by value to trace the task)
     
     'Copy most of the fields of a given hash. Do not call this method with enabled events as it may have problematic consequences
         
+    'Check args
+    If Not SanityChecks.CheckHash(newHash) Or _
+        (cpSource = CopySource.ceCopyFromPlanningList And Not SanityChecks.CheckHash(sourceListHash)) Or _
+        (cpSource = CopySource.ceCopyFromWorksheetData And sourceSheet Is Nothing) Then
+        Exit Function
+    End If
+    
+    If Application.EnableEvents = True Then
+        Debug.Print "Do not run this function with enabled events. Trouble ahead - exiting function."
+        Exit Function
+    End If
+    
     Dim newEntry As Range
     
     'First add a new task and return the cell of the entry to have a reference for further copying
@@ -601,7 +613,7 @@ Function CopyTask(copiedTaskHash As String, newHash As String)
     
     'Search for hash after adding the new task, because list items are reordered
     Dim existingEntry As Range
-    Set existingEntry = Utils.FindSheetCell(GetPlanningSheet, copiedTaskHash)
+    Set existingEntry = Utils.FindSheetCell(GetPlanningSheet, sourceListHash)
     'Debug.Print "Existing entry: " + existingEntry.Address
     
     Dim copiedFields As Variant
@@ -616,27 +628,68 @@ Function CopyTask(copiedTaskHash As String, newHash As String)
     'Populate regex fields
     'Copy regex fields (tags)
     Dim tagHeaders As Range
-    Set tagHeaders = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX)
+    Set tagHeaders = PlanningUtils.GetTagHeaderCells
     
-    Dim tagHeader As Range
-    For Each tagHeader In tagHeaders
-        ReDim Preserve copiedFields(UBound(copiedFields) + 1)
-        copiedFields(UBound(copiedFields)) = tagHeader
-    Next tagHeader
+    If Not tagHeaders Is Nothing Then
+        Dim tagHeader As Range
+        For Each tagHeader In tagHeaders
+            ReDim Preserve copiedFields(UBound(copiedFields) + 1)
+            copiedFields(UBound(copiedFields)) = tagHeader
+        Next tagHeader
+    End If
     
     'Copy fields and handle changes if needed
     For Each header In copiedFields
-        Dim existingVal As Variant
-        existingVal = PlanningUtils.IntersectHashAndListColumn(copiedTaskHash, CStr(header)).Value
+        Dim unifiedHeader As String
+        unifiedHeader = Planning.UnifyTagName(CStr(header))
+        
+        Dim existingVal As Variant: existingVal = ""
+        
+        Select Case cpSource
+            Case CopySource.ceCopyFromPlanningList
+                existingVal = PlanningUtils.IntersectHashAndListColumn(sourceListHash, CStr(header)).Value
+                
+            Case CopySource.ceCopyFromWorksheetData
+                Select Case unifiedHeader
+                    Case TAG_REGEX
+                        Dim readSerTagHeaders As String
+                        Dim readSerTagValues As String
+                        readSerTagHeaders = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+                        readSerTagValues = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_VALUES_HEADER)
+                        
+                        Dim readTagHeaders() As String
+                        Dim readTagValues() As String
+                        
+                        readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
+                        readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
+                        
+                        If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
+                            Dim headIdx As Integer
+                            For headIdx = 0 To UBound(readTagHeaders)
+                                If StrComp(readTagHeaders(headIdx), header) = 0 Then
+                                    existingVal = readTagValues(headIdx)
+                                    headIdx = UBound(readTagHeaders)
+                                End If
+                            Next headIdx
+                        End If
+                        
+                    Case Constants.TASK_PRIORITY_HEADER
+                        'Do nothing here when copying based on worksheet data
+                        existingVal = Constants.TASK_PRIO_INITIAL
+                    
+                    Case Else
+                        existingVal = Utils.GetSingleDataCellVal(sourceSheet, CStr(header))
+                End Select
+        End Select
         
         Dim cell As Range
         Set cell = PlanningUtils.IntersectHashAndListColumn(newHash, CStr(header))
         
         'Handle cell value changes here
-        Select Case Planning.UnifyTagName(CStr(header))
+        Select Case unifiedHeader
             Case TASK_NAME_HEADER
                 'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + " (copy)"
+                existingVal = existingVal + " (copy/import)"
                 cell.Value = existingVal
                 Call Planning.HandleChanges(cell)
                 
@@ -646,9 +699,9 @@ Function CopyTask(copiedTaskHash As String, newHash As String)
                 Call Planning.HandleChanges(cell)
                 
             Case Constants.TAG_REGEX
-                'Copy the tag. It is not stored elsewhere so do not handle anything
+                'Copy the tag
                 cell.Value = existingVal
-                'Do not handle anything special here
+                Call Planning.ManageTagChange(cell, False)
                 
             Case Constants.CONTRIBUTOR_HEADER
                 'Handle contributor change without cell validation update. This causes cell validation to fail
@@ -905,7 +958,7 @@ Function CollectEbsColData(headerCell As Range)
     
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         'If the header text of the cell is an ebs col header: read the col propability of the estimates to be displayed
         Dim matches As MatchCollection
         Set matches = regex.Execute(header)
@@ -1197,17 +1250,10 @@ End Function
 
 Function FollowTaskSheetLink(Target As hyperlink)
     'Follows the link to a task sheet unhiding it prior to selecting it
-    '
-    'E.g. subaddress = "'tFE2603F48C8CDE5FE'!A1"
-    Dim regex As New RegExp
-    regex.Pattern = "(" + Constants.HASH_REGEXP + ")\!*"
-    Dim matchh As MatchCollection
-    Set matchh = regex.Execute(Target.subAddress)
     
-    If matchh.Count = 1 Then
+    If StrComp(Target.subAddress, Constants.TASK_SHEET_STD_LINK) = 0 Then
         Dim taskSheet As Worksheet
-        'ToDo: Submatches val is a bit strange. change it
-        Set taskSheet = TaskUtils.GetTaskSheet(CStr(matchh(0).SubMatches(0)))
+        Set taskSheet = TaskUtils.GetTaskSheet(PlanningUtils.GetTaskHash(Target.Parent))
         
         If Not taskSheet Is Nothing Then
             taskSheet.Visible = XlSheetVisibility.xlSheetVisible
@@ -1215,5 +1261,48 @@ Function FollowTaskSheetLink(Target As hyperlink)
         
         'After sheet is visible select sheet
         taskSheet.Select
+    End If
+End Function
+
+
+
+Function GetTagHeaderCells() As Range
+    Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
+End Function
+
+
+
+Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
+    'Check args
+    If StrComp(hash, "") = 0 Then Exit Function
+    
+    'Init output
+    GetSerializedTags = ""
+    
+    Dim headers As Range
+    Set headers = PlanningUtils.GetTagHeaderCells
+    
+    If Not headers Is Nothing Then
+        Dim coV As New Collection
+        Dim coH As New Collection
+        Dim tagHeader As Range
+        Dim tag As Range
+        
+        For Each tagHeader In headers
+            Set tag = PlanningUtils.IntersectHashAndListColumn(hash, tagHeader)
+            
+            If Not tag Is Nothing Then
+                If StrComp(tag, "") <> 0 Then
+                    Call coV.Add(tag.Value)
+                    Call coH.Add(tagHeader.Value)
+                End If
+            End If
+        Next tagHeader
+        
+        If coV.Count > 0 Then
+            'Serialize tags
+            GetSerializedTags = Utils.SerializeArray(Base.CollectionToArray(coV))
+            serializedTagHeaders = Utils.SerializeArray(Base.CollectionToArray(coH))
+        End If
     End If
 End Function
