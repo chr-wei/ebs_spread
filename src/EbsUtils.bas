@@ -57,7 +57,7 @@ Function HandleEbsSheetChanges(Target As Range)
         Case Constants.EBS_SHOW_POOL_HEADER
             Call EbsUtils.ManagePoolVisibilityChange(Target)
         Case Constants.EBS_PROP_CHART_MODE_HEADER, Constants.EBS_PROP_CHART_SCALING_HEADER
-            Call EbsUtils.PrintPropabilityChart(Target.parent)
+            Call EbsUtils.PrintPropabilityChart(Target.Parent)
     End Select
 End Function
 
@@ -72,10 +72,10 @@ Function ManagePoolVisibilityChange(changedCell As Range)
     '  changedCell: Cell within the table for which the setting was switched (all cells of the column are reinvestigated)
     
     'Delete all the entries from the velocity histogram
-    Call EbsUtils.ClearHistogramContents(changedCell.parent)
+    Call EbsUtils.ClearHistogramContents(changedCell.Parent)
     
     Dim colData As Range
-    Set colData = Utils.GetListColumn(changedCell.parent, Constants.EBS_MAIN_LIST_IDX, changedCell, ceData)
+    Set colData = Utils.GetListColumn(changedCell.Parent, Constants.EBS_MAIN_LIST_IDX, changedCell, ceData)
     
     'Find all pools which shall be displayed in the chart
     Dim selectedPools As Range
@@ -86,7 +86,7 @@ Function ManagePoolVisibilityChange(changedCell As Range)
     End If
     
     'Find all pool cells that contain a deserialized array / data
-    Set selectedPools = Base.FindAll(Utils.IntersectListColAndCells(changedCell.parent, Constants.EBS_MAIN_LIST_IDX, Constants.EBS_VELOCITY_POOL_HEADER, selectedPools), _
+    Set selectedPools = Base.FindAll(Utils.IntersectListColAndCells(changedCell.Parent, Constants.EBS_MAIN_LIST_IDX, Constants.EBS_VELOCITY_POOL_HEADER, selectedPools), _
         Constants.SERIALIZED_ARRAY_REGEX, , ceRegex)
     
     If selectedPools Is Nothing Then
@@ -117,13 +117,13 @@ Function ManagePoolVisibilityChange(changedCell As Range)
             Dim histoVal() As Long
             
             Dim ebsDate As Range
-            Set ebsDate = Utils.IntersectListColAndCells(changedCell.parent, Constants.EBS_MAIN_LIST_IDX, Constants.EBS_RUN_DATE_HEADER, poolCell)
+            Set ebsDate = Utils.IntersectListColAndCells(changedCell.Parent, Constants.EBS_MAIN_LIST_IDX, Constants.EBS_RUN_DATE_HEADER, poolCell)
             
             'Calc the velocity histogram from the bare pool velocities (count and categorize)
             Call EbsUtils.CalcVelocityHistogram(poolVals, histoX, histoVal)
             
             'Print out the values
-            Call EbsUtils.PrintVelocityHistogramDataRow(changedCell.parent, ebsDate.Value, histoX, histoVal, transparencyVals(poolIdx - 1))
+            Call EbsUtils.PrintVelocityHistogramDataRow(changedCell.Parent, ebsDate.Value, histoX, histoVal, transparencyVals(poolIdx - 1))
             poolIdx = poolIdx + 1
         End If
     Next poolCell
@@ -547,8 +547,16 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
         End If
     Next hashIdx
     
+    Dim veloCount As Long
+    
+    If Not Base.IsArrayAllocated(velocities) Then
+        veloCount = 0
+    Else
+        veloCount = UBound(velocities)
+    End If
+
     'Generate additional velocites if not enough are available
-    If UBound(velocities) < N And Constants.EBS_GENERATE_RND_VELOCITIES Then
+    If veloCount < N And Constants.EBS_GENERATE_RND_VELOCITIES Then
         Dim genVelocityIdx As Long
         
         For genVelocityIdx = UBound(velocities) + 1 To N
@@ -1039,7 +1047,6 @@ nextHash0a1:
         WriteRunData = True
     Else
         WriteRunData = False
-        Stop
     End If
 End Function
 
@@ -1553,6 +1560,9 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
                     
         'First x-axis: accumulated time
         Set x1Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_ACCUMULATED_TIME_POOL_HEADER, ceData)
+        
+        If x1Cells Is Nothing Then Exit Function
+        
         Set x1Cells = Utils.GetBottomRightCell(x1Cells)
         x1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x1Cells.Value))
                
@@ -1697,10 +1707,8 @@ Function DeleteAllEbsSheets()
     regex.Pattern = Constants.EBS_SHEET_REGEX
     Dim sheet As Worksheet
     For Each sheet In ThisWorkbook.Worksheets
-        If regex.Test(sheet.name) Then
-            Application.DisplayAlerts = False
-            sheet.Delete
-            Application.DisplayAlerts = True
+        If regex.test(sheet.name) Then
+            Call Utils.DeleteWorksheetSilently(sheet)
         End If
     Next sheet
 End Function
