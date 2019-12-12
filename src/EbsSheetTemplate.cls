@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Private Sub Worksheet_Change(ByVal Target As Range)
-    If StrComp(Target.parent.name, Constants.EBS_SHEET_TEMPLATE_NAME) = 0 Then
+    If StrComp(Target.Parent.name, Constants.EBS_SHEET_TEMPLATE_NAME) = 0 Then
         'Prohibit managing changes in the template
         Exit Sub
     End If

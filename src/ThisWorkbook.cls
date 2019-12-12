@@ -12,6 +12,9 @@ Option Explicit
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
     Call DeleteShortcuts
+    
+    'Move all tasks to virtual sheets prior to closing the workbook. This prevents high memory usage on next start.
+    Call Planning.UI_VirtualizeTaskSheets
 End Sub
 
 
