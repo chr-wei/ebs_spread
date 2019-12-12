@@ -54,7 +54,7 @@ End Sub
 
 Private Sub Worksheet_Change(ByVal Target As Range)
     'Run a catched call to the main value handler method in this sheet
-    Call Utils.RunTryCatchedCall("HandleChanges", Planning, Target)
+    Call Utils.RunTryCatchedCall(f:="HandleChanges", obj:=Planning, arg1:=Target, screenUpdating:=False)
 End Sub
 
 
@@ -85,7 +85,8 @@ Sub UI_CopyTask()
         newHash = CreateHashString("t")
         'Call this function with events to copy the task data from worksheet to task sheet immediately
         'Only call with disabled events to not mix up the cell validation values
-        Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=copiedHash, arg2:=newHash, enableEvt:=False, screenUpdating:=False
+        Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=CopySource.ceCopyFromPlanningList, arg3:=copiedHash, _
+        enableEvt:=False, screenUpdating:=False
         
         'Select the new task
         Dim copiedCell As Range
@@ -108,14 +109,14 @@ End Sub
 
 Sub UI_EndAllTasks()
     'Stop tracking for all tasks (helps preventing errors with unconsistent data as not only the task that is actively tracking is stopped)
-    Call Utils.RunTryCatchedCall("PlanningUtils.EndAllTasks")
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.EndAllTasks", screenUpdating:=False)
 End Sub
 
 
 
 Sub UI_StartSelectedTask()
     'Track the selected task (add timestamp)
-    Utils.RunTryCatchedCall f:="PlanningUtils.StartSelectedTask"
+    Utils.RunTryCatchedCall f:="PlanningUtils.StartSelectedTask", screenUpdating:=False
 End Sub
 
 
@@ -127,7 +128,7 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
     hash = GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0.25)
+        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0.25), screenUpdating:=False
     End If
 End Sub
 
@@ -141,7 +142,7 @@ Sub UI_AddZeroMinutesToSelectedTask()
     hash = GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0)
+        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0), screenUpdating:=False
     End If
 End Sub
 
@@ -196,7 +197,13 @@ End Sub
 
 Sub UI_CollectTotalTimesSpent()
     'Read the task's data to get the total time a user spent working on it.
-    Utils.RunTryCatchedCall f:="PlanningUtils.CollectTotalTimesSpent"
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.CollectTotalTimesSpent", screenUpdating:=False)
+End Sub
+
+
+
+Sub UI_VirtualizeTaskSheets()
+    Call Utils.RunTryCatchedCall(f:="Utils.VirtualizeTaskSheets", screenUpdating:=False)
 End Sub
 
 
@@ -227,7 +234,7 @@ Function HandleChanges(Target As Range)
         
         'Test if the bottom neighbour of the selected cell is an ebs column.
         'Set the header so that the handler for the ebs column is called
-        If regex.Test(bn.Value) Then
+        If regex.test(bn.Value) Then
             Set Target = bn
             header = bn.Value
         Else
@@ -312,7 +319,7 @@ Function UnifyTagName(header As String) As String
     regex.Global = True
     regex.Pattern = Constants.TAG_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         UnifyTagName = Constants.TAG_REGEX
     Else
         'Fall back to old header
@@ -329,7 +336,7 @@ Function UnifyEbsColumnName(header As String) As String
     regex.Global = True
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         UnifyEbsColumnName = Constants.EBS_COLUMN_REGEX
         Exit Function
     Else
@@ -438,7 +445,7 @@ Function ManageEstimateChange(changedCell As Range)
             Case UserEstimateStatus.ceInvalid
                 'Value was malformed. Set placeholder to cells and append malformed val
                 Dim invalidPlaceholder As String
-                invalidPlaceholder = Constants.INVALID_ENTRY_PLACEHOLDER + CStr(enteredVal)
+                invalidPlaceholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
             
                 changedCell.Value = invalidPlaceholder
                 changedCell.NumberFormat = "General"
@@ -490,7 +497,7 @@ Function ManageKanbanListChange(changedCell As Range)
             End If
                 prioCell.Value = Constants.N_A
                 
-        Case Constants.KANBAN_LIST_IN_PROGRESS, Constants.KANBAN_LIST_TODO
+        Case Else
             'The task is active again: Delete finished on date and set high priority to move up the task
             finishedOnCell.Value = Constants.N_A
             prioCell.Value = Constants.TASK_PRIO_INITIAL
@@ -521,13 +528,27 @@ End Function
 
 
 
-Function ManageTagChange(changedCell As Range)
-    'If the user entered a new tag inside the tag column add the tag to the cell validation list (to make it selectable by dropdown).
-    'Adding cell validation should prevent extensive creation of new tags - the user is informed if a 'new' tag is inserted which might be accidental
-    Dim tagCol As Range
-    Set tagCol = Utils.GetListColumn(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, changedCell, ceData)
+Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boolean = True)
     
-    Call Utils.SetCellValuesForValidation(tagCol)
+    'Store all tags in the corresponding task sheet
+    Dim hash As String
+    hash = PlanningUtils.GetTaskHash(changedCell)
+    
+    If SanityChecks.CheckHash(hash) Then
+        Dim serializedTags As String
+        Dim serializedTagHeaders As String
+        serializedTags = PlanningUtils.GetSerializedTags(hash, serializedTagHeaders)
+        Call TaskUtils.SetTags(TaskUtils.GetTaskSheet(hash), serializedTagHeaders, serializedTags)
+    End If
+    
+    'If no errors are expected update the data validation list
+    If setCellValidation Then
+        'If the user entered a new tag inside the tag column add the tag to the cell validation list (to make it selectable by dropdown).
+        'Adding cell validation should prevent extensive creation of new tags - the user is informed if a 'new' tag is inserted which might be accidental
+        Dim tagCol As Range
+        Set tagCol = Utils.GetListColumn(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, changedCell, ceData)
+        Call Utils.SetCellValuesForValidation(tagCol)
+    End If
 End Function
 
 

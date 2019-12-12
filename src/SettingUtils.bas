@@ -194,7 +194,7 @@ End Function
 
 
 
-Function GetContributorCalIdSetting(contributor As String) As String
+Function GetContributorCalIdSetting(contributor As String, Optional ByRef storId As String) As String
     'Get the calendar id of the contributor
     '
     'Input args:
@@ -202,17 +202,23 @@ Function GetContributorCalIdSetting(contributor As String) As String
     
     'Init output
     GetContributorCalIdSetting = ""
+    storId = ""
     
     'Check args
-    
     If StrComp(contributor, "") = 0 Then Exit Function
     
     Dim idCell As Range
+    Dim storeIdCell As Range
     
-    Set idCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, CAL_ID_HEADER)
+    Set idCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, Constants.CAL_ID_HEADER)
+    Set storeIdCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, Constants.STORE_ID_HEADER)
     
     If Not idCell Is Nothing Then
         GetContributorCalIdSetting = Trim(idCell.Value)
+    End If
+    
+    If Not storeIdCell Is Nothing Then
+        storId = Trim(storeIdCell.Value)
     End If
 End Function
 
