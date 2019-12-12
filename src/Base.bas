@@ -196,7 +196,7 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
         If Not cell Is Nothing Then
             Dim cellVal As Variant
             
-            'Retrieve the property. By default the 'Value'property will be returned.
+            'Retrieve the property. By default the 'Value' property will be returned.
             cellVal = CallByName(cell, property, VbGet)
             
             If Not IsError(cellVal) Then
@@ -206,7 +206,7 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                     Case ComparisonTypes.ceRegex
                         Dim regex As New RegExp
                         regex.Pattern = propertyVal
-                        compMatch = (regex.Test(cellVal))
+                        compMatch = (regex.test(cellVal))
                     Case ComparisonTypes.ceStringComp
                         compMatch = (StrComp(cellVal, propertyVal) = 0)
                     Case ComparisonTypes.ceEqual
@@ -391,20 +391,20 @@ Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Vari
         argIn = arr(arrIdx)
         If IsMissing(additionalArg) Then
             'Calc without additionalArg
-            argOut = Application.run(f, argIn)
+            argOut = Application.Run(f, argIn)
         Else
             If IsArray(additionalArg) Then
                 'Calculate element-wise with both arrays
                 If UBound(additionalArg) = UBound(arr) Then
                     'Calc element-wise
-                    argOut = Application.run(f, argIn, additionalArg(arrIdx))
+                    argOut = Application.Run(f, argIn, additionalArg(arrIdx))
                 Else
                     'Calc with first element of additional arg
-                    argOut = Application.run(f, argIn, additionalArg(0))
+                    argOut = Application.Run(f, argIn, additionalArg(0))
                 End If
             Else
                 'Calc with additional arg (no array type, additionalArg is constant in every cycle)
-                argOut = Application.run(f, argIn, additionalArg)
+                argOut = Application.Run(f, argIn, additionalArg)
             End If
         End If
         retArr(arrIdx) = argOut

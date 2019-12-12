@@ -209,6 +209,24 @@ End Function
 
 
 
+Function GetBottomLeftCell(rng As Range) As Range
+    'Function returns the bottom left cell of a given range. This method was written to prevent errors with the cells.End(xlDown) property.
+    '
+    'Input args:
+    '   rng:                Range of any size to get the top left cell of
+    '
+    'Output args:
+    '   GetBottomLeftCell: The bottom right cell of the range
+    
+    'Init output
+    Set GetBottomLeftCell = Nothing
+    'Check args
+    If rng Is Nothing Then Exit Function
+    Set GetBottomLeftCell = rng.cells(rng.Rows.Count, 1)
+End Function
+
+
+
 Function GetLeftNeighbour(rng As Range) As Range
     'Get a single next left cell to a given selection
     Set GetLeftNeighbour = Utils.GetTopLeftCell(rng).Offset(0, -1)
@@ -466,7 +484,8 @@ End Function
 
 
 
-Function RunTryCatchedCall(f As String, Optional obj As Object, Optional arg1 As Variant, Optional arg2 As Variant, _
+Function RunTryCatchedCall(f As String, Optional obj As Object, _
+    Optional arg1 As Variant, Optional arg2 As Variant, Optional arg3 As Variant, Optional arg4 As Variant, _
     Optional enableEvt As Boolean = False, Optional screenUpdating As Boolean = True)
     'This is a wrapper to run functions of objects (worksheets) and modules with specific Application settings e.g. disabled Application events
     'with a try catch mechanism to prohibit errors from bothering the user
@@ -485,14 +504,18 @@ Function RunTryCatchedCall(f As String, Optional obj As Object, Optional arg1 As
     
     'Call the passed function either on a passed object (e.g. worksheet) or just without (e.g a module function)
     If IsMissing(obj) Or obj Is Nothing Then
-        Call Excel.Application.run(f, arg1, arg2)
+        Call Excel.Application.Run(f, arg1, arg2, arg3, arg4)
     Else
         If IsMissing(arg1) Then
             Call CallByName(obj, f, VbMethod)
         ElseIf IsMissing(arg2) Then
             Call CallByName(obj, f, VbMethod, arg1)
-        Else
+        ElseIf IsMissing(arg3) Then
             Call CallByName(obj, f, VbMethod, arg1, arg2)
+        ElseIf IsMissing(arg4) Then
+            Call CallByName(obj, f, VbMethod, arg1, arg2, arg3)
+        Else
+            Call CallByName(obj, f, VbMethod, arg1, arg2, arg3, arg4)
         End If
     End If
     
@@ -601,7 +624,7 @@ Function DeserializeArray(serialized As String) As Variant
     regex.Global = True
     regex.Pattern = Constants.SERIALIZED_ARRAY_REGEX
 
-    If Not regex.Test(serialized) Then
+    If Not regex.test(serialized) Then
         Exit Function
     End If
     
@@ -913,16 +936,19 @@ Function GetSingleDataCellVal(sheet As Worksheet, headerText As String, Optional
     '   dataCell:               The function also returns the cell which holds the value
     '   GetSingleDataCellVal:   String containing the value right to the header cell
     
+    'Init output
+    GetSingleDataCellVal = ""
+    
     Dim headerCell As Range
+    Set headerCell = Utils.FindSheetCell(sheet, headerText)
     
-    Set headerCell = Utils.GetTopLeftCell(Utils.FindSheetCell(sheet, headerText))
-    Set dataCell = Utils.GetRightNeighbour(headerCell)
-    
-    If Not IsError(dataCell.Value) Then
-        GetSingleDataCellVal = dataCell.Value
-    Else
-        GetSingleDataCellVal = ""
-        Set dataCell = Nothing
+    If Not headerCell Is Nothing Then
+        Set headerCell = Utils.GetTopLeftCell(headerCell)
+        Set dataCell = Utils.GetRightNeighbour(headerCell)
+        
+        If Not IsError(dataCell.Value) Then
+            GetSingleDataCellVal = dataCell.Value
+        End If
     End If
 End Function
 
@@ -945,7 +971,7 @@ Function SetSingleDataCell(sheet As Worksheet, headerText As String, data As Var
         dataCell.Value = data
     Else
         'Debug info
-        Debug.Print "Header cell '" & headerText & "'could not be found on worksheet '" & sheet.name & "'."
+        Debug.Print "Header cell '" & headerText & " 'could not be found on worksheet '" & sheet.name & "'."
     End If
 End Function
 
@@ -958,7 +984,7 @@ Function AddSubtileHyperlink(cell As Range, link As String)
     '   cell:   The cell the hyperlink will be added to
     '   link:   The hyperlink to add
     
-    With cell.parent.Hyperlinks.Add(cell, "", link)
+    With cell.Parent.Hyperlinks.Add(cell, "", link)
         Dim lightColor As Long
         lightColor = SettingUtils.GetColors(ceLightColor)
         .Range.Font.color = lightColor
@@ -1139,4 +1165,31 @@ Function ReapplyAutoFilters(ByRef lo As ListObject, filterData() As Variant)
             Call lo.Range.AutoFilter(filterData(fIdx, 0), filterData(fIdx, 1))
         End If
     Next fIdx
+End Function
+
+
+
+Function DeleteWorksheetSilently(sheet As Worksheet)
+'xx comment
+    'Check args
+    If sheet Is Nothing Then Exit Function
+    
+    'Delete the sheet
+    Application.DisplayAlerts = False
+    sheet.Visible = xlSheetVisible 'Make visible prior to deletion to prevent errors
+    sheet.Delete
+    Application.DisplayAlerts = True
+End Function
+
+
+
+Function VirtualizeTaskSheets()
+    Dim sheet As Worksheet
+    For Each sheet In Utils.GetAllTaskSheets()
+        Call VirtualSheetUtils.StoreVirtualSheet(sheet)
+    Next sheet
+    
+    For Each sheet In VirtualSheetUtils.GetAllStorageSheets
+        sheet.Visible = xlSheetHidden
+    Next sheet
 End Function
