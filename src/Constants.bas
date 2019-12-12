@@ -23,7 +23,6 @@ Option Explicit
 Public Const DEBUGGING_MODE As Double = False
 
 
-
 'Planning sheet constants
 Public Const PLANNING_SHEET_NAME As String = "Planning"
 Public Const TASK_LIST_NAME As String = "TaskOverviewList"
@@ -42,6 +41,8 @@ Public Const TASK_NAME_INITIAL As String = "<ENTER_NAME>"
 Public Const TASK_ESTIMATE_INITIAL As String = "<ENTER_ESTIMATE>"
 Public Const TASK_PRIO_INITIAL As Long = (2 ^ 15) - 1
 Public Const CONTRIBUTOR_INITIAL As String = "Me"
+
+Public Const TASK_SHEET_STD_LINK As String = PLANNING_SHEET_NAME + "!A1"
 
 Public Const KANBAN_LIST_TODO As String = "To do"
 Public Const KANBAN_LIST_IN_PROGRESS As String = "In progress"
@@ -62,6 +63,10 @@ Public Const TASK_SHEET_TIME_LIST_IDX As Integer = 1
 Public Const TASK_SHEET_EBS_LIST_IDX As Integer = 2
 
 Public Const VELOCITY_HEADER As String = "Current Velocity"
+
+Public Const SERIALIZED_TAGS_HEADERS_HEADER As String = TAG_REGEX & " HEADERS"
+Public Const SERIALIZED_TAGS_VALUES_HEADER As String = TAG_REGEX & " VALUES"
+
 Public Const COMPARISON_ENTRY_HEADER As String = "Comparison entry no."
 Public Const SINGLE_SUPPORT_POINT_HEADER As String = "Propability support point"
 Public Const EBS_SELF_TIME_HEADER As String = "EBS self time"
@@ -152,7 +157,7 @@ Public Const COUNTED_ENTRIES_FORMAT = "000000"
 Public Const SERIALIZED_ARRAY_REGEX As String = "{*}"
 Public Const INVALID_ENTRY_PLACEHOLDER As String = "<INVALID_ENTRY>"
 
-Public Const HASH_REGEXP As String = "[\w]{18}"
+Public Const HASH_REGEXP As String = "[a-zA-Z0-9]{18}"
 
 
 
@@ -172,8 +177,14 @@ Public Const SETTINGS_HIGHLIGHT_COLOR_HEADER As String = "HighlightColor"
 Public Const SETTINGS_COMMON_COLOR_HEADER As String = "CommonColor"
 Public Const SETTINGS_LIGHT_COLOR_HEADER As String = "LightColor"
 
-Public Const CAL_ID_HEADER As String = "Calendar id"
-Public Const CAL_PATH_HEADER As String = "Calendar Path"
+Public Const CAL_ID_TEMP_HEADER As String = "Calendar ID temp"
+Public Const STORE_ID_TEMP_HEADER As String = "Store ID temp"
+
+Public Const CAL_ID_HEADER As String = "Calendar ID"
+Public Const STORE_ID_HEADER As String = "Store ID"
+Public Const CAL_PATH_TEMP_HEADER As String = "Calendar path temp"
+
+Public Const IMPORT_SHEET_HEADER As String = "ImportSheetName"
 
 
 

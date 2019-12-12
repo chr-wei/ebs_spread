@@ -24,5 +24,5 @@ Function CheckHash(hash As String) As Boolean
     Dim regex As New RegExp
 
     regex.Pattern = Constants.HASH_REGEXP
-    CheckHash = regex.Test(hash)
+    CheckHash = regex.test(hash)
 End Function

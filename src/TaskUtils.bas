@@ -25,8 +25,8 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
     Dim clickedCell As Range
     Dim sheet As Worksheet
     
-    Set clickedCell = Target.parent
-    Set sheet = clickedCell.parent
+    Set clickedCell = Target.Parent
+    Set sheet = clickedCell.Parent
     
     'No hyperlink handling for the task sheet template
     If StrComp(sheet.name, Constants.TASK_SHEET_TEMPLATE_NAME) = 0 Then Exit Function
@@ -34,6 +34,11 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
     If Target.subAddress Like Constants.PLANNING_SHEET_NAME + "!*" Then
         'Hide this sheet when clicking the link
         sheet.Visible = XlSheetVisibility.xlSheetHidden
+        
+        'On going back select the task's entry
+        Dim taskName As Range
+        Set taskName = PlanningUtils.IntersectHashAndListColumn(sheet.name, Constants.TASK_NAME_HEADER)
+        If Not taskName Is Nothing Then taskName.Select
     Else
         Dim accentColor As Long
         accentColor = SettingUtils.GetColors(ceAccentColor)
@@ -58,11 +63,54 @@ End Function
 
 Function GetTaskSheet(hash As String) As Worksheet
     'Return the task sheet to a given hash. Has a safety mechanism to always create a task sheet if no sheet could be found.
-    If SheetExists(hash) Then
+    If Utils.SheetExists(hash) Then
         Set GetTaskSheet = ThisWorkbook.Worksheets(hash)
+        
+    ElseIf VirtualSheetUtils.VirtualSheetExists(hash) Then
+    
+        Dim loadedSheet As Worksheet
+        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash)
+        
+        If Not loadedSheet Is Nothing Then
+        
+            'Hide sheet after loading
+            loadedSheet.Visible = xlSheetHidden
+            
+            'Move sheet to the correct location
+            Call loadedSheet.Move(After:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
+                        
+            'Restore sheet's column widths
+            ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME).UsedRange.Copy
+            Call loadedSheet.PasteSpecial(xlPasteColumnWidths)
+            
+            'Go back to overview worksheet as loading the virtual sheet jumps to the new sheet
+            ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
+        
+            'Copy the sheet's code from TaskSheetTemplate
+            Dim codeCopy As VBIDE.CodeModule
+            Dim codePaste As VBIDE.CodeModule
+            Dim numLines As Integer
+        
+            Set codeCopy = ThisWorkbook.VBProject.VBComponents("TaskSheetTemplate").CodeModule
+            Set codePaste = ThisWorkbook.VBProject.VBComponents(loadedSheet.CodeName).CodeModule
+            
+            numLines = codeCopy.CountOfLines
+            
+            'Use this line to erase all code from the destination sheet's code
+            If codePaste.CountOfLines > 1 Then
+                Call codePaste.DeleteLines(1, codePaste.CountOfLines)
+            End If
+            
+            Call codePaste.AddFromString(codeCopy.Lines(1, numLines))
+        End If
+        
+        Set GetTaskSheet = loadedSheet
+    
     Else
         'Add a new worksheet with HASH as name if no sheet exists
-        ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy Before:=ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME)
+        Debug.Print "Cannot find task sheet '" & hash & "'. Create new sheet as fallback."
+                
+        Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(After:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
 
         'Go back to overview worksheet as copying jumps to the new sheet
         ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
@@ -420,6 +468,13 @@ End Function
 
 
 
+Function SetTags(sheet As Worksheet, serializedTagHeaders As String, serializedTagValues As String)
+    Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER, serializedTagHeaders)
+    Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_VALUES_HEADER, serializedTagValues)
+End Function
+
+
+
 Function GetLastEndTimestamp(sheet As Worksheet) As Date
     'Returns the timestamp of the last row of tracked time entries
     '
@@ -500,6 +555,17 @@ End Function
 
 
 
+Function GetName(sheet As Worksheet) As String
+    'Wrapper to get the name from the sheet. "" if name is invalid
+    '
+    'Input args:
+    '  sheet:  The task shete to retrieve the val from
+    
+    GetName = GetSingleDataCellVal(sheet, Constants.TASK_NAME_HEADER)
+End Function
+
+
+
 Function GetContributor(sheet As Worksheet) As String
     'Wrapper to get the contributor name from the sheet. "" if contributor name does not exist
     '
@@ -550,7 +616,7 @@ Function SetPlainDelta(clickedCell As Range)
     
     Const PLAIN_DELTA_FORMULA As String = "=MAX(([@[" & Constants.END_TIME_HEADER & "]]-[@[" & Constants.START_TIME_HEADER & "]])*24,0)"
     Dim taskSheet As Worksheet
-    Set taskSheet = clickedCell.parent
+    Set taskSheet = clickedCell.Parent
     
     'Get the cell to add the formula to
     Dim deltaTCell As Range
@@ -570,7 +636,7 @@ Function SetCalendarDelta(clickedCell As Range)
     '   clickedCell:    The cell a user clicked a hyperlink in (see TaskUtils.HandleFollowHyperlink)
     
     Dim taskSheet As Worksheet
-    Set taskSheet = clickedCell.parent
+    Set taskSheet = clickedCell.Parent
     Dim contributor As String
     
     contributor = TaskUtils.GetContributor(taskSheet)
