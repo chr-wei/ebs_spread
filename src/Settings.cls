@@ -53,13 +53,16 @@ End Sub
 
 
 Sub UI_ExportTasks()
+    'Export all visible tasks of planning sheet list. Data will be exported to a new workbook
     Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ExportVisibleTasks", screenUpdating:=False)
 End Sub
 
 
 
 Sub UI_ImportTasks()
+    'Import all tasks of a workbook which name is specified in the setting sheet.
     
+    'Read the workbook's name and check whether it is opened
     Dim importWorkbookName As String
     importWorkbookName = Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.IMPORT_SHEET_HEADER)
 
@@ -68,6 +71,7 @@ Sub UI_ImportTasks()
     Set sourceWb = Workbooks(importWorkbookName)
     
     If Err.Number <> 0 Then
+        'Workbook is not opened
         Debug.Print "Importing from workbook '" & importWorkbookName & "' failed."
         Err.Clear
         Exit Sub
@@ -75,5 +79,6 @@ Sub UI_ImportTasks()
         On Error GoTo 0
     End If
     
+    'Workbook available. Import tasks' data
     Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", arg1:=sourceWb, screenUpdating:=False)
 End Sub

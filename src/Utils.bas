@@ -2,7 +2,7 @@ Attribute VB_Name = "Utils"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -424,24 +424,6 @@ Function IntersectListColAndCells(sheet As Worksheet, listId As Variant, colIden
             Base.IntersectN(listCol, rowIdentifier.EntireRow)
     End If
     'Debug info
-End Function
-
-
-
-Function GetAllTaskSheets() As Collection
-    'Get all workbook sheets matching the hash pattern
-    
-    Dim taskSheets As New Collection
-    Dim sheet As Worksheet
-    
-    'Get task sheets (they have a hash set as their name)
-    For Each sheet In ThisWorkbook.Worksheets
-        If CheckHash(sheet.name) Then
-            Call taskSheets.Add(sheet)
-        End If
-    Next sheet
-
-    Set GetAllTaskSheets = taskSheets
 End Function
 
 
@@ -1170,7 +1152,11 @@ End Function
 
 
 Function DeleteWorksheetSilently(sheet As Worksheet)
-'xx comment
+    'Delete a worksheet without warning. Make sure to unhide it first. Otherwise deletion will fail
+    '
+    'Input args:
+    '   sheet:  Sheet you want to delete
+    
     'Check args
     If sheet Is Nothing Then Exit Function
     
@@ -1179,17 +1165,4 @@ Function DeleteWorksheetSilently(sheet As Worksheet)
     sheet.Visible = xlSheetVisible 'Make visible prior to deletion to prevent errors
     sheet.Delete
     Application.DisplayAlerts = True
-End Function
-
-
-
-Function VirtualizeTaskSheets()
-    Dim sheet As Worksheet
-    For Each sheet In Utils.GetAllTaskSheets()
-        Call VirtualSheetUtils.StoreVirtualSheet(sheet)
-    Next sheet
-    
-    For Each sheet In VirtualSheetUtils.GetAllStorageSheets
-        sheet.Visible = xlSheetHidden
-    Next sheet
 End Function

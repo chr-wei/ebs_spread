@@ -10,7 +10,7 @@ Attribute VB_Exposed = True
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -85,8 +85,8 @@ Sub UI_CopyTask()
         newHash = CreateHashString("t")
         'Call this function with events to copy the task data from worksheet to task sheet immediately
         'Only call with disabled events to not mix up the cell validation values
-        Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=CopySource.ceCopyFromPlanningList, arg3:=copiedHash, _
-        enableEvt:=False, screenUpdating:=False
+        Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=copiedHash, _
+            enableEvt:=False, screenUpdating:=False
         
         'Select the new task
         Dim copiedCell As Range
@@ -202,12 +202,6 @@ End Sub
 
 
 
-Sub UI_VirtualizeTaskSheets()
-    Call Utils.RunTryCatchedCall(f:="Utils.VirtualizeTaskSheets", screenUpdating:=False)
-End Sub
-
-
-
 Function HandleChanges(Target As Range)
     'Main cell value change handler. The function checks if a cell of the planning list object was edited. In addition some special
     'cells above the list are checked as well.
@@ -264,6 +258,8 @@ Function HandleChanges(Target As Range)
             Call ManageEbsColChange(Target)
         Case DUE_DATE_HEADER
             Call ManageDueDateChange(Target)
+        Case TASK_FINISHED_ON_HEADER
+            Call ManageFinishedOnDateChange(Target)
         Case CONTRIBUTOR_HEADER
             Call ManageContributorChange(Target)
         Case T_HASH_HEADER:
@@ -357,7 +353,7 @@ End Function
 
 
 
-Function ManageEstimateChange(changedCell As Range)
+Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates As Boolean = True)
     'Manage the change of the user's estimate. Multiple things are done here.
     ' (1) Estimate is copied to task sheet
     ' (1.1) But prior to copying it it is check for its type and validity.
@@ -438,18 +434,25 @@ Function ManageEstimateChange(changedCell As Range)
         'Adjust formatting of the planning sheet cell to display the enterd value correctly
         Select Case ues
             Case UserEstimateStatus.ceValidHours
-                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(enteredVal))
+                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(enteredVal), setNewEbsEstimates)
                 changedCell.Value = outputVal
                 changedCell.NumberFormat = "0.00"
                 
             Case UserEstimateStatus.ceInvalid
-                'Value was malformed. Set placeholder to cells and append malformed val
-                Dim invalidPlaceholder As String
-                invalidPlaceholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
-            
-                changedCell.Value = invalidPlaceholder
+                Dim placeholder As String
+                
+                Select Case enteredVal
+                    Case Constants.N_A, ""
+                        'Just leave it N/A
+                        placeholder = Constants.N_A
+                    Case Else
+                        'Value was malformed and not empty or N/A. Set placeholder to cells and append shortened malformed val
+                        placeholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
+                End Select
+                
+                changedCell.Value = placeholder
                 changedCell.NumberFormat = "General"
-                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), invalidPlaceholder)
+                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), placeholder, setNewEbsEstimates)
         End Select
     End If
 End Function
@@ -463,7 +466,7 @@ End Function
 
 
 
-Function ManageKanbanListChange(changedCell As Range)
+Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnDate As Boolean = True)
     'Handle the 'status' change of a task.
     
     Dim hash As String
@@ -471,7 +474,10 @@ Function ManageKanbanListChange(changedCell As Range)
     If Not CheckHash(hash) Then Exit Function
     
     'Set the value to the task sheet
-    Call TaskUtils.SetKanbanList(TaskUtils.GetTaskSheet(hash), changedCell.Value)
+    Dim sheet As Worksheet
+    Set sheet = TaskUtils.GetTaskSheet(hash)
+    
+    Call TaskUtils.SetKanbanList(sheet, changedCell.Value)
                 
     Dim finishedOnCell As Range
     Set finishedOnCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
@@ -484,27 +490,49 @@ Function ManageKanbanListChange(changedCell As Range)
             If PlanningUtils.IsTaskTracking(changedCell) Then
                 Call PlanningUtils.EndAllTasks
             End If
+                      
+            prioCell.Value = Constants.N_A
+                
+        Case Else
+            'Set a priority if no proper value is set
+            If Not IsNumeric(prioCell.Value) Then
+                prioCell.Value = Constants.TASK_PRIO_INITIAL
+            End If
+    End Select
+    
+    'Change the finished on date depending on the kanban list value
+    If changeFinishedOnDate Then
+        Select Case (changedCell.Value)
+            Case Constants.KANBAN_LIST_DONE
             
             'When the task is changed to 'done' the end time stamp in the sheet can be set. It is set to the last
             'time the user tracked time for this task. If no time was tracked the time stamp is set to 'Now'
+            'The handling of finished on time can be turned of
+                
             Dim lastStamp As Double
-            lastStamp = CDbl(TaskUtils.GetLastEndTimestamp(TaskUtils.GetTaskSheet(hash)))
+            lastStamp = CDbl(TaskUtils.GetLastEndTimestamp(sheet))
                 
+            Dim datee As Date
+                    
             If lastStamp <> 0 Then
-                finishedOnCell.Value = CDate(lastStamp)
+                datee = CDate(lastStamp)
             Else
-                finishedOnCell.Value = CDate(Now)
+                datee = CDate(Now)
             End If
-                prioCell.Value = Constants.N_A
                 
-        Case Else
-            'The task is active again: Delete finished on date and set high priority to move up the task
-            finishedOnCell.Value = Constants.N_A
-            prioCell.Value = Constants.TASK_PRIO_INITIAL
-    End Select
-    
+            finishedOnCell.Value = datee
+            
+            Case Else
+                'The task is active again: Delete finished on date
+                finishedOnCell.Value = Constants.N_A
+        End Select
+        
+        'Manage finished on date change for planning and task sheet manually
+        Call Planning.ManageFinishedOnDateChange(finishedOnCell)
+    End If
+  
     'Sort the priority column
-    PlanningUtils.OrganizePrioColumn
+    Call PlanningUtils.OrganizePrioColumn
 End Function
 
 
@@ -529,6 +557,7 @@ End Function
 
 
 Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boolean = True)
+    'Store tags inside the task sheet and update the list validation if tag changes
     
     'Store all tags in the corresponding task sheet
     Dim hash As String
@@ -568,13 +597,15 @@ End Function
 
 
 
-Function ManageContributorChange(changedCell As Range, Optional setCellValidation As Boolean = True)
+Function ManageContributorChange(changedCell As Range, Optional setCellValidation As Boolean = True, Optional setNewEbsEstimates As Boolean = True)
     'Mange the contributor change
     '
     'Input args:
     '   changedCell:            The cell a contributor's name got changed in
     '   setCellValueValidation: If true the data validation list will be updated. In some cases this leads to a fail of cell column validation. Therefore
     '                           updating the list can be prevented.
+    '   setNewEbsEstimates:     If true new estimates for the current task will be set based on the current velocity pool of the contributor.
+    
     Dim hash As String
     hash = GetTaskHash(changedCell)
     If Not CheckHash(hash) Then Exit Function
@@ -592,23 +623,64 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
         Call Utils.SetCellValuesForValidation(contributorCells)
     End If
     
-    'If the contributor changes the database for estimates changes as well. Recalculate
-    Dim sheet As Worksheet
-    Set sheet = TaskUtils.GetTaskSheet(hash)
-    Call TaskUtils.SetEbsEstimates(sheet, TaskUtils.GetEstimate(sheet))
+    If setNewEbsEstimates Then
+        'If the contributor changes the database for estimates changes as well. Recalculate
+        Dim sheet As Worksheet
+        Set sheet = TaskUtils.GetTaskSheet(hash)
+        Call TaskUtils.SetEbsEstimates(sheet, TaskUtils.GetEstimate(sheet))
+    End If
 End Function
 
 
 
 Function ManageDueDateChange(changedCell As Range)
     'Copy the due date to the task sheet
-    If Not IsDate(changedCell.Value) Then
-        Exit Function
-    End If
     
     Dim hash As String
     hash = GetTaskHash(changedCell)
     If CheckHash(hash) Then
-        Call TaskUtils.SetDueDate(TaskUtils.GetTaskSheet(hash), CDate(changedCell.Value))
+        Dim sheet As Worksheet
+        Set sheet = TaskUtils.GetTaskSheet(hash)
+        
+        If IsDate(changedCell.Value) Then
+            Call TaskUtils.SetDueDate(sheet, CDate(changedCell.Value))
+        Else
+            Select Case changedCell.Value
+                Case "", Constants.N_A
+                    changedCell.Value = Constants.N_A
+                Case Else
+                    'The cell content was set neither to a date nor to N/A
+                    changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+            End Select
+            
+            Call TaskUtils.UnsetDueDate(sheet)
+        End If
+    End If
+End Function
+
+
+
+Function ManageFinishedOnDateChange(changedCell As Range)
+    'Copy the finished on date to the task sheet
+    
+    Dim hash As String
+    hash = GetTaskHash(changedCell)
+    If CheckHash(hash) Then
+        Dim sheet As Worksheet
+        Set sheet = TaskUtils.GetTaskSheet(hash)
+        
+        If IsDate(changedCell.Value) Then
+            Call TaskUtils.SetFinishedOnDate(sheet, CDate(changedCell.Value))
+        Else
+            Select Case changedCell.Value
+                Case "", Constants.N_A
+                    changedCell.Value = Constants.N_A
+                Case Else
+                    'The cell content was set neither to a date nor to N/A
+                    changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+            End Select
+            
+            Call TaskUtils.UnsetFinishedOnDate(sheet)
+        End If
     End If
 End Function

@@ -2,7 +2,7 @@ Attribute VB_Name = "Constants"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -66,6 +66,7 @@ Public Const VELOCITY_HEADER As String = "Current Velocity"
 
 Public Const SERIALIZED_TAGS_HEADERS_HEADER As String = TAG_REGEX & " HEADERS"
 Public Const SERIALIZED_TAGS_VALUES_HEADER As String = TAG_REGEX & " VALUES"
+Public Const TASK_SHEET_COUNT_LIMIT As Integer = 5
 
 Public Const COMPARISON_ENTRY_HEADER As String = "Comparison entry no."
 Public Const SINGLE_SUPPORT_POINT_HEADER As String = "Propability support point"

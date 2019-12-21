@@ -2,7 +2,7 @@ Attribute VB_Name = "PlanningUtils"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -96,7 +96,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
         'Create a new task sheet
         Call TaskUtils.GetTaskSheet(newHash)
         
-        'Select the title of the created taskb
+        'Select the title of the created task
         Dim title As Range
         Set title = PlanningUtils.IntersectHashAndListColumn(newHash, Constants.TASK_NAME_HEADER)
         
@@ -138,6 +138,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Dim taskContributorCell As Range
     Dim taskHashCell As Range
     Dim taskPrioCell As Range
+    Dim taskFinishedOnCell As Range
     
     Dim newFormattedNumber As String
     Dim gotEntryData As Boolean
@@ -152,6 +153,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Set taskContributorCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, CONTRIBUTOR_HEADER, newEntryCell)
     Set taskHashCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, T_HASH_HEADER, newEntryCell)
     Set taskPrioCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, Constants.TASK_PRIORITY_HEADER, newEntryCell)
+    Set taskFinishedOnCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, Constants.TASK_FINISHED_ON_HEADER, newEntryCell)
     
     If newEntryCell Is Nothing Or _
         taskNameCell Is Nothing Or _
@@ -159,6 +161,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
         taskKanbanListCell Is Nothing Or _
         taskContributorCell Is Nothing Or _
         taskHashCell Is Nothing Or _
+        taskFinishedOnCell Is Nothing Or _
         taskPrioCell Is Nothing Then
         'Exit if a cell could not be found
         Exit Function
@@ -175,6 +178,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     taskEstimateCell.Value = Constants.TASK_ESTIMATE_INITIAL
     taskKanbanListCell.Value = Constants.KANBAN_LIST_TODO
     taskContributorCell.Value = Constants.CONTRIBUTOR_INITIAL
+    taskFinishedOnCell.Value = Constants.N_A
     
     'Add a hyperlink to the sheet which will be generated in the next step
     Dim subAddress As String
@@ -294,7 +298,7 @@ Function EndAllTasks()
 
     'Set end times in all task sheets. Multiple started task should never exist. As precaution we always stop all tasks
     'in order to maintain a healthy document
-    For Each sheet In Utils.GetAllTaskSheets()
+    For Each sheet In TaskUtils.GetAllTaskSheets()
         Call TaskUtils.SetEndTimeToSheetTracking(sheet)
     Next sheet
 
@@ -582,21 +586,17 @@ End Function
 
 
 
-Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceListHash As String, Optional sourceSheet As Worksheet)
+Function CopyTask(newHash As String, sourceListHash As String)
     'Copy a selected task with specific column values (its name, tags, priority, estimated time, comment, due date and contributor)
     '
     'Input args:
-    '   cpSource:       Switch to select copy source from: Either planning sheet list or an (external) task sheet
     '   sourceListHash: The task of the hash that you want to copy. Mandatory if copying from planning list was selected
-    '   sourceSheet:    The (external) sheet that holds data you want to copy. Mandatory if copying from source sheet was selected
     '   newHash:        The new hash that will be used for the copied task (given by value to trace the task)
     
     'Copy most of the fields of a given hash. Do not call this method with enabled events as it may have problematic consequences
         
     'Check args
-    If Not SanityChecks.CheckHash(newHash) Or _
-        (cpSource = CopySource.ceCopyFromPlanningList And Not SanityChecks.CheckHash(sourceListHash)) Or _
-        (cpSource = CopySource.ceCopyFromWorksheetData And sourceSheet Is Nothing) Then
+    If Not (SanityChecks.CheckHash(newHash) And SanityChecks.CheckHash(sourceListHash)) Then
         Exit Function
     End If
     
@@ -605,15 +605,12 @@ Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceList
         Exit Function
     End If
     
-    Dim newEntry As Range
-    
     'First add a new task and return the cell of the entry to have a reference for further copying
-    Call PlanningUtils.AddNewTask(newHash, newEntry)
-    'Debug.Print "New entry: " + newEntry.Address
+    Call PlanningUtils.AddNewTask(newHash)
     
     'Search for hash after adding the new task, because list items are reordered
     Dim existingEntry As Range
-    Set existingEntry = Utils.FindSheetCell(GetPlanningSheet, sourceListHash)
+    Set existingEntry = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, sourceListHash)
     'Debug.Print "Existing entry: " + existingEntry.Address
     
     Dim copiedFields As Variant
@@ -645,42 +642,10 @@ Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceList
         
         Dim existingVal As Variant: existingVal = ""
         
-        Select Case cpSource
-            Case CopySource.ceCopyFromPlanningList
-                existingVal = PlanningUtils.IntersectHashAndListColumn(sourceListHash, CStr(header)).Value
-                
-            Case CopySource.ceCopyFromWorksheetData
-                Select Case unifiedHeader
-                    Case TAG_REGEX
-                        Dim readSerTagHeaders As String
-                        Dim readSerTagValues As String
-                        readSerTagHeaders = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
-                        readSerTagValues = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_VALUES_HEADER)
-                        
-                        Dim readTagHeaders() As String
-                        Dim readTagValues() As String
-                        
-                        readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
-                        readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
-                        
-                        If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
-                            Dim headIdx As Integer
-                            For headIdx = 0 To UBound(readTagHeaders)
-                                If StrComp(readTagHeaders(headIdx), header) = 0 Then
-                                    existingVal = readTagValues(headIdx)
-                                    headIdx = UBound(readTagHeaders)
-                                End If
-                            Next headIdx
-                        End If
-                        
-                    Case Constants.TASK_PRIORITY_HEADER
-                        'Do nothing here when copying based on worksheet data
-                        existingVal = Constants.TASK_PRIO_INITIAL
-                    
-                    Case Else
-                        existingVal = Utils.GetSingleDataCellVal(sourceSheet, CStr(header))
-                End Select
-        End Select
+        'Read the value to be copied
+        existingVal = PlanningUtils.IntersectHashAndListColumn(sourceListHash, CStr(header)).Value
+        
+        'Now save the value to the new task and run handlers
         
         Dim cell As Range
         Set cell = PlanningUtils.IntersectHashAndListColumn(newHash, CStr(header))
@@ -689,17 +654,12 @@ Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceList
         Select Case unifiedHeader
             Case TASK_NAME_HEADER
                 'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + " (copy/import)"
+                existingVal = existingVal + " (copy)"
                 cell.Value = existingVal
                 Call Planning.HandleChanges(cell)
-                
-            Case TASK_PRIORITY_HEADER, TASK_ESTIMATE_HEADER, COMMENT_HEADER, DUE_DATE_HEADER
-                'Copy values and handle change to copy values to task sheet
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-                
+               
             Case Constants.TAG_REGEX
-                'Copy the tag
+                'Copy the tag and run handler without cell validation update. This causes cell validation to fail
                 cell.Value = existingVal
                 Call Planning.ManageTagChange(cell, False)
                 
@@ -707,6 +667,11 @@ Function CopyTask(newHash As String, cpSource As CopySource, Optional sourceList
                 'Handle contributor change without cell validation update. This causes cell validation to fail
                 cell.Value = existingVal
                 Call Planning.ManageContributorChange(cell, False)
+                                
+            Case TASK_PRIORITY_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER, TASK_ESTIMATE_HEADER
+                'Copy values and handle change to copy values to task sheet
+                cell.Value = existingVal
+                Call Planning.HandleChanges(cell)
         End Select
     Next header
     
@@ -949,6 +914,12 @@ End Function
 Function CollectEbsColData(headerCell As Range)
     'The function reads data from ebs sheet and copies it to the planning sheet.
     'Settings in the column header (propability of estimate and time or date mode) are taken into account
+    
+    'Check args
+    If headerCell Is Nothing Then Exit Function
+    
+    'Reset the column values to N/A
+    PlanningUtils.GetTaskListColumn(headerCell, ceData).Value = Constants.N_A
     
     Dim header As String
     header = headerCell.Value
@@ -1267,14 +1238,24 @@ End Function
 
 
 Function GetTagHeaderCells() As Range
+    'Returns all headers for tags
     Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
 End Function
 
 
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
+    'Read all tags of a task and return them as a serialzed string. Tag headers are returned as well if necessary
+    '
+    'Input args
+    '   hash:                   The task's hash you want to get the serialzed tags for
+    '   serializedTagHeaders:   A variable holding the serialized tag headers
+    '
+    'Output args
+    '   GetSerializedTags:      The serialized tag values
+    
     'Check args
-    If StrComp(hash, "") = 0 Then Exit Function
+    If Not SanityChecks.CheckHash(hash) Then Exit Function
     
     'Init output
     GetSerializedTags = ""
@@ -1288,6 +1269,7 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
         Dim tagHeader As Range
         Dim tag As Range
         
+        'Now add tag headers and values to separate collections which will be serialized later on
         For Each tagHeader In headers
             Set tag = PlanningUtils.IntersectHashAndListColumn(hash, tagHeader)
             
@@ -1300,7 +1282,7 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
         Next tagHeader
         
         If coV.Count > 0 Then
-            'Serialize tags
+            'Serialize tags if any tag values were found
             GetSerializedTags = Utils.SerializeArray(Base.CollectionToArray(coV))
             serializedTagHeaders = Utils.SerializeArray(Base.CollectionToArray(coH))
         End If
