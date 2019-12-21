@@ -2,7 +2,7 @@ Attribute VB_Name = "Base"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
