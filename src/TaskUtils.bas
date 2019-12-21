@@ -2,7 +2,7 @@ Attribute VB_Name = "TaskUtils"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -63,21 +63,29 @@ End Function
 
 Function GetTaskSheet(hash As String) As Worksheet
     'Return the task sheet to a given hash. Has a safety mechanism to always create a task sheet if no sheet could be found.
+    
+    'Getting a task sheet may load it from a virtual sheet storage. Many open sheets inside a workbook have been found to consume
+    'a lot of ram memory. Virtualize them to prevent memory problems
+    If TaskUtils.GetAllTaskSheets.Count > Constants.TASK_SHEET_COUNT_LIMIT Then
+        Call TaskUtils.VirtualizeTaskSheets
+        Debug.Print "Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage."
+    End If
+    
     If Utils.SheetExists(hash) Then
         Set GetTaskSheet = ThisWorkbook.Worksheets(hash)
         
     ElseIf VirtualSheetUtils.VirtualSheetExists(hash) Then
-    
+        
+        'Load the virtual sheet to a new sheet and use task sheet as template (will copy sheet code as well)
         Dim loadedSheet As Worksheet
-        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash)
+        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
         
         If Not loadedSheet Is Nothing Then
-        
             'Hide sheet after loading
             loadedSheet.Visible = xlSheetHidden
             
             'Move sheet to the correct location
-            Call loadedSheet.Move(After:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
+            Call loadedSheet.Move(after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
                         
             'Restore sheet's column widths
             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME).UsedRange.Copy
@@ -85,23 +93,6 @@ Function GetTaskSheet(hash As String) As Worksheet
             
             'Go back to overview worksheet as loading the virtual sheet jumps to the new sheet
             ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
-        
-            'Copy the sheet's code from TaskSheetTemplate
-            Dim codeCopy As VBIDE.CodeModule
-            Dim codePaste As VBIDE.CodeModule
-            Dim numLines As Integer
-        
-            Set codeCopy = ThisWorkbook.VBProject.VBComponents("TaskSheetTemplate").CodeModule
-            Set codePaste = ThisWorkbook.VBProject.VBComponents(loadedSheet.CodeName).CodeModule
-            
-            numLines = codeCopy.CountOfLines
-            
-            'Use this line to erase all code from the destination sheet's code
-            If codePaste.CountOfLines > 1 Then
-                Call codePaste.DeleteLines(1, codePaste.CountOfLines)
-            End If
-            
-            Call codePaste.AddFromString(codeCopy.Lines(1, numLines))
         End If
         
         Set GetTaskSheet = loadedSheet
@@ -110,18 +101,36 @@ Function GetTaskSheet(hash As String) As Worksheet
         'Add a new worksheet with HASH as name if no sheet exists
         Debug.Print "Cannot find task sheet '" & hash & "'. Create new sheet as fallback."
                 
-        Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(After:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
+        Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
 
         'Go back to overview worksheet as copying jumps to the new sheet
         ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
 
         Dim sheet As Worksheet
-        Set sheet = ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME & " (2)")
+        Set sheet = ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME & " (2)")
         sheet.name = hash
 
         Call TaskUtils.SetHash(sheet, hash)
         Set GetTaskSheet = sheet
     End If
+End Function
+
+
+
+Function GetAllTaskSheets() As Collection
+    'Get all workbook sheets matching the hash pattern
+    
+    Dim taskSheets As New Collection
+    Dim sheet As Worksheet
+    
+    'Get task sheets (they have a hash set as their name)
+    For Each sheet In ThisWorkbook.Worksheets
+        If SanityChecks.CheckHash(sheet.name) Then
+            Call taskSheets.Add(sheet)
+        End If
+    Next sheet
+
+    Set GetAllTaskSheets = taskSheets
 End Function
 
 
@@ -321,19 +330,28 @@ End Function
 
 
 
-Function SetEstimate(sheet As Worksheet, userEstimate As Variant)
+Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
     'Wrapper to set the user estimate to the task sheet
     'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheet for consistency reasons.
+    '
+    'Input args:
+    '   sheet:              The task sheet you want to set an estimate to
+    '   userEstimate:       The estimate value
+    '   setNewEbsEstimates: Flag stating whether new EBS estimates based on the current velocity pool of the contributor shall be calculated.
+    '                       These estimates can be used to check the EBS estimate mechanism
     
     Call Utils.SetSingleDataCell(sheet, TASK_ESTIMATE_HEADER, userEstimate)
-    If IsNumeric(userEstimate) Then
-        Call TaskUtils.SetEbsEstimates(sheet, CDbl(userEstimate))
-    Else
-        'Clear the ebs list entries if invalid data was passed
-        Dim br As Range
-        Set br = TaskUtils.GetEbsListBodyRange(sheet)
-        
-        If Not br Is Nothing Then br.Delete
+    
+    If setNewEbsEstimates Then
+        If IsNumeric(userEstimate) Then
+            Call TaskUtils.SetEbsEstimates(sheet, CDbl(userEstimate))
+        Else
+            'Clear the ebs list entries if invalid data was passed
+            Dim br As Range
+            Set br = TaskUtils.GetEbsListBodyRange(sheet)
+            
+            If Not br Is Nothing Then br.Delete
+        End If
     End If
 End Function
 
@@ -420,7 +438,7 @@ Function GetTimeListBodyRange(sheet As Worksheet) As Range
     
     'Init output
     Set GetTimeListBodyRange = Nothing
-    
+
     'Get the ebs data data table / list object
     Dim lo As ListObject
     Set lo = sheet.ListObjects(Constants.TASK_SHEET_TIME_LIST_IDX)
@@ -456,8 +474,20 @@ End Function
 
 
 
+Function UnsetDueDate(sheet As Worksheet)
+    Call Utils.SetSingleDataCell(sheet, Constants.DUE_DATE_HEADER, Constants.N_A)
+End Function
+
+
+
 Function SetFinishedOnDate(sheet As Worksheet, datee As Date)
     Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, datee)
+End Function
+
+
+
+Function UnsetFinishedOnDate(sheet As Worksheet)
+    Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, Constants.N_A)
 End Function
 
 
@@ -735,5 +765,25 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
         'Add the hyperlinks which will be catched by an 'TaskUtils.HandleFollowHyperlink'
         Call Utils.AddSubtileHyperlink(actionOneCell, actionOneCell.Address)
         Call Utils.AddSubtileHyperlink(actionTwooCell, actionTwooCell.Address)
+        
+        'Set color for first action cell: Plain delta calc
+        Call TaskUtils.SetClickActionHighlight(sheet, actionOneCell)
     End If
 End Function
+
+
+
+Function VirtualizeTaskSheets()
+    'Store all task sheets to a virtual storage sheet to prevent excessive memory (ram) consumption
+    
+    Dim sheet As Worksheet
+    For Each sheet In TaskUtils.GetAllTaskSheets()
+        Call VirtualSheetUtils.StoreVirtualSheet(sheet)
+    Next sheet
+    
+    'We do not want to see the storage sheet(s). Hide it / them.
+    For Each sheet In VirtualSheetUtils.GetAllStorageSheets
+        sheet.Visible = xlSheetHidden
+    Next sheet
+End Function
+
