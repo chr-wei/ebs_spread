@@ -2,7 +2,7 @@ Attribute VB_Name = "EbsUtils"
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based design (EBS) approach by Joel Spolsky.
 '
-'  Copyright (C) 2019  Christian Weihsbach
+'  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
 '  it under the terms of the GNU General Public License as published by
 '  the Free Software Foundation; either version 3 of the License, or
@@ -362,7 +362,7 @@ Function GetEbsSheet(contributor As String) As Worksheet
         Set GetEbsSheet = ThisWorkbook.Worksheets(BuildContributorSheetName(contributor))
     Else
         'Add a new worksheet if no worksheet exists
-        ThisWorkbook.Worksheets(Constants.EBS_SHEET_TEMPLATE_NAME).Copy After:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME)
+        ThisWorkbook.Worksheets(Constants.EBS_SHEET_TEMPLATE_NAME).Copy after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME)
     
         'Go back to overview worksheet as copying jumps to the new sheet
         ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate

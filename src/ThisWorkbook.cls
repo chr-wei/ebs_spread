@@ -10,16 +10,13 @@ Attribute VB_Exposed = True
 Option Explicit
 
 
-Private Sub Workbook_BeforeClose(Cancel As Boolean)
+Private Sub Workbook_Deactivate()
     Call DeleteShortcuts
-    
-    'Move all tasks to virtual sheets prior to closing the workbook. This prevents high memory usage on next start.
-    Call Planning.UI_VirtualizeTaskSheets
 End Sub
 
 
 
-Private Sub Workbook_Open()
+Private Sub Workbook_Activate()
     Call CreateShortcuts
 End Sub
 
