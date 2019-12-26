@@ -232,7 +232,11 @@ code {
   background-color: $accent-color;
   color: $background-color;
   padding: 2px 5px;
-  border-radius: 2px
+  border-radius: 2px;
+  &--highlight {
+    @extend code;
+    background-color: #e61e67;
+  }
 }
 
 ::selection {
