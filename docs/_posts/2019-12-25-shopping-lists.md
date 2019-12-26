@@ -1,8 +1,8 @@
 ---
-title: Projects are shopping lists - Compose a list of tasks
-date: 2019-12-25 00:00:00 am
+title: Compose a list of items / tasks
+date: 2019-12-25 03:00:00 pm
 description: Learn how to add, remove and tag tasks
-featured_image: '/images/blog/valley_journey.jpg'
+featured_image: '/images/blog/blowball.jpg'
 ---
 ### General info
 For every task a new row is created in the task list inside the *Planning* sheet.
