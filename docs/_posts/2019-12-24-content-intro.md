@@ -24,7 +24,7 @@ Let's explore features while imaging we're on a nice shopping trip at the market
 
 1. How to use the workbook:
 * Projects are shopping lists: <a href="{{'/blog/shopping-lists' | relative_url}}">Compose a list of items / tasks</a>
-* Collect one item after another: <a href="{{'/blog/order-tasks' | relative_url}}">Get your tasks in order</a>
+* Collect one item after another: <a href="{{'/blog/sort-tasks' | relative_url}}">Get your tasks in order</a>
 * Waste time while shopping: <a href="{{'/blog/track-time' | relative_url}}">How to track the work you're doing</a>
 * Use the force: <a href="{{'/blog/ebs-force' | relative_url}}">Evidence based sheduling in a nutshell</a>
 * Connect your calendar: Let's create dates and talk to the MS Project-world
