@@ -25,8 +25,8 @@ post_settings:
   grid_spacing: 10
 
 contact_settings:
-  email_address: 'hello@jekyllthemes.io'
-  form_action: 'https://formspree.io/hello@jekyllthemes.io'
+  email_address: 'rrap1ide@gmail.com'
+  form_action: 'https://formspree.io/rrap1ide@gmail.com'
   confirmation_url: '/thanks'
   email_subject: 'Contact form submission'
   send_button_text: 'Mail me your thoughts'
