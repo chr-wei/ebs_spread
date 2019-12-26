@@ -5,19 +5,19 @@ description: See how to prioritize your tasks
 featured_image: '/images/blog/search.jpg'
 ---
 
-After adding all tasks you should prioritize and order them to decide what to do first.
+After adding all tasks you should prioritize and arrange them in order to decide what to do first.
 Every tasks has a unique priority value - there are no tasks with the same priority.
 This determines the task queue for all applied algorithms and time and date calculation.
 
 ### Prioritizing tasks
 
-Tags that were also mentioned in the last post become useful if tasks have to be reordered or sorted. A selected task can be 
+A selected task can be 
 
 shifted up by hitting *CTRL-ALT-+* 
 
 and shifted down by hitting *CTRL-ALT--*
 
-Shifting up- or downwards means adjusting the priority of the task. If a tag is selected and multiple tasks are highlighted all highlighted tasks will be shifted accordingly. Shifting down the selected tag `Food products` ...
+Shifting up- or downwards means adjusting the priority of the task. If a tag is selected and multiple tasks are highlighted, all highlighted tasks will be shifted accordingly. Shifting down the selected tag `Food products` ...
 
 | Task no. | Task name                        | %Tag 1 | %Tag 2      | %Tag 3    |
 |----------|----------------------------------|--------|-------------|-----------|
