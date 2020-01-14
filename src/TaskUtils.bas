@@ -359,10 +359,18 @@ End Function
 
 Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
         'Populate the list of ebs estimates at the task sheet for the given user estimate.
+        'Estimates are based on velo pool of last successful contributor ebs run
         '
         'Input args:
         '  sheet: The task sheet one wants to add the data to
         '  userEstimate: The user estimate one wants to get propable finish times for by using the ebs algorithm
+        
+        'Check args
+        If sheet Is Nothing Or userEstimate = -1 Then Exit Function
+        
+        'Store name to re-read sheet later again. See comment below
+        Dim tHash As String
+        tHash = sheet.name
         
         'Clear list of ebs estimates first
         Dim br As Range
@@ -370,14 +378,30 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
         
         If Not br Is Nothing Then br.Delete
         
-        'Read the name of the contributor to select the correct velocity pool later on
+        'Read the name of the contributor to select the latest calculated velocity pool later on
         Dim contributor As String
         contributor = Utils.GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
-        
         If StrComp(contributor, "") = 0 Then Exit Function
         
+        Dim ebsSheet As Worksheet
+        Set ebsSheet = EbsUtils.GetEbsSheet(contributor)
+        If ebsSheet Is Nothing Then Exit Function
+        
+        Dim eHash As String
+        eHash = EbsUtils.GetLatestEbsRun(ebsSheet)
+        If Not SanityChecks.CheckHash(eHash) Then Exit Function
+        
+        Dim eHashCol As Range
+        Set eHashCol = EbsUtils.GetEbsMainListColumn(ebsSheet, Constants.EBS_HASH_HEADER, ceData)
+        
+        'Get the rundata entry in ebs sheet with the current hash
+        Dim veloPoolCell As Range
+        Set veloPoolCell = EbsUtils.IntersectEbsMainListColumn(ebsSheet, Constants.EBS_VELOCITY_POOL_HEADER, Base.FindAll(eHashCol, eHash))
+        
+        If veloPoolCell Is Nothing Then Exit Function
+        
         Dim contribPool() As Double
-        contribPool = EbsUtils.GenVelocityPool(contributor, Constants.EBS_VELOCITY_POOL_SIZE)
+        contribPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(veloPoolCell.Value))
         
         If Not Base.IsArrayAllocated(contribPool) Then Exit Function
         
