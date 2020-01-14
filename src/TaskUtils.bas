@@ -384,7 +384,8 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
         If StrComp(contributor, "") = 0 Then Exit Function
         
         Dim ebsSheet As Worksheet
-        Set ebsSheet = EbsUtils.GetEbsSheet(contributor)
+        'Only return sheet if it exists (no fallback)
+        Set ebsSheet = EbsUtils.GetEbsSheet(contributor, False)
         If ebsSheet Is Nothing Then Exit Function
         
         Dim eHash As String

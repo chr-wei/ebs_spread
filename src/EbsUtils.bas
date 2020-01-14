@@ -352,15 +352,19 @@ End Function
 
 
 
-Function GetEbsSheet(contributor As String) As Worksheet
+Function GetEbsSheet(contributor As String, Optional fallback As Boolean = True) As Worksheet
     'This function adds a new contributor EBS / sheduling sheet if not existing or returns a reference to an existing sheet.
     '
     'Input args:
-    '  contributors: Array containing all the names of contributors for which an EBS sheet is needed.
-        
+    '  contributor:  Contributor name for which an ebs sheet shall be returned
+    '  fallback:     Boolean stating whether a fallback sheet shall be created if no existing one is found
+    '
+    'Output args:
+    '  GetEbsSheet:  Contributor's ebs sheet
+    
     If Utils.SheetExists(BuildContributorSheetName(contributor)) Then
         Set GetEbsSheet = ThisWorkbook.Worksheets(BuildContributorSheetName(contributor))
-    Else
+    ElseIf fallback Then
         'Add a new worksheet if no worksheet exists
         ThisWorkbook.Worksheets(Constants.EBS_SHEET_TEMPLATE_NAME).Copy after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME)
     
