@@ -190,7 +190,7 @@ End Sub
 
 Sub UI_RunEbs()
     'THE main feature. Run all the steps to get evidence based sheduling data and charts for every contributor.
-    Utils.RunTryCatchedCall f:="EbsUtils.RunEbs"
+    Utils.RunTryCatchedCall f:="EbsUtils.RunEbs", screenUpdating:=False
 End Sub
 
 

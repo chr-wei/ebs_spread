@@ -1063,12 +1063,13 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
         End If
         
         'Set restriction to not use appointments with a specificied 'blocker category'(marks that the appointment is used to get work done)
-        Dim blockerCat As String
-        blockerCat = SettingUtils.GetContributorGetWorkDoneCat(contributor)
+        '### Blocker categories are not working right now. Will be implemented in a later release
+        'Dim blockerCat As String
+        'blockerCat = SettingUtils.GetContributorGetWorkDoneCat(contributor)
         
-        If StrComp(blockerCat, "") <> 0 Then
-            restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
-        End If
+        'If StrComp(blockerCat, "") <> 0 Then
+            'restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
+        'End If
           
         'Filter the items according to their restrictions
         Set filteredItems = filteredItems.Restrict(restriction)
