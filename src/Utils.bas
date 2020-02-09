@@ -531,6 +531,9 @@ Function ConvertRangeValsToArr(rng As Range) As String()
     'Output args:
     '   ConvertRangeValsToArr:   The array with values
     
+    'Check args
+    If rng Is Nothing Then Exit Function
+    
     Dim rngCell As Range
     Dim rngValues() As String
     ReDim Preserve rngValues(rng.Count - 1)
@@ -617,7 +620,7 @@ Function DeserializeArray(serialized As String) As Variant
     
     serialized = Replace(serialized, "{", "")
     serialized = Replace(serialized, "}", "")
-    deserialized = split(serialized, ";")
+    deserialized = Split(serialized, ";")
     
     DeserializeArray = deserialized
 End Function
@@ -714,24 +717,7 @@ Function InterpolateArray(arrX() As Double, arrY() As Double, supportPoints As V
     copiedArrX = arrX
     Dim copiedArrY() As Double
     copiedArrY = arrY
-    
-    Dim point As Variant
-    If supportIsArray Then
-        For Each point In supportPoints
-            'Insert the support points into the array
-            ReDim Preserve copiedArrX(UBound(copiedArrX) + 1)
-            copiedArrX(UBound(copiedArrX)) = CDbl(point)
-            
-            ReDim Preserve copiedArrY(UBound(copiedArrY) + 1)
-            copiedArrY(UBound(copiedArrY)) = 0#
-        Next point
-    Else
-        ReDim Preserve copiedArrX(UBound(copiedArrX) + 1)
-        copiedArrX(UBound(copiedArrX)) = CDbl(supportPoints)
-        ReDim Preserve copiedArrY(UBound(copiedArrY) + 1)
-        copiedArrY(UBound(copiedArrY)) = 0#
-    End If
-    
+
     Call Base.QuickSort(copiedArrX, ceAscending, , , copiedArrY)
         
     'Data prepared now start calculating the interpolated values
@@ -763,24 +749,24 @@ Function InterpolateArray(arrX() As Double, arrY() As Double, supportPoints As V
             currentSupPoint = supportPoints
         End If
         
-        searchIdx = 0
+        searchIdx = LBound(copiedArrX)
         
         'Search for the inserted support points
-        While copiedArrX(searchIdx) <> currentSupPoint
+        While copiedArrX(searchIdx) < currentSupPoint And searchIdx < UBound(copiedArrX)
             searchIdx = searchIdx + 1
         Wend
         
-        If searchIdx = 0 Then
-            xSpan = copiedArrX(2) - copiedArrX(1)
-            ySpan = copiedArrY(2) - copiedArrY(1)
-            xRef = copiedArrX(1)
-            yRef = copiedArrY(1)
+        If searchIdx = LBound(copiedArrX) Then
+            xSpan = copiedArrX(LBound(copiedArrX) + 1) - copiedArrX(LBound(copiedArrX))
+            ySpan = copiedArrY(LBound(copiedArrY) + 1) - copiedArrY(LBound(copiedArrY))
+            xRef = copiedArrX(LBound(copiedArrX))
+            yRef = copiedArrY(LBound(copiedArrY))
             
         ElseIf searchIdx = UBound(copiedArrX) Then
-            xSpan = copiedArrX(UBound(copiedArrX) - 1) - copiedArrX(UBound(copiedArrX) - 2)
-            ySpan = copiedArrY(UBound(copiedArrY) - 1) - copiedArrY(UBound(copiedArrY) - 2)
-            xRef = copiedArrX(UBound(copiedArrX) - 1)
-            yRef = copiedArrY(UBound(copiedArrY) - 1)
+            xSpan = copiedArrX(UBound(copiedArrX)) - copiedArrX(UBound(copiedArrX) - 1)
+            ySpan = copiedArrY(UBound(copiedArrY)) - copiedArrY(UBound(copiedArrY) - 1)
+            xRef = copiedArrX(UBound(copiedArrX))
+            yRef = copiedArrY(UBound(copiedArrY))
         Else
             xSpan = copiedArrX(searchIdx + 1) - copiedArrX(searchIdx - 1)
             ySpan = copiedArrY(searchIdx + 1) - copiedArrY(searchIdx - 1)
@@ -795,9 +781,6 @@ Function InterpolateArray(arrX() As Double, arrY() As Double, supportPoints As V
         Else
             interpolatedY(0) = cal
         End If
-        
-        'Insert the value into the y array as well to have consistent data for the next run
-        copiedArrY(searchIdx) = cal
     Next interpolateIdx
     
     InterpolateArray = interpolatedY
@@ -862,12 +845,21 @@ Function CopyVarArrToDoubleArr(varArr As Variant) As Double()
     For elemIdx = 0 To UBound(varArr) - LBound(varArr)
         If GetArrayDimension(varArr) > 1 Then
             'If you read value of multiple cells the arrays have more than one dimension - catch that here
-            doubleArr(elemIdx) = CDbl(varArr(elemIdx + 1, LBound(varArr)))
+            varVal = varArr(elemIdx + 1, LBound(varArr))
         Else
-            doubleArr(elemIdx) = CDbl(varArr(elemIdx))
+            varVal = varArr(elemIdx)
+        End If
+        
+        'Check double conversion
+        If IsNumeric(varVal) Or IsDate(varVal) Then
+            'Works for Strings and numbers
+            doubleArr(elemIdx) = varVal
+        Else
+            Erase doubleArr
+            Exit Function
         End If
     Next elemIdx
-    
+
     CopyVarArrToDoubleArr = doubleArr
 End Function
 
@@ -894,11 +886,21 @@ Function CopyVarArrToDateArr(varArr As Variant) As Date()
     Dim elemIdx As Integer
     
     For elemIdx = 0 To UBound(varArr) - LBound(varArr)
-        If GetArrayDimension(varArr) > 1 Then
+        
+        If Base.GetArrayDimension(varArr) > 1 Then
             'If you read value of multiple cells the arrays have more than one dimension - catch that here
-            dateArr(elemIdx) = CDate(varArr(elemIdx + 1, LBound(varArr)))
+            varVal = varArr(elemIdx + 1, LBound(varArr))
         Else
-            dateArr(elemIdx) = CDate(varArr(elemIdx))
+            varVal = varArr(elemIdx)
+        End If
+        
+        'Check date conversion
+        If IsNumeric(varVal) Or IsDate(varVal) Then
+            'Works for Strings and numbers
+            dateArr(elemIdx) = varVal
+        Else
+            Erase dateArr
+            Exit Function
         End If
     Next elemIdx
     

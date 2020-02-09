@@ -47,7 +47,7 @@ End Enum
 
 Private Sub Worksheet_SelectionChange(ByVal Target As Range)
     'Run a catched call to the main selection handler method in this sheet
-    Utils.RunTryCatchedCall f:="HandleSelectionChanges", obj:=Planning, arg1:=Target, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="HandleSelectionChanges", obj:=Planning, arg1:=Target, screenUpdating:=False)
 End Sub
 
 
@@ -61,14 +61,14 @@ End Sub
 
 Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
     'Run a catched call to the hyperlink handler method in this sheet
-    Utils.RunTryCatchedCall f:="PlanningUtils.FollowTaskSheetLink", arg1:=Target
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.FollowTaskSheetLink", arg1:=Target, screenUpdating:=False)
 End Sub
 
 
 
 Sub UI_AddNewTask()
     'Add a new task
-    Utils.RunTryCatchedCall f:="PlanningUtils.AddNewTask", enableEvt:=False, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddNewTask", enableEvt:=False, screenUpdating:=False)
 End Sub
 
 
@@ -102,7 +102,7 @@ End Sub
 
 Sub UI_DeleteSelectedTask()
     'Delete the entire task (cannot be undone). Delete the task sheet (named by tHash) and the task row entry in the planning sheet
-    Utils.RunTryCatchedCall f:="PlanningUtils.DeleteSelectedTask", screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.DeleteSelectedTask", screenUpdating:=False)
 End Sub
 
 
@@ -116,7 +116,7 @@ End Sub
 
 Sub UI_StartSelectedTask()
     'Track the selected task (add timestamp)
-    Utils.RunTryCatchedCall f:="PlanningUtils.StartSelectedTask", screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.StartSelectedTask", screenUpdating:=False)
 End Sub
 
 
@@ -128,7 +128,7 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
     hash = GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0.25), screenUpdating:=False
+        Call Utils.RunTryCatchedCall(f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0.25), screenUpdating:=False)
     End If
 End Sub
 
@@ -142,7 +142,7 @@ Sub UI_AddZeroMinutesToSelectedTask()
     hash = GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Utils.RunTryCatchedCall f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0), screenUpdating:=False
+        Call Utils.RunTryCatchedCall(f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0), screenUpdating:=False)
     End If
 End Sub
 
@@ -152,8 +152,8 @@ Sub UI_ShiftTaskUp()
     'Shift task up in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Utils.RunTryCatchedCall f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftUp, arg2:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftUp, arg2:=lastSpecialSelection, _
+        enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(Selection)
@@ -165,8 +165,8 @@ Sub UI_ShiftTaskDown()
     'Shift task down in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Utils.RunTryCatchedCall f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftDown, arg2:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftDown, arg2:=lastSpecialSelection, _
+        enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(Selection)
@@ -179,8 +179,8 @@ Sub UI_GatherTasks()
     'To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Utils.RunTryCatchedCall f:="PlanningUtils.GatherTasks", arg1:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="PlanningUtils.GatherTasks", arg1:=lastSpecialSelection, _
+        enableEvt:=False, screenUpdating:=False)
     'Since the gather tasks command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the gahter tasks call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(Selection)
@@ -190,7 +190,7 @@ End Sub
 
 Sub UI_RunEbs()
     'THE main feature. Run all the steps to get evidence based sheduling data and charts for every contributor.
-    Utils.RunTryCatchedCall f:="EbsUtils.RunEbs", screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="EbsUtils.RunEbs", screenUpdating:=False)
 End Sub
 
 

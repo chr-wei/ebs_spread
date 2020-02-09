@@ -255,6 +255,30 @@ End Function
 
 
 
+Function GetFirstDayOfWeekSetting() As Integer
+    'Return first day of week setting. A fallback mechanism is used to always retrieve a value even if
+    'no specific setting is set.
+    '
+    'Output args:
+    '  GetFirstDayOfWeekSetting: The weekday as vbSunday to vbMonday
+    
+    'Init output
+    GetFirstDayOfWeekSetting = -1
+      
+    Dim firstDayOfWeek As Integer
+    
+    firstDayOfWeek = SettingUtils.GetWeekdayVal(Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.FIRST_DAY_OF_WEEK_HEADER))
+
+    If firstDayOfWeek = -1 Then
+        'Fallback to standard value
+        GetFirstDayOfWeekSetting = Constants.FIRST_DAY_OF_WEEK
+    Else
+        GetFirstDayOfWeekSetting = firstDayOfWeek
+    End If
+End Function
+
+
+
 Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As ApptOnOffset) As Double
     'Returns the appointment on- and offset values. with the on- and offset one can specify how long prior and / or after an appointment
     'time is needed to prepare the meeting / get back to work
@@ -348,26 +372,37 @@ Function GetContributorWorkingDays(contributor As String) As Double()
             'Read the workdays. Serialized array in settings row should look like this: {Mon; Tue; Wed; Thu; Fri}
             
             For dayIdx = 0 To UBound(workingDaysSet)
-                Select Case Trim(workingDaysSet(dayIdx))
-                    Case "Sun"
-                        workingDays(dayIdx) = 1
-                    Case "Mon"
-                        workingDays(dayIdx) = 2
-                    Case "Tue"
-                        workingDays(dayIdx) = 3
-                    Case "Wed"
-                        workingDays(dayIdx) = 4
-                    Case "Thu"
-                        workingDays(dayIdx) = 5
-                    Case "Fri"
-                        workingDays(dayIdx) = 6
-                    Case "Sat"
-                        workingDays(dayIdx) = 7
-                End Select
+                workingDays(dayIdx) = SettingUtils.GetWeekdayVal(workingDaysSet(dayIdx))
             Next dayIdx
             GetContributorWorkingDays = workingDays
         End If
     End If
+End Function
+
+
+
+Function GetWeekdayVal(id As String) As Integer
+    'This function returns vb constant values for the following three character day ids:
+    'Sun, Mon, Tue, Wed, Thu, Fri, Sat'
+    Select Case Trim(id)
+        Case "Sun"
+            GetWeekdayVal = vbSunday
+        Case "Mon"
+            GetWeekdayVal = vbMonday
+        Case "Tue"
+            GetWeekdayVal = vbTuesday
+        Case "Wed"
+            GetWeekdayVal = vbWednesday
+        Case "Thu"
+            GetWeekdayVal = vbThursday
+        Case "Fri"
+            GetWeekdayVal = vbFriday
+        Case "Sat"
+            GetWeekdayVal = vbSaturday
+        Case Else
+            'Invalid day
+            GetWeekdayVal = -1
+    End Select
 End Function
 
 

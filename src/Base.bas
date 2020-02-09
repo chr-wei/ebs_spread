@@ -602,7 +602,7 @@ End Function
 
 
 Function GetArrayDimension(arr As Variant) As Long
-    'Returns the dimension of an array 'perpendicular'to Ubound(arr)
+    'Returns the dimension of an array 'perpendicular' to Ubound(arr)
     '
     'Input args:
     '  arr:                The array

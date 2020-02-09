@@ -1181,6 +1181,7 @@ Function CollectTotalTimesSpent()
         If SanityChecks.CheckHash(hash) Then
             Set sheet = TaskUtils.GetTaskSheet(hash)
             totalTime = TaskUtils.GetTaskTotalTime(sheet)
+            cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
             cell.Value = totalTime
         End If
     Next cell
@@ -1287,4 +1288,28 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
             serializedTagHeaders = Utils.SerializeArray(Base.CollectionToArray(coH))
         End If
     End If
+End Function
+
+
+
+Function GetVisibleTasks() As Range
+    'This function returns all task cells that are visible (height <> 0)
+    
+    'Init output
+    Set GetVisibleTasks = Nothing
+    
+    Dim hashRange As Range
+    Set hashRange = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
+    Dim cll As Range
+    Dim visibleHashes As Range
+    
+    'Detect all visible tasks
+    For Each cll In hashRange
+        If cll.Height <> 0 Then
+            'If the cell height is not 0 the cell is visible
+            Set visibleHashes = Base.UnionN(visibleHashes, cll)
+        End If
+    Next cll
+    
+    Set GetVisibleTasks = visibleHashes
 End Function
