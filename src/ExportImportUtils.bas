@@ -26,24 +26,14 @@ Option Explicit
 Function ExportVisibleTasks()
     'This function exports all sheets of tasks that are visible in the planning sheet list.
     'Tasks are exported to a separate workbook only contaning the sheets of tasks
-    Dim hashRange As Range
+
+    Dim visibleTasks As Range
+    Set visibleTasks = PlanningUtils.GetVisibleTasks
     
-    Set hashRange = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
-    Dim cll As Range
-    Dim visibleHashes As Range
-    
-    'Detect all visible tasks
-    For Each cll In hashRange
-        If cll.Height <> 0 Then
-            'If the cell height is not 0 the cell is visible
-            Set visibleHashes = Base.UnionN(visibleHashes, cll)
-        End If
-    Next cll
-        
     'Debug info
-    'Debug.Print "Visible hashes: " & visibleHashes.Count & " out of " & hashRange.Count
+    'Debug.Print "Visible Tasks: " & visibleTasks.Count & " out of " & hashRange.Count
     
-    If Not visibleHashes Is Nothing Then
+    If Not visibleTasks Is Nothing Then
         'In case there are visible hashes store them to a new workbook.
         Dim exportWb As Workbook
         Set exportWb = Excel.Workbooks.Add
@@ -52,8 +42,9 @@ Function ExportVisibleTasks()
         Set firstWorksheet = exportWb.Worksheets(1)
         
         Dim sheet As Worksheet
-                    
-        For Each cll In visibleHashes
+        Dim cll As Range
+        
+        For Each cll In visibleTasks
             Set sheet = TaskUtils.GetTaskSheet(cll.Value)
             
             Dim copiedSheet As Worksheet
