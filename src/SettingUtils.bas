@@ -1,6 +1,6 @@
 Attribute VB_Name = "SettingUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -189,6 +189,26 @@ Function GetContributorMailSetting(contributor As String) As String
         Exit Function
     Else
         GetContributorMailSetting = mailCell.Value
+    End If
+End Function
+
+
+
+Function GetImportedTaskPostfixSetting() As String
+    'Get the postfix setting string that is added to imported tasks
+    '
+
+    'Init output
+    GetImportedTaskPostfixSetting = ""
+    
+    Dim postfixCell As Range
+    Dim postfix As String
+    postfix = Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.IMPORTED_TASK_POSTFIX_HEADER, postfixCell)
+    
+    If postfixCell Is Nothing Then
+        Exit Function
+    Else
+        GetImportedTaskPostfixSetting = postfix
     End If
 End Function
 

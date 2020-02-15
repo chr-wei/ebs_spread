@@ -1,6 +1,6 @@
 Attribute VB_Name = "ExportImportUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -17,11 +17,7 @@ Attribute VB_Name = "ExportImportUtils"
 '
 '  Christian Weihsbach, weihsbach.c@gmail.com
 
-Const EXCHANGE_WORKBOOK_PREFIX As String = "EbsExportImport_"
-
 Option Explicit
-
-
 
 Function ExportVisibleTasks()
     'This function exports all sheets of tasks that are visible in the planning sheet list.
@@ -34,70 +30,68 @@ Function ExportVisibleTasks()
     'Debug.Print "Visible Tasks: " & visibleTasks.Count & " out of " & hashRange.Count
     
     If Not visibleTasks Is Nothing Then
-        'In case there are visible hashes store them to a new workbook.
-        Dim exportWb As Workbook
-        Set exportWb = Excel.Workbooks.Add
-        
-        Dim firstWorksheet As Worksheet
-        Set firstWorksheet = exportWb.Worksheets(1)
+        'In case there are visible hashes store them to a special virtual storage sheet.
         
         Dim sheet As Worksheet
         Dim cll As Range
         
         For Each cll In visibleTasks
             Set sheet = TaskUtils.GetTaskSheet(cll.Value)
-            
-            Dim copiedSheet As Worksheet
-            If Not sheet Is Nothing Then
-                Call sheet.Copy(after:=firstWorksheet)
-            End If
+            'Store the sheet in a special virtual sheet with EXPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
+            'be available inside this script
+            Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, EXPORT_SHEET_PREFIX, False)
         Next cll
-        
-        'Make sure the sheets are visible
-        For Each sheet In exportWb.Worksheets
-            sheet.Visible = xlSheetVisible
-        Next sheet
-        
-        'The first sheet of the workbook is empty - delete it to only have task sheets inside the workbook
-        Call Utils.DeleteWorksheetSilently(firstWorksheet)
     End If
 End Function
 
 
 
-Function ImportTasks(sourceWb As Workbook)
+Function ImportTasks(sourceSheetsPrefix As String)
     'This function imports all task sheet of a workbook
     '
     'Input args
-    '   sourceWb:   The workbook from which tasks are imported. The function reads all task sheets of the given workbook (identified by hash)
+    '   sourceSheetsPrefix:   The prefix of the virtual sheets from which tasks are imported.
+    '                         The function reads all virtual tasks of all identified virtual sheets (identified by prefix)
     'Check args
     
-    If sourceWb Is Nothing Then Exit Function
+    If StrComp(sourceSheetsPrefix, "") = 0 Then Exit Function
     
-    Dim sheet As Worksheet
+    Call TaskUtils.VirtualizeTaskSheets
     
-    For Each sheet In sourceWb.Worksheets
-        Dim cpHash As String
-        cpHash = sheet.name
+    Dim vSheets As Scripting.Dictionary
+    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(sourceSheetsPrefix)
+    
+    Dim key As Variant
+    
+    For Each key In vSheets.Keys
+        
+        Dim cpHash As String: cpHash = key
         If SanityChecks.CheckHash(cpHash) Then
             'If the sheet is a task sheet then copy the task from sheet data
             Dim newHash As String
             newHash = CreateHashString("t")
             
-            Call ExportImportUtils.ImportSingleTask(newHash:=newHash, sourceSheet:=sheet)
+            Dim sheet As Worksheet
+            Set sheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, sourceSheetsPrefix, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+            If Not sheet Is Nothing Then
+                Call ExportImportUtils.ImportSingleTask(newHash:=newHash, sourceSheet:=sheet, _
+                    importedTaskPostfix:=SettingUtils.GetImportedTaskPostfixSetting)
+            End If
+            Call Utils.DeleteWorksheetSilently(sheet)
         End If
-    Next sheet
+    Next key
 End Function
 
 
 
-Function ImportSingleTask(newHash As String, sourceSheet As Worksheet)
+Function ImportSingleTask(newHash As String, sourceSheet As Worksheet, importedTaskPostfix As String)
     'Import a task from a task sheet. This function is very similar to the 'PlanningUtils.CopyTask' function but uses sheet data instead of
     'planning list data to 'duplicate' a task
     '
     'Input args:
-    '   sourceSheet:    The (external) sheet that holds data you want to copy
-    '   newHash:        The new hash that will be used for the copied task (given by value to trace the task)
+    '   sourceSheet:            The (external) sheet that holds data you want to copy
+    '   newHash:                The new hash that will be used for the copied task (given by value to trace the task)
+    '   importedTaskPostfix:    The postfix appended to the task name of an imported task
     
     'Do not call this method with enabled events as it may have problematic consequences
         
@@ -210,7 +204,7 @@ Function ImportSingleTask(newHash As String, sourceSheet As Worksheet)
         Select Case unifiedHeader
             Case TASK_NAME_HEADER
                 'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + " (import)"
+                existingVal = existingVal + importedTaskPostfix
                 cell.Value = existingVal
                 Call Planning.HandleChanges(cell)
             

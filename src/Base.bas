@@ -1,6 +1,6 @@
 Attribute VB_Name = "Base"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -239,71 +239,69 @@ End Function
 
 
 
-Function CollectionToArray(collect As Collection) As Variant
-    'Source: https://stackoverflow.com/questions/48153398/converting-vba-collection-to-array
-        
-    'Convert a collection of strings to a variant array
+Function DictToArray(dict As Scripting.Dictionary) As Variant
+    'Convert a dictionary of strings to a variant array
     'This function also works for hidden cells
     '
     'Input args:
-    '  collection:           The collection
+    '  dict:           The dictionary
     '
     'Output args:
-    '  CollectionToArray:    The variant array
+    '  DictToArray:    The variant array
     
     'Init output
     Dim arr() As Variant
-    CollectionToArray = arr
+    DictToArray = arr
     
     'Check args
-    If collect.Count = 0 Then
+    If dict.Count = 0 Then
         Exit Function
     End If
     
     'Perform conversion
-    ReDim arr(0 To collect.Count - 1)
-    Dim idx As Integer
-    For idx = 0 To collect.Count - 1
-        arr(idx) = collect.item(idx + 1)
-    Next
-    
-    CollectionToArray = arr
-End Function
-
-
-
-Function GetUniqueStrings(stringCollection As Collection) As Collection
-    'This function takes a collection of strings and returns a collection with all unique strings.
-    'E.g.: {sheep, sheep, dog, cat} becomes {sheep, dog, cat}.
-    'A collection is used since the have a dictionary-like data storage option (store val and key)
-    '
-    'Input args:
-    '  stringCollection:   Collection containing strings
-    '
-    'Output args:
-    '  FindAll:        Range of cells matching the criteria (subset of rng)
-    
-    Dim uniqueCollection As New Collection
-    Set GetUniqueStrings = uniqueCollection
-    
-    If stringCollection Is Nothing Or stringCollection.Count = 0 Then
-        Exit Function
-    End If
-    
+    ReDim arr(0 To dict.Count - 1)
+    Dim idx As Integer: idx = 0
     Dim str As Variant
     
-    'Defer errors to make collection not complain when key already exists. Mechanism to detect duplicate vals
-    On Error Resume Next
-    For Each str In stringCollection
-        If str = vbNullString Then
-            GoTo l4rNextIteration
-        End If
-        Call uniqueCollection.Add(str, CStr(str))
-l4rNextIteration:
-    Next str
+    For Each str In dict.Items
+        arr(idx) = str
+        idx = idx + 1
+    Next
     
-    Set GetUniqueStrings = uniqueCollection
+    DictToArray = arr
 End Function
+
+
+
+'Function GetUniqueStrings(stringDict As Scripting.Dictionary) As Scripting.Dictionary
+'    'This function takes a dictionary of strings and returns a dictionary only with with unique strings.
+'    'E.g.: {sheep, sheep, dog, cat} becomes {sheep, dog, cat}.
+'    'A collection is used since the have a dictionary-like data storage option (store val and key)
+'    '
+'    'Input args:
+'    '  stringDict:   Dictionary containing strings
+'    '
+'    'Output args:
+'    '  FindAll:      Range of cells matching the criteria (subset of rng)
+'
+'    Dim uniqueDict As New Scripting.Dictionary
+'    Set GetUniqueStrings = uniqueDict
+'
+'    If stringDict Is Nothing Or stringDict.Count = 0 Then
+'        Exit Function
+'    End If
+'
+'    Dim key As Variant
+'
+'    For Each key In stringDict.Keys
+'        'Add string to dict if it does not exist
+'        If key <> vbNullString And Not uniqueDict.Exists(key) Then
+'            Call uniqueDict.Add(key:=key, item:=stringDict(key))
+'        End If
+'    Next key
+'
+'    Set GetUniqueStrings = uniqueDict
+'End Function
 
 
 
@@ -494,6 +492,7 @@ Public Function IsArrayAllocated(arr As Variant) As Boolean
         End If
     Else
         'Error. unallocated array
+        On Error GoTo 0
         IsArrayAllocated = False
     End If
 End Function

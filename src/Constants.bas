@@ -1,6 +1,6 @@
 Attribute VB_Name = "Constants"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,8 @@ Attribute VB_Name = "Constants"
 Option Explicit
 
 'Debugging flag: Disables error catching
-Public Const DEBUGGING_MODE As Double = False
+Public Const DEBUGGING_MODE As Boolean = False
+Public Const VERBOSE_OUTPUT As Boolean = False
 
 'Planning sheet constants
 Public Const PLANNING_SHEET_NAME As String = "Planning"
@@ -174,6 +175,9 @@ Public Const GETTING_WORK_DONE_CAT_HEADER As String = "ExcludeCategories"
 Public Const APPT_ONSET_HEADER As String = "AppointmentOnsetHours"
 Public Const APPT_OFFSET_HEADER As String = "AppointmentOffsetHours"
 
+Public Const IMPORTED_TASK_POSTFIX_HEADER As String = "ImportedTaskPostfix"
+Public Const IMPORTED_TASK_POSTFIX As String = " (imported)"
+
 Public Const SETTINGS_HIGHLIGHT_COLOR_HEADER As String = "HighlightColor"
 Public Const SETTINGS_COMMON_COLOR_HEADER As String = "CommonColor"
 Public Const SETTINGS_LIGHT_COLOR_HEADER As String = "LightColor"
@@ -188,9 +192,9 @@ Public Const CAL_ID_HEADER As String = "Calendar ID"
 Public Const STORE_ID_HEADER As String = "Store ID"
 Public Const CAL_PATH_TEMP_HEADER As String = "Calendar path temp"
 
-Public Const IMPORT_SHEET_HEADER As String = "ImportSheetName"
-
-
+'Virtual sheet constants
+Public Const STORAGE_SHEET_PREFIX As String = "VSHEET_STOR_"
+Public Const EXPORT_SHEET_PREFIX As String = "EXP_STOR_"
 
 'Array constants
 

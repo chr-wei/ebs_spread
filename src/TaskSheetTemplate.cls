@@ -8,5 +8,5 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
-    Utils.RunTryCatchedCall f:="TaskUtils.HandleFollowHyperlink", arg1:=Target, screenUpdating:=False
+    Call Utils.RunTryCatchedCall(f:="TaskUtils.HandleFollowHyperlink", arg1:=Target, screenUpdating:=False)
 End Sub

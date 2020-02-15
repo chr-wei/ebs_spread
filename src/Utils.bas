@@ -1,6 +1,6 @@
 Attribute VB_Name = "Utils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@ Public Enum DeserializedType
 End Enum
 
 Function CreateHashString(Optional prefix As String = "") As String
+    Const FN As String = "CreateHashString"
     'Function is used to create a unique hash value (first 18 chars of sha256) with prefix if needed.
     '
     'Input args:
@@ -45,8 +46,10 @@ Function CreateHashString(Optional prefix As String = "") As String
     Randomize
     CreateHashString = Left(prefix + UCase(cl.SHA256(CStr(Rnd()))), 18)
     Set cl = Nothing
+    
     'Debug info
-    Debug.Print "Created HASH is: " & CreateHashString
+    Call MessageUtils.HandleMessage("Created HASH is: " & CreateHashString, _
+        ceVerbose, FN)
 End Function
 
 
@@ -438,15 +441,13 @@ Function SetCellValuesForValidation(cellRange As Range)
     Dim cell As Range
     
     'All strings in the passed cells. These are filtered to get unique values.
-    Dim stringList As Collection
-    Set stringList = Utils.ConvertRngToStrCollection(cellRange)
+    Dim stringDict As New Scripting.Dictionary
+    Set stringDict = Utils.ConvertRngToDict(cellRange)
     
-    Set stringList = Base.GetUniqueStrings(stringList)
-    If stringList.Count > 0 Then
-        
+    If stringDict.Count > 0 Then
         'Build the list string
         Dim listString As String
-        listString = Join(Base.CollectionToArray(stringList), ",")
+        listString = Join(Base.DictToArray(stringDict), ",")
         'Debug.Print "ls: " & listString
         
         Dim currArea As Variant
@@ -504,15 +505,11 @@ Function RunTryCatchedCall(f As String, Optional obj As Object, _
     GoTo finallyHandle 'Skip the error handle
     
 errHandle:
-    With Err
-        If .Number <> 0 Then 'ein Fehler ist aufgetreten
-            Select Case .Number
-                Case Else
-                    'Fehler-Meldung anzeigen und Prozedur beenden
-                    MsgBox "Error no. " & .Number & vbLf & .Description
-            End Select
-        End If
-    End With
+    If Err.Number <> 0 Then
+        'Display the error message
+        Call MessageUtils.HandleMessage("#" & Err.Number & ": " & Err.Description, _
+            ceError, f)
+    End If
         
 finallyHandle:
     'Finally all other tasks
@@ -627,31 +624,33 @@ End Function
 
 
 
-Function ConvertRngToStrCollection(rng As Range) As Collection
-    'Convert any range values to a collection of strings
+Function ConvertRngToDict(rng As Range) As Scripting.Dictionary
+    'Convert any range values to a dictionary of strings
     '
     'Input args:
     '   rng:        The range you want to convert
     '
     'Output args:
-    '   ConvertRngToStrCollection:  The collection of strings
+    '   ConvertRngToDict:  The dictionary of strings
     
-    Dim stringCollection As New Collection
-    Set ConvertRngToStrCollection = stringCollection
+    Dim dict As New Scripting.Dictionary
+    Set ConvertRngToDict = dict
 
     If rng Is Nothing Then
         Exit Function
     End If
 
     Dim cell As Range
+    Dim key As String
     For Each cell In rng
-        Dim currentValue As String
-        currentValue = cell.Value
-        ''Normal' add here without 'key'
-        Call stringCollection.Add(currentValue)
+        key = CStr(cell.Value)
+        'Add items
+        If key <> vbNullString And Not dict.Exists(key) Then
+            Call dict.Add(key:=key, item:=cell.Value)
+        End If
     Next cell
 
-    Set ConvertRngToStrCollection = stringCollection
+    Set ConvertRngToDict = dict
 End Function
 
 

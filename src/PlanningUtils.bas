@@ -1,6 +1,6 @@
 Attribute VB_Name = "PlanningUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -865,7 +865,7 @@ Function OrganizePrioColumn()
     Dim sf As SortFields
     Set sf = lo.Sort.SortFields
     sf.Clear
-    sf.Add Key:=prioCol, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
+    sf.Add key:=prioCol, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
     
     With lo.Sort
         .header = xlYes
@@ -1163,9 +1163,11 @@ End Function
 
 
 Function CollectTotalTimesSpent()
-    'For every task on planning sheet collect the total time the user has spent on it
+    'For every task on planning sheet that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
-    Set timeCells = PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData)
+    Set timeCells = Base.IntersectN( _
+        PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
+        PlanningUtils.GetVisibleTasks.EntireRow)
     
     If timeCells Is Nothing Then Exit Function
     
@@ -1265,27 +1267,30 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
     Set headers = PlanningUtils.GetTagHeaderCells
     
     If Not headers Is Nothing Then
-        Dim coV As New Collection
-        Dim coH As New Collection
+        Dim diV As New Scripting.Dictionary
+        Dim diH As New Scripting.Dictionary
         Dim tagHeader As Range
         Dim tag As Range
         
         'Now add tag headers and values to separate collections which will be serialized later on
+        Dim tagIdx As Integer: tagIdx = 0
+        
         For Each tagHeader In headers
             Set tag = PlanningUtils.IntersectHashAndListColumn(hash, tagHeader)
             
             If Not tag Is Nothing Then
                 If StrComp(tag, "") <> 0 Then
-                    Call coV.Add(tag.Value)
-                    Call coH.Add(tagHeader.Value)
+                    Call diV.Add(key:=CStr(tagIdx), item:=tag.Value)
+                    Call diH.Add(key:=CStr(tagIdx), item:=tagHeader.Value)
+                    tagIdx = tagIdx + 1
                 End If
             End If
         Next tagHeader
         
-        If coV.Count > 0 Then
+        If diV.Count > 0 Then
             'Serialize tags if any tag values were found
-            GetSerializedTags = Utils.SerializeArray(Base.CollectionToArray(coV))
-            serializedTagHeaders = Utils.SerializeArray(Base.CollectionToArray(coH))
+            GetSerializedTags = Utils.SerializeArray(Base.DictToArray(diV))
+            serializedTagHeaders = Utils.SerializeArray(Base.DictToArray(diH))
         End If
     End If
 End Function
