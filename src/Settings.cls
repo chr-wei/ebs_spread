@@ -60,25 +60,8 @@ End Sub
 
 
 Sub UI_ImportTasks()
-    'Import all tasks of a workbook which name is specified in the setting sheet.
-    
-    'Read the workbook's name and check whether it is opened
-    Dim importWorkbookName As String
-    importWorkbookName = Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.IMPORT_SHEET_HEADER)
-
-    Dim sourceWb As Workbook
-    On Error Resume Next
-    Set sourceWb = Workbooks(importWorkbookName)
-    
-    If Err.Number <> 0 Then
-        'Workbook is not opened
-        Debug.Print "Importing from workbook '" & importWorkbookName & "' failed."
-        Err.Clear
-        Exit Sub
-    Else
-        On Error GoTo 0
-    End If
+    'Import all tasks of a special storage sheets which have the prefix EXPORT_SHEET_PREFIX
     
     'Workbook available. Import tasks' data
-    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", arg1:=sourceWb, screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", arg1:=Constants.EXPORT_SHEET_PREFIX, screenUpdating:=False)
 End Sub

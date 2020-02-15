@@ -1,6 +1,6 @@
 Attribute VB_Name = "SanityChecks"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify

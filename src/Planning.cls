@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -433,10 +433,10 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         
         'Adjust formatting of the planning sheet cell to display the enterd value correctly
         Select Case ues
-            Case UserEstimateStatus.ceValidHours
-                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(enteredVal), setNewEbsEstimates)
+            Case UserEstimateStatus.ceValidHours, UserEstimateStatus.ceValidDate
+                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(outputVal), setNewEbsEstimates)
                 changedCell.Value = outputVal
-                changedCell.NumberFormat = "0.00"
+                changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
                 
             Case UserEstimateStatus.ceInvalid
                 Dim placeholder As String

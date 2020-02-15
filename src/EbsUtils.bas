@@ -1,6 +1,6 @@
 Attribute VB_Name = "EbsUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -146,10 +146,9 @@ Function RunEbs()
     Set contribCells = PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData)
     
     'Read all unique contributors
-    Dim contribStrings As Collection
-    Set contribStrings = Utils.ConvertRngToStrCollection(contribCells)
-    Set contribStrings = Base.GetUniqueStrings(contribStrings)
-    contributors = Base.CollectionToArray(contribStrings)
+    Dim contribStrings As Scripting.Dictionary
+    Set contribStrings = Utils.ConvertRngToDict(contribCells)
+    contributors = Base.DictToArray(contribStrings)
     
     'Check
     If Not Base.IsArrayAllocated(contributors) Then Exit Function

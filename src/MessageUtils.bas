@@ -1,0 +1,287 @@
+Attribute VB_Name = "MessageUtils"
+'  This macro collection lets you organize your tasks and schedules
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
+'
+'  Copyright (C) 2020  Christian Weihsbach
+'  This program is free software; you can redistribute it and/or modify
+'  it under the terms of the GNU General Public License as published by
+'  the Free Software Foundation; either version 3 of the License, or
+'  (at your option) any later version.
+'  This program is distributed in the hope that it will be useful,
+'  but WITHOUT ANY WARRANTY; without even the implied warranty of
+'  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+'  GNU General Public License for more details.
+'  You should have received a copy of the GNU General Public License
+'  along with this program; if not, write to the Free Software Foundation,
+'  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+'
+'  Christian Weihsbach, weihsbach.c@gmail.com
+
+Option Explicit
+
+Const MESSAGE_SHEET_NAME As String = "Messages"
+Const MESSAGE_LIST_NAME As String = "MessageList"
+
+Const MESSAGE_NO_HEADER As String = "Message no."
+Const MESSAGE_TIMESTAMP_HEADER As String = "Timestamp"
+Const MESSAGE_HEADER As String = "Message"
+Const MESSAGE_CALLER_HEADER As String = "Caller"
+Const MESSAGE_SEVERITY_HEADER As String = "Severity"
+
+Const LIST_MESSAGE_MIN_SEVERITY As Integer = 1 'MessageSeverity.ceInfo
+Const LIST_MESSAGE_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
+
+Const DIRECT_MESSAGE_MIN_SEVERITY As Integer = 3 'MessageSeverity.ceError
+Const DIRECT_MESSAGE_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
+
+Const MESSAGE_BOX_MIN_SEVERITY As Integer = 3 'MessageSeverity.ceError
+Const MESSAGE_BOX_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
+
+Public savedListMaxSeverity As Integer
+
+Enum MessageSeverity
+    ceNoSeverity = -2
+    ceVerbose = -1
+    
+    ceInfo = 1
+    ceWarning = 2
+    ceError = 3
+End Enum
+
+
+
+Function HandleMessage(message As String, _
+    severity As MessageSeverity, _
+    Optional caller As String = vbNullString, _
+    Optional clearPreviousMessages As Boolean = False)
+    
+    If severity <= MessageSeverity.ceVerbose And Not Constants.VERBOSE_OUTPUT Then
+        'Do not output verbose messages if verbose mode is not activated
+        Exit Function
+    End If
+    
+    If clearPreviousMessages And Not Constants.DEBUGGING_MODE Then
+        Call MessageUtils.ClearListMessages
+    End If
+    
+    If Constants.DEBUGGING_MODE Or Constants.VERBOSE_OUTPUT Then
+        Call MessageUtils.PostDirectMessage(message, severity, caller)
+    Else
+        If MessageUtils.DoMessageListPost(severity) Then
+            Call MessageUtils.PostListMessage(message, severity, caller)
+            If severity > MessageUtils.savedListMaxSeverity Then
+                savedListMaxSeverity = severity
+                Call MessageUtils.SetSheetColor(severity)
+            End If
+        End If
+        
+        If MessageUtils.DoDirectPost(severity) Then Call MessageUtils.PostDirectMessage(message, severity, caller)
+        If MessageUtils.DoMessageBoxPost(severity) Then Call MessageUtils.PostBoxMessage(message, severity, caller)
+    End If
+End Function
+
+
+
+Function GetMessageSheet() As Worksheet
+    'Return the message sheet of this project
+    '
+    'Output args:
+    '  GetMessageSheet:   A reference to the sheet with a fixed name
+    
+    Set GetMessageSheet = ThisWorkbook.Worksheets(MESSAGE_SHEET_NAME)
+End Function
+
+
+
+Function GetMessageList() As ListObject
+    'Return the main list on the task sheet
+    '
+    'Output args:
+    '  GetMessageList:    A reference to the list object with a fixed name
+    Set GetMessageList = MessageUtils.GetMessageSheet.ListObjects(MESSAGE_LIST_NAME)
+End Function
+
+
+
+Function GetMessageListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+    'Wrapper to read column of the message list
+    '
+    'Input args:
+    '  colIdentifier:  An identifier specifying the column one whishes to extract. Can be a cell inside the column or the header string
+    '  rowIdentifier:  An identifier specifying whether to return the whole list, only the header or only the data range (without headers)
+    '
+    'Output args:
+    '  GetMessageListColumn: Range of the selected cells of the column
+    
+    Set GetMessageListColumn = Utils.GetListColumn(GetMessageList, MESSAGE_LIST_NAME, colIdentifier, rowIdentifier)
+End Function
+
+
+
+Function PostListMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
+    
+    'Adds a new message
+    '
+    Dim newEntryCell As Range
+    Dim receivedEntry As Boolean
+    Dim newFormattedNumber As String
+        
+    receivedEntry = Utils.GetNewEntry(MessageUtils.GetMessageSheet, MESSAGE_LIST_NAME, newEntryCell, newFormattedNumber)
+    
+    If receivedEntry Then
+        'If a new entry (with number and cell) could be generated add the data
+        Dim messageCell As Range
+        Dim timestampCell As Range
+        Dim callerCell As Range
+        Dim severityCell As Range
+        
+        Set messageCell = MessageUtils.IntersectMessageListColumn(MESSAGE_HEADER, newEntryCell)
+        Set timestampCell = MessageUtils.IntersectMessageListColumn(MESSAGE_TIMESTAMP_HEADER, newEntryCell)
+        Set callerCell = MessageUtils.IntersectMessageListColumn(MESSAGE_CALLER_HEADER, newEntryCell)
+        Set severityCell = MessageUtils.IntersectMessageListColumn(MESSAGE_SEVERITY_HEADER, newEntryCell)
+        
+        If Not messageCell Is Nothing And Not timestampCell Is Nothing And Not callerCell Is Nothing And Not severityCell Is Nothing Then
+            newEntryCell.Value = newFormattedNumber
+            messageCell.Value = message
+            timestampCell.Value = Now()
+            severityCell.Value = MessageUtils.GetSeverityString(severity)
+            
+            If StrComp(caller, vbNullString) = 0 Then
+                callerCell.Value = Constants.N_A
+            Else
+                callerCell.Value = caller
+            End If
+        End If
+    End If
+End Function
+
+
+
+Function PostDirectMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
+    Dim out As String
+    out = "[" & CStr(Now) & "]" & vbTab & "[" & MessageUtils.GetSeverityString(severity) & "]:" & vbTab & message
+    
+    If StrComp(caller, vbNullString) <> 0 Then
+        'Add caller info to the message
+        out = out & " (from '" & caller & "')"
+    End If
+    Debug.Print out
+End Function
+
+
+
+Function PostBoxMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
+    Call MsgBox(prompt:=message, title:=MessageUtils.GetSeverityString(severity))
+End Function
+
+
+
+Function GetSeverityString(severity As MessageSeverity) As String
+    Select Case severity
+        Case MessageSeverity.ceInfo
+            GetSeverityString = "Info"
+        Case MessageSeverity.ceWarning
+            GetSeverityString = "Warning"
+        Case MessageSeverity.ceError
+            GetSeverityString = "Error"
+        Case MessageSeverity.ceVerbose
+            GetSeverityString = "Verbose"
+        Case Else
+            GetSeverityString = ""
+    End Select
+End Function
+
+
+
+Function IntersectMessageListColumn(colIdentifier As Variant, rowIdentifier As Range) As Range
+    'Get the intersection of a list column and a cell
+    Set IntersectMessageListColumn = Utils.IntersectListColAndCells(MessageUtils.GetMessageSheet, MESSAGE_LIST_NAME, colIdentifier, rowIdentifier)
+End Function
+
+
+
+Function ClearListMessages()
+    Dim br As Range
+    Set br = MessageUtils.GetMessageListBodyRange
+            
+    If Not br Is Nothing Then br.Delete
+    
+    Call MessageUtils.SetSheetColor(MessageSeverity.ceNoSeverity)
+    MessageUtils.savedListMaxSeverity = MessageSeverity.ceNoSeverity
+End Function
+
+
+
+Function GetMessageListBodyRange() As Range
+    'Get the body range of the message list.
+    
+    'Init output
+    Set GetMessageListBodyRange = Nothing
+    
+    Dim lo As ListObject
+    Set lo = MessageUtils.GetMessageList
+    If Not lo Is Nothing Then
+        Dim dbc As Range
+        Set dbc = lo.DataBodyRange
+        Set GetMessageListBodyRange = dbc
+    End If
+End Function
+
+
+Function SetSheetColor(severity As MessageSeverity)
+    Dim color As Long
+    Dim sheet As Worksheet
+    Set sheet = MessageUtils.GetMessageSheet
+        
+    Select Case severity
+        Case MessageSeverity.ceInfo
+            color = vbCyan
+        Case MessageSeverity.ceWarning
+            color = vbYellow
+        Case MessageSeverity.ceError
+            color = vbRed
+        Case MessageSeverity.ceVerbose
+            color = vbGreen
+        Case Else
+            'Reset the color
+            sheet.Tab.ColorIndex = xlNone
+            Exit Function
+    End Select
+    
+    sheet.Tab.color = color
+    sheet.Tab.TintAndShade = 0
+End Function
+
+
+
+Function DoDirectPost(severity As MessageSeverity) As Boolean
+    If severity >= DIRECT_MESSAGE_MIN_SEVERITY And severity <= DIRECT_MESSAGE_MAX_SEVERITY Then
+        DoDirectPost = True
+    Else
+        DoDirectPost = False
+    End If
+End Function
+
+
+
+Function DoMessageListPost(severity As MessageSeverity) As Boolean
+    If severity >= LIST_MESSAGE_MIN_SEVERITY And severity <= LIST_MESSAGE_MAX_SEVERITY Then
+        DoMessageListPost = True
+    Else
+        DoMessageListPost = False
+    End If
+End Function
+
+
+
+Function DoMessageBoxPost(severity As MessageSeverity) As Boolean
+    If severity >= MESSAGE_BOX_MIN_SEVERITY And severity <= MESSAGE_BOX_MAX_SEVERITY Then
+        DoMessageBoxPost = True
+    Else
+        DoMessageBoxPost = False
+    End If
+End Function
+
+
+
+

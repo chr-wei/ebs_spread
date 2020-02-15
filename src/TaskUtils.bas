@@ -1,6 +1,6 @@
 Attribute VB_Name = "TaskUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -62,23 +62,29 @@ End Function
 
 
 Function GetTaskSheet(hash As String) As Worksheet
+    Const FN As String = "GetTaskSheet"
     'Return the task sheet to a given hash. Has a safety mechanism to always create a task sheet if no sheet could be found.
+    '
+    'Input args:
+    '   hash:       The hash of the task
     
     'Getting a task sheet may load it from a virtual sheet storage. Many open sheets inside a workbook have been found to consume
     'a lot of ram memory. Virtualize them to prevent memory problems
-    If TaskUtils.GetAllTaskSheets.Count > Constants.TASK_SHEET_COUNT_LIMIT Then
+    If TaskUtils.GetAllTaskSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
         Call TaskUtils.VirtualizeTaskSheets
-        Debug.Print "Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage."
+        Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
+            ceVerbose, FN)
     End If
     
     If Utils.SheetExists(hash) Then
         Set GetTaskSheet = ThisWorkbook.Worksheets(hash)
         
-    ElseIf VirtualSheetUtils.VirtualSheetExists(hash) Then
+    ElseIf VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
         
         'Load the virtual sheet to a new sheet and use task sheet as template (will copy sheet code as well)
         Dim loadedSheet As Worksheet
-        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash, Constants.STORAGE_SHEET_PREFIX, _
+            ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
         
         If Not loadedSheet Is Nothing Then
             'Hide sheet after loading
@@ -99,7 +105,8 @@ Function GetTaskSheet(hash As String) As Worksheet
     
     Else
         'Add a new worksheet with HASH as name if no sheet exists
-        Debug.Print "Cannot find task sheet '" & hash & "'. Create new sheet as fallback."
+        Call MessageUtils.HandleMessage("Cannot find task sheet '" & hash & "'. Create new sheet as fallback.", _
+            ceInfo, FN)
                 
         Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
 
@@ -803,12 +810,14 @@ Function VirtualizeTaskSheets()
     
     Dim sheet As Worksheet
     For Each sheet In TaskUtils.GetAllTaskSheets()
-        Call VirtualSheetUtils.StoreVirtualSheet(sheet)
+        Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, Constants.STORAGE_SHEET_PREFIX)
     Next sheet
     
     'We do not want to see the storage sheet(s). Hide it / them.
-    For Each sheet In VirtualSheetUtils.GetAllStorageSheets
+    Dim item As Variant
+    For Each item In VirtualSheetUtils.GetAllStorageSheets(Constants.STORAGE_SHEET_PREFIX).Items
+        Set sheet = item
         sheet.Visible = xlSheetHidden
-    Next sheet
+    Next item
 End Function
 

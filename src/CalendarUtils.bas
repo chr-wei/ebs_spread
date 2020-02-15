@@ -1,6 +1,6 @@
 Attribute VB_Name = "CalendarUtils"
 '  This macro collection lets you organize your tasks and schedules
-'  for you with the evidence based design (EBS) approach by Joel Spolsky.
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
 '  Copyright (C) 2020  Christian Weihsbach
 '  This program is free software; you can redistribute it and/or modify
@@ -1004,6 +1004,7 @@ End Function
 
 
 Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outlook.Items
+    Const FN As String = "GetCalItems"
     'This function returns calendar items of a contributor if a folder id was specified. These appointments are filtered by busy status and category.
     'Recurrent appointments are included
     '
@@ -1043,8 +1044,12 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
     Else
         Exit Function
     End If
-    If Err.Number <> 0 Then Debug.Print "Error reading calendar of cal id: " & calId
-    Err.Clear
+    If Err.Number <> 0 Then
+        Call MessageUtils.HandleMessage( _
+            "Error reading calendar of cal id: " & calId & ". Processing calendar events not possible.", _
+            ceWarning, FN)
+        Err.Clear
+    End If
     On Error GoTo 0
 
 
