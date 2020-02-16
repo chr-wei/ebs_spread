@@ -141,7 +141,7 @@ Public Const APPOINTMENT_OFFSET_HOURS As Double = 1 / 12 '5min
 Public Const WORKING_HOURS_START As Date = "08:00"
 Public Const WORKING_HOURS_END As Date = "17:00"
 Public Const STANDARD_GETTING_WORK_DONE_CATEGORY As String = "[EBS.Blocker]"
-Public Const BUSY_AT_OPTIONAL_APPOINTMENTS As Boolean = False
+Public Const BUSY_AT_OPTIONAL_APPOINTMENTS As Boolean = True
 
 
 
