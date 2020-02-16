@@ -28,7 +28,7 @@ Const MESSAGE_HEADER As String = "Message"
 Const MESSAGE_CALLER_HEADER As String = "Caller"
 Const MESSAGE_SEVERITY_HEADER As String = "Severity"
 
-Const LIST_MESSAGE_MIN_SEVERITY As Integer = 1 'MessageSeverity.ceInfo
+Const LIST_MESSAGE_MIN_SEVERITY As Integer = -1 'MessageSeverity.ceVerbose
 Const LIST_MESSAGE_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
 
 Const DIRECT_MESSAGE_MIN_SEVERITY As Integer = 3 'MessageSeverity.ceError
@@ -50,21 +50,32 @@ End Enum
 
 
 
+Function InvokeUIMsg(FN As String)
+    Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, True)
+End Function
+
+
+
+Function InvokeFnMsg(FN As String)
+    Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, False)
+End Function
+
+
 Function HandleMessage(message As String, _
     severity As MessageSeverity, _
     Optional caller As String = vbNullString, _
     Optional clearPreviousMessages As Boolean = False)
+    
+    If clearPreviousMessages Then
+        Call MessageUtils.ClearListMessages
+    End If
     
     If severity <= MessageSeverity.ceVerbose And Not Constants.VERBOSE_OUTPUT Then
         'Do not output verbose messages if verbose mode is not activated
         Exit Function
     End If
     
-    If clearPreviousMessages And Not Constants.DEBUGGING_MODE Then
-        Call MessageUtils.ClearListMessages
-    End If
-    
-    If Constants.DEBUGGING_MODE Or Constants.VERBOSE_OUTPUT Then
+    If Constants.DEBUGGING_MODE Then
         Call MessageUtils.PostDirectMessage(message, severity, caller)
     Else
         If MessageUtils.DoMessageListPost(severity) Then
@@ -159,7 +170,7 @@ End Function
 
 Function PostDirectMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
     Dim out As String
-    out = "[" & CStr(Now) & "]" & vbTab & "[" & MessageUtils.GetSeverityString(severity) & "]:" & vbTab & message
+    out = "[" & CStr(Now) & "] [" & MessageUtils.GetSeverityString(severity) & "]:" & vbTab & message
     
     If StrComp(caller, vbNullString) <> 0 Then
         'Add caller info to the message

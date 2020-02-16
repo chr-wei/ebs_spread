@@ -1,0 +1,532 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Analysis"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+'  This macro collection lets you organize your tasks and schedules
+'  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
+'
+'  Copyright (C) 2020  Christian Weihsbach
+'  This program is free software; you can redistribute it and/or modify
+'  it under the terms of the GNU General Public License as published by
+'  the Free Software Foundation; either version 3 of the License, or
+'  (at your option) any later version.
+'  This program is distributed in the hope that it will be useful,
+'  but WITHOUT ANY WARRANTY; without even the implied warranty of
+'  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+'  GNU General Public License for more details.
+'  You should have received a copy of the GNU General Public License
+'  along with this program; if not, write to the Free Software Foundation,
+'  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+'
+'  Christian Weihsbach, weihsbach.c@gmail.com
+
+Option Explicit
+
+Const ANALYSIS_SHEET_NAME As String = "Analysis"
+
+Const SPAN_START_HEADER As String = "Span start"
+Const SPAN_END_HEADER As String = "Span end"
+Const SPLIT_INTERVAL_HEADER As String = "Split interval"
+
+Const SPLIT_ENTRY_HEADER As String = "Split entry no."
+Const SPLIT_START_HEADER As String = "Split start"
+Const SPLIT_END_HEADER As String = "Split end"
+Const TIME_SPENT_HEADER As String = "Time spent"
+
+Const STL_IDX As Integer = 1
+
+Const INTERVAL_WARNING_COUNT As Long = 200
+
+Enum SplitInterval
+    ceNoSplit = -1
+    ceInvalid = 0
+    ceHour = 1
+    ceDay = 2
+    ceWeek = 3
+    ceMonth = 4
+    ceYear = 5
+End Enum
+
+'STL will stand for 'split time list (analysis)'
+Sub UI_BuildStl()
+    Const FN As String = "Analysis.UI_BuildStl"
+    Call MessageUtils.InvokeUIMsg(FN)
+    Call Utils.RunTryCatchedCall(f:="Analysis.BuildStl", screenUpdating:=False)
+End Sub
+
+
+
+Function BuildStl()
+    Const FN As String = "Analysis.BuildStl"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Clear output table
+    Dim br As Range
+    Set br = Analysis.GetStlBodyRange()
+    
+    If Not br Is Nothing Then
+        br.Delete
+    End If
+    
+    'Pre fill the stl rows with split time spans
+    If Not PreprocessStlRows Then Exit Function
+    
+    'Cycle through visible tasks and add time spent
+    
+    'For all visible tasks
+    Dim visibleTasks As Range
+    Set visibleTasks = PlanningUtils.GetVisibleTasks
+    
+    'Debug info
+    'Debug.Print "Visible tasks are: " & visibleTasks.Address
+    
+    Dim taskCell As Range
+    Dim taskSheet As Worksheet
+    
+    Dim analysisSheet As Worksheet
+    Set analysisSheet = Analysis.GetAnalysisSheet
+    
+    'Prepare the analysis time span and helping variables
+    Dim spanStartCell As Range
+    Dim spanEndCell As Range
+
+    Dim splitStartCol As Range
+    Dim splitEndCol As Range
+    
+    Set splitStartCol = Analysis.GetStlColumn(SPLIT_START_HEADER, ceData)
+    Set splitEndCol = Analysis.GetStlColumn(SPLIT_END_HEADER, ceData)
+    
+    Dim splitStartVals() As Date
+    Dim splitEndVals() As Date
+        
+    splitStartVals = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(splitStartCol))
+    splitEndVals = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(splitEndCol))
+    
+    If Not Base.IsArrayAllocated(splitStartVals) Or Not Base.IsArrayAllocated(splitEndVals) Then Exit Function
+    
+    Dim spanStart As Date
+    Dim spanEnd As Date
+    spanStart = splitStartVals(LBound(splitStartVals))
+    spanEnd = splitEndVals(UBound(splitEndVals))
+    
+    'Generate an array with indices for interpolation algorithm used in a later step (sorting task times to sub time spans)
+    Dim splitIndices() As Long
+    splitIndices = Analysis.CalcIndexArray(UBound(splitStartVals) + 1)
+    
+    Dim summedDeltaCol As Range
+    Set summedDeltaCol = Analysis.GetStlColumn(TIME_SPENT_HEADER, ceData)
+    
+    For Each taskCell In visibleTasks
+        Set taskSheet = TaskUtils.GetTaskSheet(taskCell.Value)
+        
+        'Prepare the task time columns and value arrays
+        Dim tStartCol As Range
+        Dim tEndCol As Range
+        Dim tDeltaCol As Range
+        
+        Dim tStartVals() As Date
+        Dim tEndVals() As Date
+        Dim tDeltaVals() As Double
+            
+        'Get time columns and filter out all entries that:
+        ' 1 either have a start date after the span end
+        ' 2 or have an end date before the span start
+        Set tStartCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.START_TIME_HEADER, ceData)
+        Set tStartCol = Base.FindAll(tStartCol, spanEnd, , ceDoubleLess)
+        
+        Set tEndCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.END_TIME_HEADER, ceData)
+        Set tEndCol = Base.FindAll(tEndCol, spanStart, , ceDoubleBigger)
+        If tStartCol Is Nothing Or tEndCol Is Nothing Then GoTo z7g_skipTask
+                
+        Set tStartCol = Base.IntersectN(tStartCol, tEndCol.EntireRow)
+        Set tEndCol = Base.IntersectN(tEndCol, tStartCol.EntireRow)
+        
+        Set tDeltaCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, ceData)
+        Set tDeltaCol = Base.IntersectN(tDeltaCol, tStartCol.EntireRow)
+        If tStartCol Is Nothing Or tEndCol Is Nothing Or tDeltaCol Is Nothing Then GoTo z7g_skipTask
+        
+        'Filtering done. Now read the actual values
+        tStartVals = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(tStartCol))
+        tEndVals = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(tEndCol))
+        tDeltaVals = Utils.CopyVarArrToDoubleArr(Utils.ConvertRangeValsToArr(tDeltaCol))
+        
+        Dim allInitialized As Boolean
+        allInitialized = Base.IsArrayAllocated(tStartVals) And Base.IsArrayAllocated(tEndVals) And Base.IsArrayAllocated(tDeltaVals)
+        
+        If allInitialized Then
+            'Now we've got all entries of the task that are overlapping with the defined time span.
+            'Find sub time span to add the time to
+            
+            Dim mappableEntriesLimit As Integer
+            mappableEntriesLimit = UBound(tStartVals)
+            
+            Dim interpStartIdxs() As Double
+            Dim interpEndIdxs() As Double
+            
+            ReDim interpStartIdxs(0 To mappableEntriesLimit)
+            ReDim interpEndIdxs(0 To mappableEntriesLimit)
+            
+            'Find out in which split span the start time lies
+            If UBound(splitStartVals) > 0 Then 'More than one split entry available. Interpolate
+                interpStartIdxs = Utils.InterpolateArray( _
+                    Utils.CopyVarArrToDoubleArr(splitStartVals), _
+                    Utils.CopyVarArrToDoubleArr(splitIndices), _
+                    tStartVals)
+                    
+                interpEndIdxs = Utils.InterpolateArray( _
+                    Utils.CopyVarArrToDoubleArr(splitStartVals), _
+                    Utils.CopyVarArrToDoubleArr(splitIndices), _
+                    tEndVals)
+            End If
+            
+            Dim timeRatio As Double
+            Dim mappableTaskIdx As Integer
+            Dim entryEndIdx As Integer
+            Dim entryStartIdx As Integer
+            Dim actualDeltaH As Double
+            Dim evaluatedDeltaH As Double
+            Dim currentDelta As Double
+            
+            For mappableTaskIdx = 0 To mappableEntriesLimit
+                'Cycle all task time deltas and map them to STL rows
+                entryStartIdx = Int(interpStartIdxs(mappableTaskIdx))
+                entryStartIdx = Base.Max(entryStartIdx, 0)
+                entryStartIdx = Base.Min(entryStartIdx, splitIndices(UBound(splitIndices)))
+                
+                entryEndIdx = Int(interpEndIdxs(mappableTaskIdx))
+                entryEndIdx = Base.Max(entryEndIdx, 0)
+                entryEndIdx = Base.Min(entryEndIdx, splitIndices(UBound(splitIndices)))
+                
+                evaluatedDeltaH = tDeltaVals(mappableTaskIdx)
+                If evaluatedDeltaH = 0 Then GoTo r3h_skipEntry
+                
+                actualDeltaH = Base.Max(tEndVals(mappableTaskIdx) - tStartVals(mappableTaskIdx), 0) * 24
+                
+                'Delta time and timestamps may differ if the delta time was calculated as a calendar diff event.
+                'Then the delta time is smaller than the actual difference of start time and end time as
+                'calendar diff excludes appointments within the given time span. Calc 'timeRatio' to take this into account
+                'and split evenly (can be 1 or less than 1)
+                timeRatio = evaluatedDeltaH / actualDeltaH 'unit is h
+
+                
+                'The logged time entry of the task can be mapped to two or more STL entries.
+                Dim chainIdx As Integer
+                Dim inSplitDeltaH As Double: inSplitDeltaH = 0
+                For chainIdx = entryStartIdx To entryEndIdx
+                    If entryStartIdx = entryEndIdx Then
+                        inSplitDeltaH = evaluatedDeltaH
+                    ElseIf chainIdx = entryStartIdx Then
+                        'Get the time from task start to first STL entry end
+                        inSplitDeltaH = (splitEndVals(entryStartIdx) - tStartVals(mappableTaskIdx)) * 24 * timeRatio
+                    ElseIf chainIdx = entryEndIdx Then
+                        'Calc the time from last STL entry start to split end
+                        inSplitDeltaH = (tEndVals(mappableTaskIdx) - splitStartVals(entryEndIdx)) * 24 * timeRatio
+                    Else
+                        inSplitDeltaH = (splitStartVals(entryStartIdx + 1) - splitStartVals(entryStartIdx)) * 24 * timeRatio
+                    End If
+                        
+                    currentDelta = summedDeltaCol(RowIndex:=chainIdx + 1).Value
+                    summedDeltaCol(RowIndex:=chainIdx + 1).Value = currentDelta + inSplitDeltaH
+                Next chainIdx
+            Next mappableTaskIdx
+r3h_skipEntry:
+        End If
+z7g_skipTask:
+    Next taskCell
+    
+    'Show the analysis sheet afterwardsh
+    analysisSheet.Activate
+End Function
+
+
+
+Function PreprocessStlRows() As Boolean
+    Const FN As String = "Analysis.PreprocessStlRows"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Init output
+    PreprocessStlRows = False
+    
+    'Read analysis settings
+    Dim analysisSheet As Worksheet
+    Set analysisSheet = Analysis.GetAnalysisSheet
+    If analysisSheet Is Nothing Then Exit Function
+    
+    Dim spanStartCell As Range
+    Dim spanEndCell As Range
+
+    Call Utils.GetSingleDataCellVal(analysisSheet, SPAN_START_HEADER, spanStartCell)
+    Call Utils.GetSingleDataCellVal(analysisSheet, SPAN_END_HEADER, spanEndCell)
+    
+    Dim splitInt As SplitInterval
+    
+    splitInt = Analysis.GetSplitInterval
+    
+    If Not _
+        (IsDate(spanStartCell.Value) And _
+        IsDate(spanEndCell.Value) And _
+        splitInt <> SplitInterval.ceInvalid) Then Exit Function
+    
+    Dim spanStart As Date: spanStart = CDate(spanStartCell.Value2)
+    Dim spanEnd As Date: spanEnd = CDate(spanEndCell.Value2)
+    
+    'Build output rows
+    
+    Dim firstDayOfWeek As Integer
+    firstDayOfWeek = SettingUtils.GetFirstDayOfWeekSetting
+    
+    Dim intervalIdx As Long
+    Dim intervalCount As Long
+    
+    Select Case splitInt
+        Case SplitInterval.ceNoSplit
+            intervalCount = 0
+            
+        Case SplitInterval.ceHour
+            intervalCount = DateDiff("h", spanStart, spanEnd)
+            
+        Case SplitInterval.ceDay
+            intervalCount = DateDiff("d", spanStart, spanEnd)
+            
+        Case SplitInterval.ceWeek
+            intervalCount = DateDiff("ww", spanStart, spanEnd, firstDayOfWeek)
+            
+        Case SplitInterval.ceMonth
+            intervalCount = DateDiff("m", spanStart, spanEnd)
+            
+        Case SplitInterval.ceYear
+            intervalCount = DateDiff("yyyy", spanStart, spanEnd)
+    End Select
+    
+    If intervalCount > INTERVAL_WARNING_COUNT Then
+        Call MessageUtils.HandleMessage("Generated number of intervals is " & intervalCount & _
+            " and exceeds " & INTERVAL_WARNING_COUNT & ". Aborting.", _
+            ceWarning, FN)
+        Exit Function
+    End If
+            
+    Dim splitStart As Date
+    Dim splitEnd As Date
+    
+    For intervalIdx = 0 To intervalCount
+        If intervalIdx = 0 Then
+            splitStart = spanStart
+        Else
+            Select Case splitInt
+                Case SplitInterval.ceNoSplit
+                    'Should never be reached
+                    
+                Case SplitInterval.ceHour
+                    splitStart = spanStart + intervalIdx / 24 'hours
+                    splitStart = Int(splitStart) + TimeSerial(Hour(splitStart), 0, 0)
+                
+                Case SplitInterval.ceDay
+                    splitStart = spanStart + intervalIdx 'days
+                    splitStart = Int(splitStart)
+                
+                Case SplitInterval.ceWeek
+                    splitStart = spanStart + 7 * intervalIdx 'days
+                    splitStart = splitStart - (Weekday(splitStart, firstDayOfWeek) - 1 + (splitStart - Int(splitStart)))
+                
+                Case SplitInterval.ceMonth
+                    splitStart = DateSerial(Year(spanStart) + intervalIdx \ 12, Month(spanStart) + intervalIdx Mod 12, 1)
+                    
+                Case SplitInterval.ceYear
+                    splitStart = DateSerial(Year(spanStart) + intervalIdx, 1, 1)
+                    
+            End Select
+        End If
+                
+        If intervalIdx = intervalCount Then
+            splitEnd = spanEnd
+        Else
+            Select Case splitInt
+                Case SplitInterval.ceNoSplit
+                    'Should never be reached
+                    
+                Case SplitInterval.ceHour
+                    splitEnd = spanStart + (intervalIdx + 1) / 24 'hours
+                    splitEnd = Int(splitEnd) + TimeSerial(Hour(splitEnd), 0, 0)
+                
+                Case SplitInterval.ceDay
+                    splitEnd = spanStart + (intervalIdx + 1) 'days
+                    splitEnd = Int(splitEnd)
+                
+                Case SplitInterval.ceWeek
+                    splitEnd = spanStart + 7 * (intervalIdx + 1) 'days
+                    splitEnd = splitEnd - (Weekday(splitEnd, firstDayOfWeek) - 1 + (splitEnd - Int(splitEnd)))
+                
+                Case SplitInterval.ceMonth
+                    splitEnd = DateSerial(Year(spanStart) + (intervalIdx + 1) \ 12, Month(spanStart) + (intervalIdx + 1) Mod 12, 1)
+                    
+                Case SplitInterval.ceYear
+                    splitEnd = DateSerial(Year(spanStart) + intervalIdx + 1, 1, 1)
+            End Select
+        End If
+                
+        Call Analysis.AddNewStlEntry(splitStart, splitEnd)
+    Next intervalIdx
+    
+    PreprocessStlRows = True
+End Function
+
+
+
+Function GetSplitInterval() As SplitInterval
+    Const FN As String = "Analysis.GetSplitInterval"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    Dim analysisSheet As Worksheet
+    Set analysisSheet = Analysis.GetAnalysisSheet
+    
+    If analysisSheet Is Nothing Then Exit Function
+    
+    Dim splitVal As String
+    splitVal = Utils.GetSingleDataCellVal(analysisSheet, SPLIT_INTERVAL_HEADER)
+    
+    Select Case splitVal
+        Case "No split"
+            GetSplitInterval = SplitInterval.ceNoSplit
+        Case "Hour"
+            GetSplitInterval = SplitInterval.ceHour
+        Case "Day"
+            GetSplitInterval = SplitInterval.ceDay
+        Case "Week"
+            GetSplitInterval = SplitInterval.ceWeek
+        Case "Month"
+            GetSplitInterval = SplitInterval.ceMonth
+        Case "Year"
+            GetSplitInterval = SplitInterval.ceYear
+        Case Else
+            GetSplitInterval = SplitInterval.ceInvalid
+    End Select
+End Function
+
+
+
+Function GetStlColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+    Const FN As String = "Analysis.GetStlColumn"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Wrapper to read column of stl
+    Set GetStlColumn = Utils.GetListColumn(Analysis.GetAnalysisSheet, STL_IDX, colIdentifier, rowIdentifier)
+End Function
+
+
+
+Function IntersectStlColumn(colIdentifier As Variant, rowIdentifier As Range) As Range
+    Const FN As String = "Analysis.IntersectStlColumn"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Get the intersection of a list column and a cell
+    Set IntersectStlColumn = Utils.IntersectListColAndCells(Analysis.GetAnalysisSheet, STL_IDX, colIdentifier, rowIdentifier)
+End Function
+
+
+
+Function GetStlBodyRange() As Range
+    Const FN As String = "Analysis.GetStlBodyRange"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Get the body range of the stl
+    '
+    'Output args:
+    '   GetStlBodyRange: The body range
+    
+    'Init output
+    Set GetStlBodyRange = Nothing
+    
+    'Get the ebs data data table / list object
+    Dim lo As ListObject
+    Dim sheet As Worksheet
+    Set sheet = Analysis.GetAnalysisSheet
+    Set lo = sheet.ListObjects(STL_IDX)
+    
+    If Not lo Is Nothing Then
+        Set GetStlBodyRange = lo.DataBodyRange
+    End If
+End Function
+
+
+
+Function GetAnalysisSheet() As Worksheet
+    Const FN As String = "Analysis.GetAnalysisSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Return the analysis sheet (fixed name)
+    '
+    'Output args:
+    '  GetAnalysis:    Handle to the analysis sheet
+    
+    Set GetAnalysisSheet = ThisWorkbook.Worksheets(ANALYSIS_SHEET_NAME)
+End Function
+
+
+
+
+Function AddNewStlEntry(splitStart As Date, splitEnd As Date)
+    Const FN As String = "Analysis.AddNewStlEntry"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Adds ebs entry (propability, estimate time) pair to the tasks sheet ebs list
+    
+    Dim newEntryCell As Range
+    
+    Dim receivedEntry As Boolean
+    Dim newFormattedNumber As String
+        
+    receivedEntry = Utils.GetNewEntry(Analysis.GetAnalysisSheet, STL_IDX, newEntryCell, newFormattedNumber)
+    
+    If receivedEntry Then
+        'If a new entry (with number and cell) could be generated add the data
+        Dim splitStartCell As Range
+        Dim splitEndCell As Range
+        Dim splitTotalTimeCell As Range
+        
+        Set splitStartCell = Analysis.IntersectStlColumn(SPLIT_START_HEADER, newEntryCell)
+        Set splitEndCell = Analysis.IntersectStlColumn(SPLIT_END_HEADER, newEntryCell)
+        Set splitTotalTimeCell = Analysis.IntersectStlColumn(TIME_SPENT_HEADER, newEntryCell)
+        
+        If Not splitStartCell Is Nothing And Not splitEndCell Is Nothing And Not splitTotalTimeCell Is Nothing Then
+            newEntryCell.Value = newFormattedNumber
+            splitStartCell.Value = splitStart
+            splitEndCell.Value = splitEnd
+            splitTotalTimeCell.Value = 0
+        End If
+    End If
+End Function
+
+
+
+Function CalcIndexArray(axisSize As Long) As Long()
+    Const FN As String = "Analysis.CalcIndexArray"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'See also: CalcIndexArray
+    '
+    'Input args:
+    '  axisSize:        Size of indices array
+    '
+    'Output args:
+    '  CalcIndexArray:   An array of indices [0 to axisSize]
+
+    Dim indexArray() As Long
+    CalcIndexArray = indexArray
+    
+    'Check args
+    If axisSize < 1 Then Exit Function
+    
+    ReDim indexArray(axisSize - 1)
+    
+    Dim idx As Integer
+    For idx = 0 To axisSize - 1
+        indexArray(idx) = idx
+    Next idx
+    
+    CalcIndexArray = indexArray
+End Function

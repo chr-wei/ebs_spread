@@ -53,6 +53,9 @@ End Sub
 
 
 Private Sub Worksheet_Change(ByVal Target As Range)
+    Const FN As String = "Planning.Worksheet_Change"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Run a catched call to the main value handler method in this sheet
     Call Utils.RunTryCatchedCall(f:="HandleChanges", obj:=Planning, arg1:=Target, screenUpdating:=False)
 End Sub
@@ -60,6 +63,9 @@ End Sub
 
 
 Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
+    Const FN As String = "Planning.Worksheet_FollowHyperlink"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Run a catched call to the hyperlink handler method in this sheet
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.FollowTaskSheetLink", arg1:=Target, screenUpdating:=False)
 End Sub
@@ -67,6 +73,9 @@ End Sub
 
 
 Sub UI_AddNewTask()
+    Const FN As String = "Planning.UI_AddNewTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Add a new task
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddNewTask", enableEvt:=False, screenUpdating:=False)
 End Sub
@@ -74,6 +83,9 @@ End Sub
 
 
 Sub UI_CopyTask()
+    Const FN As String = "Planning.UI_CopyTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Copy a task. Do make sure the user's current selection will point to the copied task after creating it. To do so create the new hash here directly
     'and search for it afterwards
     
@@ -93,7 +105,7 @@ Sub UI_CopyTask()
         Set copiedCell = PlanningUtils.IntersectHashAndListColumn(newHash, Constants.TASK_NAME_HEADER)
         
         If Not copiedCell Is Nothing Then
-            copiedCell.Select
+            Call PlanningUtils.SelectOnPlanningSheet(copiedCell)
         End If
     End If
 End Sub
@@ -101,6 +113,9 @@ End Sub
 
 
 Sub UI_DeleteSelectedTask()
+    Const FN As String = "Planning.UI_DeleteSelectedTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Delete the entire task (cannot be undone). Delete the task sheet (named by tHash) and the task row entry in the planning sheet
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.DeleteSelectedTask", screenUpdating:=False)
 End Sub
@@ -108,6 +123,9 @@ End Sub
 
 
 Sub UI_EndAllTasks()
+    Const FN As String = "Planning.UI_EndAllTasks"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Stop tracking for all tasks (helps preventing errors with unconsistent data as not only the task that is actively tracking is stopped)
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.EndAllTasks", screenUpdating:=False)
 End Sub
@@ -115,6 +133,9 @@ End Sub
 
 
 Sub UI_StartSelectedTask()
+    Const FN As String = "Planning.UI_StartSelectedTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Track the selected task (add timestamp)
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.StartSelectedTask", screenUpdating:=False)
 End Sub
@@ -122,6 +143,9 @@ End Sub
 
 
 Sub UI_AddFiveteenMinutesToSelectedTask()
+    Const FN As String = "Planning.UI_AddFiveteenMinutesToSelectedTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Add start and end timestamp to a task so that 15 minutes of time are booked for that task.
     Dim hash As String
     'Get the hash of the selected task
@@ -135,6 +159,9 @@ End Sub
 
 
 Sub UI_AddZeroMinutesToSelectedTask()
+    Const FN As String = "Planning.UI_AddZeroMinutesToSelectedTask"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Used to set a point of time to the task tracking data
     
     Dim hash As String
@@ -149,6 +176,9 @@ End Sub
 
 
 Sub UI_ShiftTaskUp()
+    Const FN As String = "Planning.UI_ShiftTaskUp"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Shift task up in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
@@ -156,12 +186,15 @@ Sub UI_ShiftTaskUp()
         enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
-    Call Planning.HandleSelectionChanges(Selection)
+    Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
 
 
 
 Sub UI_ShiftTaskDown()
+    Const FN As String = "Planning.UI_ShiftTaskDown"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Shift task down in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
@@ -169,12 +202,15 @@ Sub UI_ShiftTaskDown()
         enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
-    Call Planning.HandleSelectionChanges(Selection)
+    Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
 
 
 
 Sub UI_GatherTasks()
+    Const FN As String = "Planning.UI_GatherTasks"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Edit the priorities of all selected tasks (see multi selection with highlighted lines in task sheet) so that they are sticking together.
     'To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
@@ -183,12 +219,15 @@ Sub UI_GatherTasks()
         enableEvt:=False, screenUpdating:=False)
     'Since the gather tasks command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the gahter tasks call through 'RunTryCatchedCall'
-    Call Planning.HandleSelectionChanges(Selection)
+    Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
 
 
 
 Sub UI_RunEbs()
+    Const FN As String = "Planning.UI_RunEbs"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'THE main feature. Run all the steps to get evidence based sheduling data and charts for every contributor.
     Call Utils.RunTryCatchedCall(f:="EbsUtils.RunEbs", screenUpdating:=False)
 End Sub
@@ -196,6 +235,9 @@ End Sub
 
 
 Sub UI_CollectTotalTimesSpent()
+    Const FN As String = "Planning.UI_CollectTotalTimesSpent"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
     'Read the task's data to get the total time a user spent working on it.
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.CollectTotalTimesSpent", screenUpdating:=False)
 End Sub
@@ -203,6 +245,9 @@ End Sub
 
 
 Function HandleChanges(Target As Range)
+    Const FN As String = "Planning.HandleChanges"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Main cell value change handler. The function checks if a cell of the planning list object was edited. In addition some special
     'cells above the list are checked as well.
     'Handling changes differs from column to column. At first the column headers are read and then a specific handler is called.
@@ -354,6 +399,7 @@ End Function
 
 
 Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates As Boolean = True)
+    Const FN As String = "ManageEstimateChange"
     'Manage the change of the user's estimate. Multiple things are done here.
     ' (1) Estimate is copied to task sheet
     ' (1.1) But prior to copying it it is check for its type and validity.
@@ -371,13 +417,27 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         
         'Determine the status of the entered value
         If IsNumeric(enteredVal) Or IsDate(enteredVal) Then
-            If 0 < CDbl(enteredVal) And CDbl(enteredVal) < 100 Then
+            If 0 < CDbl(enteredVal) And CDbl(enteredVal) <= 100 Then
                 'A value less than 100 is allowed for entered hours (generally entered hours should not be larger than 16.0)
                 ues = UserEstimateStatus.ceValidHours
+                
+            ElseIf CDbl(enteredVal) > 100 And CDbl(enteredVal) <= CDbl(Now) Then
+                'More than 100 hours is not allowed.
+                Call MessageUtils.HandleMessage("Invalid estimate entered. " & enteredVal & " is more than 100h", _
+                    ceWarning, FN)
+                ues = UserEstimateStatus.ceInvalid
             ElseIf CDbl(enteredVal) > CDbl(Now) Or enteredVal = CalendarUtils.GetStartOfDay(Now) Then
                 'Entered date has to be later than 'NOW'. This does not apply, if the date without clock time is e.g. 16/07/2019 and 'NOW' is 16/07/2019 07:00.
                 'It is assumed that the user sets the end of 16/07/2019 as time limit and not the beginning if no time is passed along
-                ues = UserEstimateStatus.ceValidDate
+
+                If CDbl(enteredVal) - CDbl(Now) < 100 Then
+                    'Entered date should not be later than 100 days from now on. This would make time calculation below run for a long time
+                    ues = UserEstimateStatus.ceValidDate
+                Else
+                    Call MessageUtils.HandleMessage("Invalid estimate entered. " & CDate(enteredVal) & " is more than 100 days from 'Now' on", _
+                        ceWarning, FN)
+                    ues = UserEstimateStatus.ceInvalid
+                End If
             Else
                 ues = UserEstimateStatus.ceInvalid
             End If
@@ -388,6 +448,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         
         Dim outputVal As Variant
         outputVal = enteredVal
+        
         'Process entered value
         If ues = UserEstimateStatus.ceValidDate Then
             'User entered a date - calculate estimate

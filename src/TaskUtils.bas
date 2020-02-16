@@ -38,7 +38,7 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
         'On going back select the task's entry
         Dim taskName As Range
         Set taskName = PlanningUtils.IntersectHashAndListColumn(sheet.name, Constants.TASK_NAME_HEADER)
-        If Not taskName Is Nothing Then taskName.Select
+        If Not taskName Is Nothing Then Call PlanningUtils.SelectOnPlanningSheet(taskName)
     Else
         Dim accentColor As Long
         accentColor = SettingUtils.GetColors(ceAccentColor)
@@ -54,6 +54,7 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
         Call TaskUtils.SetClickActionHighlight(sheet, clickedCell)
         
         'Overwrite action of the clicked link and select the clicked cell
+        sheet.Activate
         clickedCell.Select
     End If
 End Function
@@ -338,6 +339,7 @@ End Function
 
 
 Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
+    Const FN As String = "SetEstimate"
     'Wrapper to set the user estimate to the task sheet
     'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheet for consistency reasons.
     '
@@ -347,6 +349,9 @@ Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNe
     '   setNewEbsEstimates: Flag stating whether new EBS estimates based on the current velocity pool of the contributor shall be calculated.
     '                       These estimates can be used to check the EBS estimate mechanism
     
+    'Check args:
+    If sheet Is Nothing Then Exit Function
+
     Call Utils.SetSingleDataCell(sheet, TASK_ESTIMATE_HEADER, userEstimate)
     
     If setNewEbsEstimates Then
