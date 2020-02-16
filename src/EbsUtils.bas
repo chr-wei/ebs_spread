@@ -132,7 +132,7 @@ End Function
 
 
 Function RunEbs()
-
+    Const FN As String = "RunEbs"
     'This function is the base function for EBS. For all contributors in the planning sheets with unfinished tasks
     'it collects all the data, calculates task remaining time to finish,
     'interpolates values for lean data storage and writes the data to the according tables. For every contributor a 'Sheduling (contributor)'
@@ -908,6 +908,9 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
             
     For hashIdx = 0 To UBound(hashes)
         'For all found unfinished tasks iterate
+        
+        'Give back power to the os in case of long-running calculations
+        DoEvents
                 
         'Now start ebs calculations task-wise
         currentHash = CStr(hashes(hashIdx))

@@ -34,7 +34,12 @@ Public Enum CopySource
     ceCopyFromWorksheetData = -1
 End Enum
 
+
+
 Function GetPlanningSheet() As Worksheet
+    Const FN As String = "PlanningUtils.GetPlanningSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Return the main planning sheet of this project
     '
     'Output args:
@@ -46,6 +51,9 @@ End Function
 
 
 Function GetTaskList() As ListObject
+    Const FN As String = "PlanningUtils.GetTaskList"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Return the main list on the task sheet
     '
     'Output args:
@@ -56,6 +64,9 @@ End Function
 
 
 Function GetTaskListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+    Const FN As String = "PlanningUtils.GetTaskListColumn"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Wrapper to read column of a task list
     '
     'Input args:
@@ -71,6 +82,9 @@ End Function
 
 
 Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell As Range)
+    Const FN As String = "PlanningUtils.AddNewTask"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Adds a new task and returns entry cell and generated hash value
     '
     'Input args:
@@ -102,7 +116,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
         
         If Not title Is Nothing Then
             'Select title and manually invoke handling of selection changes (this is necessary if function is called with disabled events)
-            title.Select
+            Call PlanningUtils.SelectOnPlanningSheet(title)
             Call Planning.HandleSelectionChanges(title)
         End If
     End If
@@ -111,6 +125,9 @@ End Function
 
 
 Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
+    Const FN As String = "PlanningUtils.AddNewTaskLine"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Adds a new task line in the planning sheet's main list
     '
     'Input args:
@@ -202,7 +219,9 @@ End Function
 
 
 Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
-
+    Const FN As String = "PlanningUtils.GetTaskHash"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Gets the task hash to a selection / cell range in a row. If a range arg is passed the passed range will be used to determine the
     'tasks hash. The rng arg is set by ref so that a current selection can also be retrieved if 'rng'is set to 'Nothing'when calling.
     'The selection is then checked against consisting of only one cell. If not the rng arg is set to 'Nothing'
@@ -218,7 +237,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     
     If rng Is Nothing Then
         'Use selection if nothing was passed
-        Set rng = Selection
+        Set rng = PlanningUtils.GetPlanningSelection
     End If
     
     Dim activeSheetName As String
@@ -227,14 +246,16 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     
     'Check if we are in task sheet and reset range if condition does not apply
     If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) <> 0 Then
-        Debug.Print "Please give/select a range of the main sheet called '" & Constants.PLANNING_SHEET_NAME & "'."
+        Call MessageUtils.HandleMessage("Please give/select a range of the main sheet called '" & Constants.PLANNING_SHEET_NAME & "'.", _
+            ceError, FN)
         Set rng = Nothing
         Exit Function
     End If
     
     'Check if only one row is selected and reset range if condition does not apply
     If Not rng.Rows.Count = 1 Then
-        Debug.Print "Please give/select a range with only one row."
+        Call MessageUtils.HandleMessage("Please give/select a range with only one row.", _
+            ceError, FN)
         Set rng = Nothing
         Exit Function
     End If
@@ -254,6 +275,9 @@ End Function
 
 
 Function IsTaskTracking(entry As Variant) As Boolean
+    Const FN As String = "PlanningUtils.IsTaskTracking"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Finds out whether the task identified by a row cell is tracking the user's time
     '
     'Input args:
@@ -292,6 +316,9 @@ End Function
 
 
 Function EndAllTasks()
+    Const FN As String = "PlanningUtils.EndAllTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Ends the tracking of all tasks: Add finish timestamp, delete indicators
     
     Dim sheet As Worksheet
@@ -314,6 +341,9 @@ End Function
 
 
 Function DeleteSelectedTask()
+    Const FN As String = "PlanningUtils.DeleteSelectedTask"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Function deletes the selected task: Its task row in planning sheet main list and its task sheet
     
     Dim hash As String
@@ -334,6 +364,9 @@ End Function
 
 
 Function StartSelectedTask()
+    Const FN As String = "PlanningUtils.StartSelectedTask"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Track the time for the selected task: Add a timestamp in task task sheet and set indicators in lists to see which task is active
     
     'End all task prior to start a new one
@@ -380,6 +413,9 @@ End Function
 
 
 Function IntersectHashAndListColumn(hash As String, colIdentifier As Variant) As Range
+    Const FN As String = "PlanningUtils.IntersectHashAndListColumn"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Get a cell of a data column to a specific hash. Wrapper with hash cell search for list col intersection function
     '
     'Input args:
@@ -405,6 +441,9 @@ End Function
 
 
 Function ReinitPriorities()
+    Const FN As String = "PlanningUtils.ReinitPriorities"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'This function takes all numeric entries in the priority column and applies 'new'priorities to them:
     'A priority list of [6, 4, 3, 2.3, 1] becomes [5, 4, 3, 2, 1]
     'The new list contains only adjacent whole numbers
@@ -492,6 +531,9 @@ End Function
 
 
 Function SetMultiCellHighlight(Optional sel As Range) As Range
+    Const FN As String = "PlanningUtils.SetMultiCellHighlight"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Highlight multiple rows to show all entries with same column content
     '
     'Input args:
@@ -502,7 +544,7 @@ Function SetMultiCellHighlight(Optional sel As Range) As Range
     
     'Fallback to cursor selection
     If IsMissing(sel) Then
-        Set sel = Selection
+        Set sel = PlanningUtils.GetPlanningSelection
     End If
     
     If sel.Count <> 1 Then
@@ -543,6 +585,9 @@ End Function
 
 
 Function ResetHighlight()
+    Const FN As String = "PlanningUtils.ResetHighlight"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Function resets the multi cell highlight. See also 'SetMultiCellHighlight'
     
     Dim lightColor As Long
@@ -559,6 +604,9 @@ End Function
 
 
 Function GetAllListValidatedCols() As Range
+    Const FN As String = "PlanningUtils.GetAllListValidatedCols"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Return cells of all list columns that use a validation with an automatically generated item list
     '(contributor column and all tag columns)
     '
@@ -587,101 +635,34 @@ End Function
 
 
 Function CopyTask(newHash As String, sourceListHash As String)
-    'Copy a selected task with specific column values (its name, tags, priority, estimated time, comment, due date and contributor)
-    '
-    'Input args:
-    '   sourceListHash: The task of the hash that you want to copy. Mandatory if copying from planning list was selected
-    '   newHash:        The new hash that will be used for the copied task (given by value to trace the task)
+    Const FN As String = "PlanningUtils.CopyTask"
+    Call MessageUtils.InvokeFnMsg(FN)
     
-    'Copy most of the fields of a given hash. Do not call this method with enabled events as it may have problematic consequences
-        
-    'Check args
-    If Not (SanityChecks.CheckHash(newHash) And SanityChecks.CheckHash(sourceListHash)) Then
-        Exit Function
+    'Save the data sheet of the source task to a special virtual sheet
+    Dim sourceSheet As Worksheet
+    Set sourceSheet = TaskUtils.GetTaskSheet(sourceListHash)
+    Call VirtualSheetUtils.StoreAsVirtualSheet(sourceSheet, Constants.COPY_STORAGE_SHEET_PREFIX, False)
+    
+    'Change the tHash of the stored task
+    Call PlanningUtils.RewriteCopiedSheetHash(newHash)
+
+    'Reload the virtual sheet and backsync the task to the planning sheet
+    If VirtualSheetUtils.VirtualSheetExists(newHash, Constants.COPY_STORAGE_SHEET_PREFIX) Then
+    
+        Call VirtualSheetUtils.LoadVirtualSheet(newHash, Constants.COPY_STORAGE_SHEET_PREFIX, _
+            ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+            
+        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, _
+            taskNamePostfix:=" (copy)")
     End If
-    
-    If Application.EnableEvents = True Then
-        Debug.Print "Do not run this function with enabled events. Trouble ahead - exiting function."
-        Exit Function
-    End If
-    
-    'First add a new task and return the cell of the entry to have a reference for further copying
-    Call PlanningUtils.AddNewTask(newHash)
-    
-    'Search for hash after adding the new task, because list items are reordered
-    Dim existingEntry As Range
-    Set existingEntry = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, sourceListHash)
-    'Debug.Print "Existing entry: " + existingEntry.Address
-    
-    Dim copiedFields As Variant
-    
-    'Collect all the copied field headers
-    copiedFields = Array(TASK_NAME_HEADER, TASK_PRIORITY_HEADER, TASK_ESTIMATE_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, _
-        CONTRIBUTOR_HEADER)
-    
-    'Add the tag headers as well (dynamically, because the user can use different tag column names)
-    Dim header As Variant
-    
-    'Populate regex fields
-    'Copy regex fields (tags)
-    Dim tagHeaders As Range
-    Set tagHeaders = PlanningUtils.GetTagHeaderCells
-    
-    If Not tagHeaders Is Nothing Then
-        Dim tagHeader As Range
-        For Each tagHeader In tagHeaders
-            ReDim Preserve copiedFields(UBound(copiedFields) + 1)
-            copiedFields(UBound(copiedFields)) = tagHeader
-        Next tagHeader
-    End If
-    
-    'Copy fields and handle changes if needed
-    For Each header In copiedFields
-        Dim unifiedHeader As String
-        unifiedHeader = Planning.UnifyTagName(CStr(header))
-        
-        Dim existingVal As Variant: existingVal = ""
-        
-        'Read the value to be copied
-        existingVal = PlanningUtils.IntersectHashAndListColumn(sourceListHash, CStr(header)).Value
-        
-        'Now save the value to the new task and run handlers
-        
-        Dim cell As Range
-        Set cell = PlanningUtils.IntersectHashAndListColumn(newHash, CStr(header))
-        
-        'Handle cell value changes here
-        Select Case unifiedHeader
-            Case TASK_NAME_HEADER
-                'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + " (copy)"
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-               
-            Case Constants.TAG_REGEX
-                'Copy the tag and run handler without cell validation update. This causes cell validation to fail
-                cell.Value = existingVal
-                Call Planning.ManageTagChange(cell, False)
-                
-            Case Constants.CONTRIBUTOR_HEADER
-                'Handle contributor change without cell validation update. This causes cell validation to fail
-                cell.Value = existingVal
-                Call Planning.ManageContributorChange(cell, False)
-                                
-            Case TASK_PRIORITY_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER, TASK_ESTIMATE_HEADER
-                'Copy values and handle change to copy values to task sheet
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-        End Select
-    Next header
-    
-    'At the end sort the tasks with their priorities
-    PlanningUtils.OrganizePrioColumn
 End Function
 
 
 
 Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
+    Const FN As String = "PlanningUtils.ShiftPrio"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Change a tasks priority combined with sorting the priorities to shift tasks up and down
     '
     'Input args:
@@ -689,13 +670,14 @@ Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
     '  rng: A passed range identifiying the shifted task. If nothing is passed use the current selection
     
     If IsMissing(rng) Or rng Is Nothing Then
-        Set rng = Selection
+        'Activate planning sheet to get valid selection
+        Set rng = PlanningUtils.GetPlanningSelection
     End If
     
     Dim startHash As String
     Dim startColHeader As String
-    startHash = PlanningUtils.GetTaskHash(Selection)
-    startColHeader = Utils.GetListColumnHeader(Selection)
+    startHash = PlanningUtils.GetTaskHash(PlanningUtils.GetPlanningSelection)
+    startColHeader = Utils.GetListColumnHeader(PlanningUtils.GetPlanningSelection)
     
     'Check if only one col is selected
     If Not rng.Columns.Count = 1 Then
@@ -767,7 +749,7 @@ Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
     Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
     
     If Not newSel Is Nothing Then
-        newSel.Select
+        Call PlanningUtils.SelectOnPlanningSheet(newSel)
         Call Planning.HandleSelectionChanges(newSel)
     End If
     
@@ -776,13 +758,16 @@ End Function
 
 
 Function GatherTasks(Optional rng As Range)
+    Const FN As String = "PlanningUtils.GatherTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Gather tasks in priority queue
     '
     'Input args:
     '  rng: A passed range identifiying the tasks that shall be gathered. If nothing is passed use the current selection
     
     If IsMissing(rng) Or rng Is Nothing Then
-        Set rng = Selection
+        Set rng = PlanningUtils.GetPlanningSelection
     End If
     
     If rng.Count <= 1 Then
@@ -792,8 +777,8 @@ Function GatherTasks(Optional rng As Range)
     
     Dim startHash As String
     Dim startColHeader As String
-    startHash = PlanningUtils.GetTaskHash(Selection)
-    startColHeader = Utils.GetListColumnHeader(Selection)
+    startHash = PlanningUtils.GetTaskHash(PlanningUtils.GetPlanningSelection)
+    startColHeader = Utils.GetListColumnHeader(PlanningUtils.GetPlanningSelection)
     
     'Check if only one col is selected
     If Not rng.Columns.Count = 1 Then
@@ -839,7 +824,7 @@ Function GatherTasks(Optional rng As Range)
     Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
     
     If Not newSel Is Nothing Then
-        newSel.Select
+        Call PlanningUtils.SelectOnPlanningSheet(newSel)
         Call Planning.HandleSelectionChanges(newSel)
     End If
     
@@ -848,6 +833,9 @@ End Function
 
 
 Function OrganizePrioColumn()
+    Const FN As String = "PlanningUtils.OrganizePrioColumn"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'This function organizes the priorities in the priority column so that tasks keep their original priority order but with
     'a cleaner 'look'. First all priorities will be replaced with descending, whole numbers. Then the column is resorted descending
     'High priority values get to the top and low value to the bottom
@@ -879,6 +867,9 @@ End Function
 
 
 Function GetCumulativeMode(ebsColCell As Range) As CumulativeMode
+    Const FN As String = "PlanningUtils.GetCumulativeMode"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Function is used to read the setting value of an ebs column in task sheet.
     'Mode can either be cumulative or single value. This specifies if the times and dates displayed are showing the time order (cumulative times)
     'or the times for a single task to finish.
@@ -912,6 +903,9 @@ End Function
 
 
 Function CollectEbsColData(headerCell As Range)
+    Const FN As String = "PlanningUtils.CollectEbsColData"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'The function reads data from ebs sheet and copies it to the planning sheet.
     'Settings in the column header (propability of estimate and time or date mode) are taken into account
     
@@ -1122,6 +1116,9 @@ End Function
 
 
 Function GetUnfinishedTasks() As Range
+    Const FN As String = "PlanningUtils.GetUnfinishedTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Return all the unfinished task cells (column of kanban list header)
     'Unfinished tasks are the 'negative'of finished tasks. Finished tasks can be determined with 'Done'label, unfinished tasks can have
     'various different labels
@@ -1145,6 +1142,9 @@ End Function
 
 
 Function GetFinishedTasks() As Range
+    Const FN As String = "PlanningUtils.GetFinishedTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Use the kanban list tag 'Done'to find all finished tasks
     
     'Init output
@@ -1163,6 +1163,9 @@ End Function
 
 
 Function CollectTotalTimesSpent()
+    Const FN As String = "PlanningUtils.CollectTotalTimesSpent"
+    Call MessageUtils.InvokeFnMsg(FN)
+            
     'For every task on planning sheet that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
     Set timeCells = Base.IntersectN( _
@@ -1192,6 +1195,9 @@ End Function
 
 
 Function UpdateAllEbsCols()
+    Const FN As String = "PlanningUtils.UpdateAllEbsCols"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Find all ebs cols on planning sheet and call the update function for them
     
     Dim colHeaderCells As Range
@@ -1206,6 +1212,9 @@ End Function
 
 
 Function GetTaskListBodyRange() As Range
+    Const FN As String = "PlanningUtils.GetTaskListBodyRange"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Get the body range of the task list. Can be used for intersection.
     
     'Init output
@@ -1223,6 +1232,9 @@ End Function
 
 
 Function FollowTaskSheetLink(Target As hyperlink)
+    Const FN As String = "PlanningUtils.FollowTaskSheetLink"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Follows the link to a task sheet unhiding it prior to selecting it
     
     If StrComp(Target.subAddress, Constants.TASK_SHEET_STD_LINK) = 0 Then
@@ -1234,6 +1246,7 @@ Function FollowTaskSheetLink(Target As hyperlink)
         End If
         
         'After sheet is visible select sheet
+        taskSheet.Activate
         taskSheet.Select
     End If
 End Function
@@ -1241,6 +1254,9 @@ End Function
 
 
 Function GetTagHeaderCells() As Range
+    Const FN As String = "PlanningUtils.GetTagHeaderCells"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Returns all headers for tags
     Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
 End Function
@@ -1248,6 +1264,9 @@ End Function
 
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
+    Const FN As String = "PlanningUtils.GetSerializedTags"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'Read all tags of a task and return them as a serialzed string. Tag headers are returned as well if necessary
     '
     'Input args
@@ -1298,6 +1317,9 @@ End Function
 
 
 Function GetVisibleTasks() As Range
+    Const FN As String = "PlanningUtils.GetVisibleTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
     'This function returns all task cells that are visible (height <> 0)
     
     'Init output
@@ -1317,4 +1339,209 @@ Function GetVisibleTasks() As Range
     Next cll
     
     Set GetVisibleTasks = visibleHashes
+End Function
+
+
+
+Function hashExists(hash As String) As Boolean
+    hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
+End Function
+
+
+
+Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String = "")
+    Const FN As String = "BacksyncTask"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Backsync a task from a task sheet.
+    '
+    'Input args:
+    '   syncedHash:           The hash that the data is imported from. A task sheet with this hash has to exist to make reimport
+    '   taskNamePostfix:      The postfix appended to the processed task name
+    
+    'Do not call this method with enabled events as it may have problematic consequences
+        
+    'Check args
+    If TaskUtils.GetTaskSheet(syncedHash) Is Nothing Then Exit Function
+    
+    If Application.EnableEvents = True Then
+        Call MessageUtils.HandleMessage("Do not run this function with enabled events. Trouble ahead - exiting function.", _
+            ceError, FN)
+        Debug.Print
+        Exit Function
+    End If
+    
+    'First add a new task and return the cell of the entry to have a reference for further copying
+    Dim doBacksync As Boolean
+    doBacksync = PlanningUtils.hashExists(syncedHash)
+    
+    If doBacksync Then
+        'Task could be found in planning sheet. Backsync the task
+        Call MessageUtils.HandleMessage("Backsynced task '" & syncedHash & "'", _
+            ceInfo, FN)
+    Else
+        'The task will be 'imported' as it is not existent in the planning sheet
+        Dim entryAdded As Boolean
+        Dim entryCell As Range
+        entryAdded = AddNewTaskLine(syncedHash, entryCell)
+        
+        If entryAdded Then
+            Call MessageUtils.HandleMessage("Syncing task '" & syncedHash & "' with list", _
+                ceInfo, FN)
+        Else
+            Call MessageUtils.HandleMessage("Could not sync task '" & syncedHash & "' with list. Failed to create a new task line", _
+                ceError, FN)
+            Exit Function
+        End If
+    End If
+    
+    Dim copiedFields As Variant
+    
+    'Collect all the copied field headers
+    copiedFields = Array(TASK_NAME_HEADER, TASK_PRIORITY_HEADER, TASK_ESTIMATE_HEADER, KANBAN_LIST_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, _
+        CONTRIBUTOR_HEADER, TASK_FINISHED_ON_HEADER)
+    
+    'Add the tag headers as well (dynamically, because the user can use different tag column names)
+    Dim header As Variant
+    
+    'Populate regex fields
+    'Copy regex fields (tags)
+    Dim tagHeaders As Range
+    Set tagHeaders = PlanningUtils.GetTagHeaderCells
+    
+    If Not tagHeaders Is Nothing Then
+        Dim tagHeader As Range
+        For Each tagHeader In tagHeaders
+            ReDim Preserve copiedFields(UBound(copiedFields) + 1)
+            copiedFields(UBound(copiedFields)) = tagHeader
+        Next tagHeader
+    End If
+    
+    'Copy fields and handle changes if needed
+    For Each header In copiedFields
+        Dim unifiedHeader As String
+        unifiedHeader = Planning.UnifyTagName(CStr(header))
+        
+        Dim existingVal As Variant: existingVal = ""
+        
+        Select Case unifiedHeader
+            Case TAG_REGEX
+                'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
+                'the current tag header
+                        
+                Dim readSerTagHeaders As String
+                Dim readSerTagValues As String
+                readSerTagHeaders = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+                readSerTagValues = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_VALUES_HEADER)
+                        
+                Dim readTagHeaders() As String
+                Dim readTagValues() As String
+                        
+                readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
+                readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
+                        
+                If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
+                    'Values were deserialized successfully
+                    Dim headIdx As Integer
+                    For headIdx = 0 To UBound(readTagHeaders)
+                        If StrComp(readTagHeaders(headIdx), header) = 0 Then
+                            'Tag for current header was found.
+                            existingVal = readTagValues(headIdx)
+                                    
+                            'Break loop
+                            headIdx = UBound(readTagHeaders)
+                        End If
+                    Next headIdx
+                End If
+                        
+            Case Constants.TASK_PRIORITY_HEADER
+                'Task sheet does not have a priority value stored. Set to initial priority
+                existingVal = Constants.TASK_PRIO_INITIAL
+                    
+            Case Else
+                'Just pass the header here to retrieve the value of the sheet
+                existingVal = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), CStr(header))
+        End Select
+        
+        'Now save the value to the new task and run handlers
+        
+        'Store the last tag cell as its handler is called last
+        Dim lastTagCell As Range
+                
+        Dim cell As Range
+        Set cell = PlanningUtils.IntersectHashAndListColumn(syncedHash, CStr(header))
+        
+        'Handle cell value changes here
+        Select Case unifiedHeader
+            Case TASK_NAME_HEADER
+                'Copy name and handle name change to copy the name to the task sheet
+                existingVal = existingVal + taskNamePostfix
+                cell.Value = existingVal
+                Call Planning.HandleChanges(cell)
+            
+            Case TASK_ESTIMATE_HEADER
+                If IsNumeric(existingVal) Then
+                    cell.Value = CDbl(existingVal)
+                Else
+                    cell.Value = existingVal
+                End If
+                Call Planning.ManageEstimateChange(cell, False)
+                
+            Case KANBAN_LIST_HEADER
+                'Copy the value and manage change: Do not update the finished on date. This happens individually
+                cell.Value = existingVal
+                Call Planning.ManageKanbanListChange(cell, False)
+                
+            Case Constants.TAG_REGEX
+                'Copy the tag and run handler without cell validation update. This causes cell validation to fail
+                cell.Value = existingVal
+                'Store the last tag cell to call handler after last tag backsync - otherwise tags will get lost
+                Set lastTagCell = cell
+                
+            Case Constants.CONTRIBUTOR_HEADER
+                'Handle contributor change without cell validation update. This causes cell validation to fail
+                'Also do not update the EBS estimates of the copied task
+                cell.Value = existingVal
+                Call Planning.ManageContributorChange(cell, False, False)
+                                
+            Case TASK_PRIORITY_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
+                'Copy values and handle change to copy values to task sheet
+                cell.Value = existingVal
+                Call Planning.HandleChanges(cell)
+        End Select
+    Next header
+    
+    'Manage the changed tags
+    If Not lastTagCell Is Nothing Then
+        Call Planning.ManageTagChange(lastTagCell, False)
+    End If
+    
+    'At the end sort the tasks with their priorities
+    PlanningUtils.OrganizePrioColumn
+End Function
+
+
+
+Function RewriteCopiedSheetHash(newHash As String)
+    Dim nameCell As Range
+    'There should only be one virtual sheet inside the storage sheet. Load it.
+    Set nameCell = VirtualSheetUtils.GetAllVirtualSheets(Constants.COPY_STORAGE_SHEET_PREFIX).Items(0)
+    nameCell.Value = newHash
+End Function
+
+
+
+Function GetPlanningSelection() As Range
+    'Activate planning sheet to get valid selection
+    PlanningUtils.GetPlanningSheet.Activate
+    Set GetPlanningSelection = Selection
+End Function
+
+
+
+Function SelectOnPlanningSheet(rng As Range) As Range
+    If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) = 0 Then
+        PlanningUtils.GetPlanningSheet.Activate
+        rng.Select
+    End If
 End Function

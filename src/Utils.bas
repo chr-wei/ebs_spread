@@ -938,6 +938,9 @@ End Function
 
 
 Function SetSingleDataCell(sheet As Worksheet, headerText As String, data As Variant)
+    Const FN As String = "Utils.SetSingleDataCell"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Set a value of a cell that has a 'header' specifier to its left. The cell is identified by that header (cell)
     '
     'Input args:
@@ -954,7 +957,7 @@ Function SetSingleDataCell(sheet As Worksheet, headerText As String, data As Var
         dataCell.Value = data
     Else
         'Debug info
-        Debug.Print "Header cell '" & headerText & " 'could not be found on worksheet '" & sheet.name & "'."
+        Call MessageUtils.HandleMessage("Header cell '" & headerText & " 'could not be found on worksheet '" & sheet.name & "'.", ceError, FN)
     End If
 End Function
 

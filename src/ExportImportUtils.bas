@@ -37,204 +37,45 @@ Function ExportVisibleTasks()
         
         For Each cll In visibleTasks
             Set sheet = TaskUtils.GetTaskSheet(cll.Value)
-            'Store the sheet in a special virtual sheet with EXPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
+            'Store the sheet in a special virtual sheet with EXIMPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
             'be available inside this script
-            Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, EXPORT_SHEET_PREFIX, False)
+            Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, EXIMPORT_SHEET_PREFIX, False)
         Next cll
     End If
 End Function
 
 
 
-Function ImportTasks(sourceSheetsPrefix As String)
-    'This function imports all task sheet of a workbook
-    '
-    'Input args
-    '   sourceSheetsPrefix:   The prefix of the virtual sheets from which tasks are imported.
-    '                         The function reads all virtual tasks of all identified virtual sheets (identified by prefix)
-    'Check args
-    
-    If StrComp(sourceSheetsPrefix, "") = 0 Then Exit Function
-    
-    Call TaskUtils.VirtualizeTaskSheets
-    
+Function ImportTasks()
+    'This function imports all tasks of a special export worksheet
+     
+    ExportImportUtils.RewriteImportSheetHashes
+        
     Dim vSheets As Scripting.Dictionary
-    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(sourceSheetsPrefix)
-    
+    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX)
     Dim key As Variant
     
     For Each key In vSheets.Keys
-        
         Dim cpHash As String: cpHash = key
         If SanityChecks.CheckHash(cpHash) Then
-            'If the sheet is a task sheet then copy the task from sheet data
-            Dim newHash As String
-            newHash = CreateHashString("t")
-            
-            Dim sheet As Worksheet
-            Set sheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, sourceSheetsPrefix, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
-            If Not sheet Is Nothing Then
-                Call ExportImportUtils.ImportSingleTask(newHash:=newHash, sourceSheet:=sheet, _
-                    importedTaskPostfix:=SettingUtils.GetImportedTaskPostfixSetting)
+            Dim newSheet As Worksheet
+            Set newSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+            If Not newSheet Is Nothing Then
+                Call PlanningUtils.BacksyncTask(syncedHash:=cpHash, _
+                    taskNamePostfix:=SettingUtils.GetImportedTaskPostfixSetting)
             End If
-            Call Utils.DeleteWorksheetSilently(sheet)
         End If
     Next key
 End Function
 
 
 
-Function ImportSingleTask(newHash As String, sourceSheet As Worksheet, importedTaskPostfix As String)
-    'Import a task from a task sheet. This function is very similar to the 'PlanningUtils.CopyTask' function but uses sheet data instead of
-    'planning list data to 'duplicate' a task
-    '
-    'Input args:
-    '   sourceSheet:            The (external) sheet that holds data you want to copy
-    '   newHash:                The new hash that will be used for the copied task (given by value to trace the task)
-    '   importedTaskPostfix:    The postfix appended to the task name of an imported task
+Function RewriteImportSheetHashes()
+    Dim nameCell As Range
+    Dim item As Variant
     
-    'Do not call this method with enabled events as it may have problematic consequences
-        
-    'Check args
-    If Not SanityChecks.CheckHash(newHash) Or sourceSheet Is Nothing Then Exit Function
-    
-    If Application.EnableEvents = True Then
-        Debug.Print "Do not run this function with enabled events. Trouble ahead - exiting function."
-        Exit Function
-    End If
-    
-    'First add a new task and return the cell of the entry to have a reference for further copying
-    Call PlanningUtils.AddNewTask(newHash)
-    
-    Dim newTaskSheet As Worksheet
-    Set newTaskSheet = TaskUtils.GetTaskSheet(newHash)
-    
-    Dim sourceTimeLo As Range
-    Dim destTimeLo As Range
-    
-    Set sourceTimeLo = sourceSheet.ListObjects(Constants.TASK_SHEET_TIME_LIST_IDX).Range
-    Set destTimeLo = newTaskSheet.ListObjects(Constants.TASK_SHEET_TIME_LIST_IDX).Range
-        
-    Dim sourceEbsLo As Range
-    Dim destEbsLo As Range
-    
-    Set sourceEbsLo = sourceSheet.ListObjects(Constants.TASK_SHEET_EBS_LIST_IDX).Range
-    Set destEbsLo = newTaskSheet.ListObjects(Constants.TASK_SHEET_EBS_LIST_IDX).Range
-    
-    Call sourceTimeLo.Copy
-    Call destTimeLo.PasteSpecial(xlPasteAll)
-    
-    Call sourceEbsLo.Copy
-    Call destEbsLo.PasteSpecial(xlPasteAll)
-    
-    Dim copiedFields As Variant
-    
-    'Collect all the copied field headers
-    copiedFields = Array(TASK_NAME_HEADER, TASK_PRIORITY_HEADER, TASK_ESTIMATE_HEADER, KANBAN_LIST_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, _
-        CONTRIBUTOR_HEADER, TASK_FINISHED_ON_HEADER)
-    
-    'Add the tag headers as well (dynamically, because the user can use different tag column names)
-    Dim header As Variant
-    
-    'Populate regex fields
-    'Copy regex fields (tags)
-    Dim tagHeaders As Range
-    Set tagHeaders = PlanningUtils.GetTagHeaderCells
-    
-    If Not tagHeaders Is Nothing Then
-        Dim tagHeader As Range
-        For Each tagHeader In tagHeaders
-            ReDim Preserve copiedFields(UBound(copiedFields) + 1)
-            copiedFields(UBound(copiedFields)) = tagHeader
-        Next tagHeader
-    End If
-    
-    'Copy fields and handle changes if needed
-    For Each header In copiedFields
-        Dim unifiedHeader As String
-        unifiedHeader = Planning.UnifyTagName(CStr(header))
-        
-        Dim existingVal As Variant: existingVal = ""
-        
-        Select Case unifiedHeader
-            Case TAG_REGEX
-                'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
-                'the current tag header
-                        
-                Dim readSerTagHeaders As String
-                Dim readSerTagValues As String
-                readSerTagHeaders = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
-                readSerTagValues = Utils.GetSingleDataCellVal(sourceSheet, Constants.SERIALIZED_TAGS_VALUES_HEADER)
-                        
-                Dim readTagHeaders() As String
-                Dim readTagValues() As String
-                        
-                readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
-                readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
-                        
-                If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
-                    'Values were deserialized successfully
-                    Dim headIdx As Integer
-                    For headIdx = 0 To UBound(readTagHeaders)
-                        If StrComp(readTagHeaders(headIdx), header) = 0 Then
-                            'Tag for current header was found.
-                            existingVal = readTagValues(headIdx)
-                                    
-                            'Break loop
-                            headIdx = UBound(readTagHeaders)
-                        End If
-                    Next headIdx
-                End If
-                        
-            Case Constants.TASK_PRIORITY_HEADER
-                'Task sheet does not have a priority value stored. Set to initial priority
-                existingVal = Constants.TASK_PRIO_INITIAL
-                    
-            Case Else
-                'Just pass the header here to retrieve the value of the sheet
-                existingVal = Utils.GetSingleDataCellVal(sourceSheet, CStr(header))
-        End Select
-        
-        'Now save the value to the new task and run handlers
-        
-        Dim cell As Range
-        Set cell = PlanningUtils.IntersectHashAndListColumn(newHash, CStr(header))
-        
-        'Handle cell value changes here
-        Select Case unifiedHeader
-            Case TASK_NAME_HEADER
-                'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + importedTaskPostfix
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-            
-            Case TASK_ESTIMATE_HEADER
-                cell.Value = existingVal
-                Call Planning.ManageEstimateChange(cell, False)
-                
-            Case KANBAN_LIST_HEADER
-                'Copy the value and manage change: Do not update the finished on date. This happens individually
-                cell.Value = existingVal
-                Call Planning.ManageKanbanListChange(cell, False)
-                
-            Case Constants.TAG_REGEX
-                'Copy the tag and run handler without cell validation update. This causes cell validation to fail
-                cell.Value = existingVal
-                Call Planning.ManageTagChange(cell, False)
-                
-            Case Constants.CONTRIBUTOR_HEADER
-                'Handle contributor change without cell validation update. This causes cell validation to fail
-                'Also do not update the EBS estimates of the copied task
-                cell.Value = existingVal
-                Call Planning.ManageContributorChange(cell, False, False)
-                                
-            Case TASK_PRIORITY_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
-                'Copy values and handle change to copy values to task sheet
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-        End Select
-    Next header
-    
-    'At the end sort the tasks with their priorities
-    PlanningUtils.OrganizePrioColumn
+    For Each item In VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX).Items
+        Set nameCell = item
+        nameCell.Value = Utils.CreateHashString("t")
+    Next item
 End Function

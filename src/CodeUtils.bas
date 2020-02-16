@@ -48,7 +48,9 @@ Public Sub ExportModules()
                     StrComp(comp.name, "ThisWorkbook") = 0 Or _
                     StrComp(comp.name, "TaskSheetTemplate") = 0 Or _
                     StrComp(comp.name, "EbsSheetTemplate") = 0 Or _
-                    StrComp(comp.name, "Settings") = 0 Then
+                    StrComp(comp.name, "Settings") = 0 Or _
+                    StrComp(comp.name, "Analysis") = 0 Or _
+                    StrComp(comp.name, "Messages") = 0 Then
                     bExport = True
                     
                     filenamee = filenamee & ".cls"

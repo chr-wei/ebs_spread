@@ -43,6 +43,9 @@ End Sub
 
 
 Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Optional deleteNonVirtualSheet As Boolean = True)
+    Const FN As String = "StoreAsVirtualSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'This function stores a real worksheet inside a storage sheet. The range in which the source sheet is stored is called a 'virtual' sheet
     '
     'Input args:
@@ -60,7 +63,7 @@ Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Opti
     
     If VirtualSheetUtils.VirtualSheetExists(inSheet.name, storagePrefix) Then
         'Only store if sheet is not already virtual (check by sheet name)
-        Debug.Print "Cannot store sheet '" & inSheet.name & "' as virtual sheet. Sheet already exists.'"
+        Call MessageUtils.HandleMessage("Cannot store sheet '" & inSheet.name & "' as virtual sheet. Sheet already exists.'", ceError, FN)
         Exit Function
     End If
     
@@ -81,6 +84,9 @@ End Function
 
 
 Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As Worksheet
+    Const FN As String = "GetFreeStorageSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'This function manages the virtual storage sheet(s) to store sheets in
     
     'Input args:
@@ -118,6 +124,9 @@ End Function
 
 
 Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boolean
+    Const FN As String = "StorageIsFull"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Function checks if a storage sheet has enough space to store data in it
     '
     'Input args:
@@ -148,6 +157,9 @@ End Function
 
 
 Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional templateSheet As Worksheet = Nothing) As Worksheet
+    Const FN As String = "LoadVirtualSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'The function loads a virtual sheet out of a storage sheet and inserts it into a (new) worksheet.
     '
     'Input args:
@@ -164,7 +176,9 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     
     'Check args
     If Utils.SheetExists(sheetName) Then
-        Debug.Print "Virtual sheet '" & sheetName & "' will not be loaded. A non-virtual worksheet with the same name already exists.'"
+        Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & _
+            "' will not be loaded. A non-virtual worksheet with the same name already exists'", _
+            ceError, FN)
         Exit Function
     End If
     
@@ -173,7 +187,8 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     If Not templateSheet Is Nothing Then useSheetTemplate = True
     
     If Not VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
-        Debug.Print "Virtual sheet '" & sheetName & "' does not exist and cannot be loaded.'"
+            Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be loaded.'", _
+            ceError, FN)
     Else
         'The virtual sheet exists and can be loaded without conflict
         Dim vr As Range
@@ -208,15 +223,17 @@ End Function
 
 
 Function DeleteVirtualSheet(sheetName As String, storagePrefix As String)
+    Const FN As String = "DeleteVirtualSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'This function deletes a virtual sheet and runs a garbage collection afterwards to delete empty storage sheets
     
     'Input args:
     '   sheetName:      The virtual sheet's name you want to delete
     '   storagePrefix:  The virtual sheet storage prefix used to identify the storage sheet
     
-    
     If Not VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
-        Debug.Print "Virtual sheet '" & sheetName & "' does not exist and cannot be deleted.'"
+        Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be deleted.'", ceError, FN)
     Else
         'The virtual sheet exists and can be deleted
         Dim vr As Range
@@ -233,6 +250,8 @@ End Function
 
 
 Function GarbageCollectStorageSheets(storagePrefix As String)
+    Const FN As String = "GarbageCollectStorageSheets"
+    Call MessageUtils.InvokeFnMsg(FN)
     'Function deletes storage sheet if they do not contain any virtual sheet data anymore
     '
     'Input args:
@@ -251,6 +270,9 @@ End Function
 
 
 Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String) As Range
+    Const FN As String = "GetVirtualStorageDataRange"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Function returns the data range of a virtual sheet (a designated range inside a storage sheet)
     
     'Input args:
@@ -299,6 +321,9 @@ End Function
 
 
 Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Range
+    Const FN As String = "GetNewSheetStorage"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Return a range to store data in. The sheet storage will be prepared as follows:
     ' <VSHEET_1>
     ' <HEADER_ROW>: <NAME_HEADER> | <NAME> | <STORAGE_ROWS_HEADER> | <ROW_COUNT> | <STORAGE_COLUMNS_HEADER> | <COLUMN_COUNT>
@@ -357,6 +382,9 @@ End Function
 
 
 Function VirtualSheetExists(sheetName As String, storagePrefix As String) As Boolean
+    Const FN As String = "VirtualSheetExists"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Test if a virtual sheet exists
     '
     'Input args:
@@ -382,6 +410,9 @@ End Function
 
 
 Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
+    Const FN As String = "GetAllVirtualSheets"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Function returns a dictionary of all virtual sheets (key value pair of key:=sheet's name and value:= range of the found cell where the
     'name is stored
     '
@@ -435,6 +466,9 @@ End Function
 
 
 Function IsStorageSheetEmpty(sheet As Worksheet) As Boolean
+    Const FN As String = "IsStorageSheetEmpty"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Init output
     IsStorageSheetEmpty = True
     
@@ -499,6 +533,9 @@ End Function
 
 
 Function GetAllStorageSheets(storagePrefix As String) As Scripting.Dictionary
+    Const FN As String = "GetAllStorageSheets"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Get all workbook virtual storage sheets matching the hash pattern
     '
     'Input args:
@@ -524,6 +561,9 @@ End Function
 
 
 Function SheetIsStorageSheet(sheet As Worksheet, storagePrefix) As Boolean
+    Const FN As String = "SheetIsStorageSheet"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Check if the sheet is a storage sheet (has special prefix)
     '
     'Input args:

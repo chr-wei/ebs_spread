@@ -10,6 +10,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Sub UI_StoreSelectedCalendarId()
+    Const FN As String = "UI_StoreSelectedCalendarId"
     'This function stores information of a selected outlook calendar in the settings sheet.
     'The stored id can be copied to a contributors settings row to retrieve calendar information.
     
@@ -60,8 +61,6 @@ End Sub
 
 
 Sub UI_ImportTasks()
-    'Import all tasks of a special storage sheets which have the prefix EXPORT_SHEET_PREFIX
-    
-    'Workbook available. Import tasks' data
-    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", arg1:=Constants.EXPORT_SHEET_PREFIX, screenUpdating:=False)
+    'Import all tasks of a special storage sheets which have the prefix EXIMPORT_SHEET_PREFIX
+    Call Utils.RunTryCatchedCall(f:="ExportImportUtils.ImportTasks", screenUpdating:=False)
 End Sub

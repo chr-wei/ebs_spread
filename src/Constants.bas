@@ -19,7 +19,7 @@ Attribute VB_Name = "Constants"
 
 Option Explicit
 
-'Debugging flag: Disables error catching
+'Debugging flag: Disables error catching and changes message handling
 Public Const DEBUGGING_MODE As Boolean = False
 Public Const VERBOSE_OUTPUT As Boolean = False
 
@@ -194,7 +194,8 @@ Public Const CAL_PATH_TEMP_HEADER As String = "Calendar path temp"
 
 'Virtual sheet constants
 Public Const STORAGE_SHEET_PREFIX As String = "VSHEET_STOR_"
-Public Const EXPORT_SHEET_PREFIX As String = "EXP_STOR_"
+Public Const EXIMPORT_SHEET_PREFIX As String = "EXP_STOR_"
+Public Const COPY_STORAGE_SHEET_PREFIX As String = "COPY_STOR_"
 
 'Array constants
 

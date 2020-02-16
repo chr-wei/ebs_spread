@@ -60,6 +60,7 @@ Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optiona
     Optional ByRef associate2 As Variant, _
     Optional ByRef associate3 As Variant)
     
+    Const FN As String = "QuickSort"
     'This function sorts an numeric array in ascending or descending order.
     'If specified an associate array with equal length will be sorted alike
     '
@@ -74,7 +75,10 @@ Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optiona
     '  None. vArray and associate array are called by ref and returned via passed args
     'Set the standard limits if no limits are specified
     
-    If Not Base.IsArrayAllocated(vArray) Then Exit Function
+    If Not Base.IsArrayAllocated(vArray) Then
+        Call MessageUtils.HandleMessage("vArray is not allocated", ceError, FN)
+        Exit Function
+    End If
     
     If IsMissing(inLow) Or inLow = -1 Then
         'Set the starting index for pivoting

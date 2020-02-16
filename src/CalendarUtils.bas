@@ -248,6 +248,8 @@ Function MultiMapHoursToDate( _
     Optional ByVal appointmentOffsetHours As Double = 0, _
     Optional ByVal maxIterations As Integer = 32767) As Date()
     
+    Const FN As String = "MultiMapHoursToDate"
+    Call MessageUtils.InvokeFnMsg(FN)
     'Maps multi hours to a date regarding the standard outlook calendar. Events, working hours, preparation and post-action times are
     'taken into account. Data fetching approach:
     '  (1) Data from outlook and from 'Settings'sheet
@@ -463,6 +465,9 @@ Function MapHoursToDate( _
     'Iterate as long as 'remainingHours' are haven't been decreased to zero.
     iterIdx = 0
     While remainingHours >= 0 And iterIdx < maxIterations
+        'Give back power to the os in case of long-running calculations
+        DoEvents
+        
         'Debug info
         'Debug.Print "run: " & iterIdx & "," & Format(startingTime, "mm/dd/yyyy hh:mm AMPM")
         
@@ -535,6 +540,8 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     Optional ByVal appointmentOffsetHours As Double = 0, _
     Optional ByVal maxIterations As Integer = 32767) As Double
     
+    Const FN As String = "MapDateToHours"
+    Call MessageUtils.InvokeFnMsg(FN)
     'Maps a date to hours regarding the standard outlook calendar. Events, working hours, preparation and post-action times are
     'taken into account. E.g.:
     'Map(01/01/2019 -> 02/01/2019) = 8h (working)
@@ -624,6 +631,9 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     stopFlag = False
     
     Do
+        'Give back power to the os in case of long-running calculations
+        DoEvents
+        
         'Loop through all events ending in between the starting and end date - substract the hours from the total difference
         'Debug info
         'Debug.Print "Run of LeanMapDateToHours: " & iterIdx & "," & Format(startingDate, "mm/dd/yyyy hh:mm AMPM")
@@ -1005,6 +1015,7 @@ End Function
 
 Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outlook.Items
     Const FN As String = "GetCalItems"
+    Call MessageUtils.InvokeFnMsg(FN)
     'This function returns calendar items of a contributor if a folder id was specified. These appointments are filtered by busy status and category.
     'Recurrent appointments are included
     '
@@ -1093,6 +1104,7 @@ End Function
 
 
 Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef folderPath As String) As String
+    Const FN As String = "GetSelectedCalendarId"
     'Source: https://stackoverflow.com/questions/48789601/how-to-find-calendar-id
     
     'This function returns the id of a selected calendar folder as well as its path. Please do select the folder inside the explorer view
@@ -1103,7 +1115,9 @@ Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef f
     folderPath = ""
     
     Dim fold As Outlook.Folder
+    On Error Resume Next
     Set fold = Outlook.Application.ActiveExplorer.CurrentFolder
+    On Error GoTo 0
     
     If Not fold Is Nothing Then
         If fold.DefaultItemType = OlItemType.olAppointmentItem Then
@@ -1113,6 +1127,8 @@ Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef f
             storId = fold.storeId
             folderPath = fold.folderPath
         End If
+    Else
+        Call MessageUtils.HandleMessage("Calendar id could not be read. Did you select any calendar in Outlook?", ceInfo, FN)
     End If
     
     'Debug info

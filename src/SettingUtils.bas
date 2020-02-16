@@ -115,6 +115,7 @@ End Function
 
 
 Function GetContribWorkTimeSetting(contributor As String, timeSelector As WorkingTime) As Date
+    Const FN As String = "GetContribWorkTimeSetting"
     'Read the contributor's work time. Fallback constants are used if the contributor can not be found in the list.
     '
     'Input args:
@@ -156,8 +157,14 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
         Select Case timeSelector
             Case WorkingTime.ceWorkingStart
                 contributorWorkingTime = Constants.WORKING_HOURS_START
+                Call MessageUtils.HandleMessage("Falling back to standard working hour start [" & _
+                    Constants.WORKING_HOURS_START & "] for contributor" & contributor & "'", _
+                        ceInfo, FN)
             Case WorkingTime.ceWorkingEnd
                 contributorWorkingTime = Constants.WORKING_HOURS_END
+                Call MessageUtils.HandleMessage("Falling back to standard working hour end [" & _
+                    Constants.WORKING_HOURS_END & "] for contributor" & contributor & "'", _
+                        ceInfo, FN)
         End Select
     Else
         'Read the setting from the cell
