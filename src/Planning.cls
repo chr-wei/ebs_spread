@@ -149,10 +149,10 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
     'Add start and end timestamp to a task so that 15 minutes of time are booked for that task.
     Dim hash As String
     'Get the hash of the selected task
-    hash = GetTaskHash()
+    hash = PlanningUtils.GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Call Utils.RunTryCatchedCall(f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0.25), screenUpdating:=False)
+        Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddXHoursTime", arg1:=hash, arg2:=CDbl(0.25), screenUpdating:=False)
     End If
 End Sub
 
@@ -169,7 +169,7 @@ Sub UI_AddZeroMinutesToSelectedTask()
     hash = GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Call Utils.RunTryCatchedCall(f:="TaskUtils.AddXHoursTime", arg1:=TaskUtils.GetTaskSheet(hash), arg2:=CDbl(0), screenUpdating:=False)
+        Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddXHoursTime", arg1:=hash, arg2:=CDbl(0), screenUpdating:=False)
     End If
 End Sub
 

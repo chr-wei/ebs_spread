@@ -58,9 +58,10 @@ Function ImportTasks()
     For Each key In vSheets.Keys
         Dim cpHash As String: cpHash = key
         If SanityChecks.CheckHash(cpHash) Then
-            Dim newSheet As Worksheet
-            Set newSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
-            If Not newSheet Is Nothing Then
+            Dim loadedSheet As Worksheet
+            Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+            If Not loadedSheet Is Nothing Then
+                Call TaskUtils.SetHash(loadedSheet, cpHash)
                 Call PlanningUtils.BacksyncTask(syncedHash:=cpHash, _
                     taskNamePostfix:=SettingUtils.GetImportedTaskPostfixSetting)
             End If

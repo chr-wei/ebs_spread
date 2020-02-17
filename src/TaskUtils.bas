@@ -98,6 +98,9 @@ Function GetTaskSheet(hash As String) As Worksheet
             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME).UsedRange.Copy
             Call loadedSheet.PasteSpecial(xlPasteColumnWidths)
             
+            'Reset copy range to prevent accidentally pasting content to other sheets
+            Excel.Application.CutCopyMode = False
+            
             'Go back to overview worksheet as loading the virtual sheet jumps to the new sheet
             ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
         End If
@@ -270,28 +273,6 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         
         AddNewTrackingEntry = True
     End If
-End Function
-
-
-
-Function AddXHoursTime(sheet As Worksheet, deltaT As Double)
-    'Wrapper to add some hours to the tracking sheet
-    '
-    'Input args:
-    '   sheet:  The task sheet one wants to add the time to
-    '   deltaT: The time to add in h
-    
-    Dim hash As String
-    hash = TaskUtils.GetHash(sheet)
-    
-    If StrComp(hash, "") = 0 Then Exit Function
-    
-    If PlanningUtils.IsTaskTracking(hash) Then
-        'If the selected task is currently tracking, finish it to get a clean state
-        PlanningUtils.EndAllTasks
-    End If
-    
-    Call AddNewTrackingEntry(sheet, deltaT)
 End Function
 
 
@@ -600,23 +581,6 @@ Function GetEstimate(sheet As Worksheet) As Double
         GetEstimate = CDbl(val)
     Else
         GetEstimate = -1
-    End If
-End Function
-
-
-
-Function GetHash(sheet As Worksheet) As String
-    'Wrapper to get the hash from the sheet. "" if hash is invalid
-    '
-    'Input args:
-    '  sheet:  The task shete to retrieve the val from
-    
-    Dim val As String
-    val = GetSingleDataCellVal(sheet, Constants.T_HASH_HEADER)
-    If SanityChecks.CheckHash(val) Then
-        GetHash = val
-    Else
-        GetHash = ""
     End If
 End Function
 

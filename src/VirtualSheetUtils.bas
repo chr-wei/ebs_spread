@@ -75,6 +75,9 @@ Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Opti
     rSheetRng.Copy
     Call vSheetStorageRng.PasteSpecial(xlPasteAll)
     
+    'Reset copy range to prevent accidentally pasting content to other sheets
+    Excel.Application.CutCopyMode = False
+    
     'Delete the inSheet after it has been stored inside the virtual inSheet
     If deleteNonVirtualSheet Then
         Call Utils.DeleteWorksheetSilently(inSheet)
@@ -212,6 +215,9 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
         'Copy and paste data
         vr.Copy
         Call nvs.UsedRange.PasteSpecial(xlPasteAll)
+        
+        'Reset copy range to prevent accidentally pasting content to other sheets
+        Excel.Application.CutCopyMode = False
         
         'Free virtual sheet storage
         Call VirtualSheetUtils.DeleteVirtualSheet(sheetName, storagePrefix)
