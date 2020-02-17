@@ -648,12 +648,15 @@ Function CopyTask(newHash As String, sourceListHash As String)
 
     'Reload the virtual sheet and backsync the task to the planning sheet
     If VirtualSheetUtils.VirtualSheetExists(newHash, Constants.COPY_STORAGE_SHEET_PREFIX) Then
-    
-        Call VirtualSheetUtils.LoadVirtualSheet(newHash, Constants.COPY_STORAGE_SHEET_PREFIX, _
+        Dim loadedSheet As Worksheet
+        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(newHash, Constants.COPY_STORAGE_SHEET_PREFIX, _
             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+        If Not loadedSheet Is Nothing Then
+            Call TaskUtils.SetHash(loadedSheet, newHash)
             
-        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, _
-            taskNamePostfix:=" (copy)")
+            Call PlanningUtils.BacksyncTask(syncedHash:=newHash, _
+                taskNamePostfix:=" (copy)")
+        End If
     End If
 End Function
 
@@ -1503,8 +1506,17 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                 'Also do not update the EBS estimates of the copied task
                 cell.Value = existingVal
                 Call Planning.ManageContributorChange(cell, False, False)
-                                
-            Case TASK_PRIORITY_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
+                
+            Case DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
+                If IsDate(existingVal) Then
+                    'Convert to date to insert value correctly
+                    cell.Value = CDate(existingVal)
+                Else
+                    cell.Value = existingVal
+                End If
+                Call Planning.HandleChanges(cell)
+            
+            Case TASK_PRIORITY_HEADER, COMMENT_HEADER
                 'Copy values and handle change to copy values to task sheet
                 cell.Value = existingVal
                 Call Planning.HandleChanges(cell)
@@ -1544,4 +1556,21 @@ Function SelectOnPlanningSheet(rng As Range) As Range
         PlanningUtils.GetPlanningSheet.Activate
         rng.Select
     End If
+End Function
+
+
+
+Function AddXHoursTime(hash As String, deltaT As Double)
+    'Wrapper to add some hours to the tracking sheet
+    '
+    'Input args:
+    '   hash:   The task sheet's hash one wants to add the time to
+    '   deltaT: The time to add in h
+    
+    If PlanningUtils.IsTaskTracking(hash) Then
+        'If the selected task is currently tracking, finish it to get a clean state
+        PlanningUtils.EndAllTasks
+    End If
+    
+    Call TaskUtils.AddNewTrackingEntry(TaskUtils.GetTaskSheet(hash), deltaT)
 End Function
