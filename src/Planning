@@ -84,7 +84,7 @@ Sub UI_CopyTask()
     
     If SanityChecks.CheckHash(copiedHash) Then
         Dim newHash As String
-        newHash = CreateHashString("t")
+        newHash = Utils.CreateHashString("t")
         'Call this function with events to copy the task data from worksheet to task sheet immediately
         'Only call with disabled events to not mix up the cell validation values
         Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=copiedHash, _

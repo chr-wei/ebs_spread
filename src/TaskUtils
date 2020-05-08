@@ -173,7 +173,7 @@ Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolated
     Dim receivedEntry As Boolean
     Dim newFormattedNumber As String
         
-    receivedEntry = GetNewEntry(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, newEntryCell, newFormattedNumber)
+    receivedEntry = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, newEntryCell, newFormattedNumber)
     
     If receivedEntry Then
         'If a new entry (with number and cell) could be generated add the data
@@ -215,7 +215,7 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     Dim newFormattedNumber As String
     Dim entryReceived As Boolean
     
-    entryReceived = GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber)
+    entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber)
     If entryReceived Then
         Set startTimeCol = TaskUtils.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
         Set indicatorCol = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
@@ -436,7 +436,7 @@ Function GetTimeListBodyRange(sheet As Worksheet) As Range
 End Function
 
 Function SetHash(sheet As Worksheet, hash As String)
-    Call SetSingleDataCell(sheet, T_HASH_HEADER, hash)
+    Call Utils.SetSingleDataCell(sheet, T_HASH_HEADER, hash)
 End Function
 
 Function SetKanbanList(sheet As Worksheet, list As String)
@@ -506,7 +506,7 @@ Function GetVelocity(sheet As Worksheet) As Double
     '  sheet:  The task sheet to retrieve the val from
     
     Dim val As String
-    val = GetSingleDataCellVal(sheet, Constants.VELOCITY_HEADER)
+    val = Utils.GetSingleDataCellVal(sheet, Constants.VELOCITY_HEADER)
     If IsNumeric(val) Then
         GetVelocity = CDbl(val)
     Else
@@ -521,7 +521,7 @@ Function GetEstimate(sheet As Worksheet) As Double
     '  sheet:  The task shete to retrieve the val from
     
     Dim val As String
-    val = GetSingleDataCellVal(sheet, Constants.TASK_ESTIMATE_HEADER)
+    val = Utils.GetSingleDataCellVal(sheet, Constants.TASK_ESTIMATE_HEADER)
     If IsNumeric(val) Then
         GetEstimate = CDbl(val)
     Else
@@ -535,7 +535,7 @@ Function GetName(sheet As Worksheet) As String
     'Input args:
     '  sheet:  The task shete to retrieve the val from
     
-    GetName = GetSingleDataCellVal(sheet, Constants.TASK_NAME_HEADER)
+    GetName = Utils.GetSingleDataCellVal(sheet, Constants.TASK_NAME_HEADER)
 End Function
 
 Function GetContributor(sheet As Worksheet) As String
@@ -547,7 +547,7 @@ Function GetContributor(sheet As Worksheet) As String
     'Output args:
     '   GetContributor: The contributor name
     
-    GetContributor = GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
+    GetContributor = Utils.GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
 End Function
 
 Function GetTaskTotalTime(sheet As Worksheet) As Double
