@@ -139,9 +139,10 @@ Function BuildStl()
         
         Set tEndCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.END_TIME_HEADER, ceData)
         Set tEndCol = Base.FindAll(tEndCol, spanStart, , ceDoubleBigger)
+        
         If tStartCol Is Nothing Or tEndCol Is Nothing Then GoTo z7g_skipTask
-                
         Set tStartCol = Base.IntersectN(tStartCol, tEndCol.EntireRow)
+        If tStartCol Is Nothing Then GoTo z7g_skipTask
         Set tEndCol = Base.IntersectN(tEndCol, tStartCol.EntireRow)
         
         Set tDeltaCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, ceData)
