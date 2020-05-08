@@ -1,0 +1,27 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Export EbsSpread code",
+            "type": "shell",
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "cmd.exe",
+                        "args": [
+                            "/d", "/c"
+                        ]
+                    }
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            },
+            "args": ["\"${workspaceFolder}\\dev_tools\\XLSX_VBA_EXPORT.vbs\"", "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\"", "\"${workspaceFolder}\\src\""],
+            "command": "WScript"
+        }
+    ]
+}
