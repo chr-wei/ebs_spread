@@ -1,4 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
 Attribute VB_Name = "EbsUtils"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
@@ -18,17 +26,6 @@ Attribute VB_Name = "EbsUtils"
 '  Christian Weihsbach, weihsbach.c@gmail.com
     
 Option Explicit
-
-Enum PropabilityChartMode
-    ceChartModeLast = 1
-    ceChartModeLastHundred = 2
-    ceChartModeAll = 3
-End Enum
-
-Enum PropabilityChartScale
-    ceChartScaleTime = -1
-    ceChartScaleDate = 1
-End Enum
 
 Function HandleEbsSheetChanges(Target As Range)
 
@@ -898,7 +895,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
             
             'Calculate the remaining times: (Monte carlo estimate) - (remaining time)
             Erase remainingTimeEstimates
-            remainingTimeEstimates = Utils.CopyVarArrToDoubleArr(Base.CalcOnArray("EbsUtils.CalcRemainingTime", monteCarloTimeEstimates, spentTime))
+            remainingTimeEstimates = Utils.CopyVarArrToDoubleArr(Base.CalcOnArray(f:="CalcRemainingTime", arr:=monteCarloTimeEstimates, additionalArg:=spentTime, obj:=EbsUtils))
              
             'Calculate accumulated time estimates: The array values increase every iteration, do not clear
             accumulatedTimeEstimates = Utils.CopyVarArrToDoubleArr( _
@@ -1118,7 +1115,7 @@ Function GetMonteCarloTimeEstimates(userEstimate As Double, velocityPool() As Do
     GetMonteCarloTimeEstimates = monteCarloEstimates
 End Function
 
-Function CalcRemainingTime(userEstimate As Double, elapsedTime As Double) As Double
+Function CalcRemainingTime(userEstimate As Variant, elapsedTime As Variant) As Double
     'The remaining time is the difference of the time estimate and elapsed time.
     'If time estimate is too small the difference gets cut down to zero as no negative time estimates are allowed
     '
@@ -1662,5 +1659,7 @@ Function DeleteAllEbsSheets()
         End If
     Next sheet
 End Function
+
+
 
 

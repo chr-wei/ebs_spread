@@ -21,3 +21,34 @@ Public Enum DeserializedType
     ceDoubles = 1
     ceDates = 2
 End Enum
+
+Enum DateExtremum
+    ceLatest = -1
+    ceEarliest = 1
+End Enum
+
+Public Enum ShiftDirection
+    ceShiftUp = 1
+    ceShiftDown = -1
+End Enum
+
+Enum EstimateType
+    ceTime = 0
+    ceDate = 1
+End Enum
+
+Public Enum CopySource
+    ceCopyFromPlanningList = 1
+    ceCopyFromWorksheetData = -1
+End Enum
+
+Enum PropabilityChartMode
+    ceChartModeLast = 1
+    ceChartModeLastHundred = 2
+    ceChartModeAll = 3
+End Enum
+
+Enum PropabilityChartScale
+    ceChartScaleTime = -1
+    ceChartScaleDate = 1
+End Enum

@@ -61,7 +61,7 @@ Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Run a catched call to the hyperlink handler method in this sheet
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.FollowTaskSheetLink", arg1:=Target, screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="FollowTaskSheetLink", obj:=PlanningUtils, arg1:=Target, screenUpdating:=False)
 End Sub
 
 Sub UI_AddNewTask()
@@ -69,7 +69,7 @@ Sub UI_AddNewTask()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Add a new task
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddNewTask", enableEvt:=False, screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="AddNewTask", obj:=PlanningUtils, enableEvt:=False, screenUpdating:=False)
 End Sub
 
 Sub UI_CopyTask()
@@ -80,14 +80,14 @@ Sub UI_CopyTask()
     'and search for it afterwards
     
     Dim copiedHash As String
-    copiedHash = GetTaskHash()
+    copiedHash = PlanningUtils.GetTaskHash()
     
     If SanityChecks.CheckHash(copiedHash) Then
         Dim newHash As String
         newHash = Utils.CreateHashString("t")
         'Call this function with events to copy the task data from worksheet to task sheet immediately
         'Only call with disabled events to not mix up the cell validation values
-        Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=copiedHash, _
+        Utils.RunTryCatchedCall f:="CopyTask", obj:=PlanningUtils, arg1:=newHash, arg2:=copiedHash, _
                                 enableEvt:=False, screenUpdating:=False
         
         'Select the new task
@@ -105,7 +105,7 @@ Sub UI_DeleteSelectedTask()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Delete the entire task (cannot be undone). Delete the task sheet (named by tHash) and the task row entry in the planning sheet
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.DeleteSelectedTask", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="DeleteSelectedTask", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
 Sub UI_EndAllTasks()
@@ -113,7 +113,7 @@ Sub UI_EndAllTasks()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Stop tracking for all tasks (helps preventing errors with unconsistent data as not only the task that is actively tracking is stopped)
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.EndAllTasks", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="EndAllTasks", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
 Sub UI_StartSelectedTask()
@@ -121,7 +121,7 @@ Sub UI_StartSelectedTask()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Track the selected task (add timestamp)
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.StartSelectedTask", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="StartSelectedTask", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
 Sub UI_AddFiveteenMinutesToSelectedTask()
@@ -134,7 +134,7 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
     hash = PlanningUtils.GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddXHoursTime", arg1:=hash, arg2:=CDbl(0.25), screenUpdating:=False)
+        Call Utils.RunTryCatchedCall(f:="AddXHoursTime", obj:=PlanningUtils, arg1:=hash, arg2:=CDbl(0.25), screenUpdating:=False)
     End If
 End Sub
 
@@ -146,10 +146,10 @@ Sub UI_AddZeroMinutesToSelectedTask()
     
     Dim hash As String
     'Get the hash of the selected task
-    hash = GetTaskHash()
+    hash = PlanningUtils.GetTaskHash()
     
     If SanityChecks.CheckHash(hash) Then
-        Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddXHoursTime", arg1:=hash, arg2:=CDbl(0), screenUpdating:=False)
+        Call Utils.RunTryCatchedCall(f:="AddXHoursTime", obj:=PlanningUtils, arg1:=hash, arg2:=CDbl(0), screenUpdating:=False)
     End If
 End Sub
 
@@ -160,7 +160,7 @@ Sub UI_ShiftTaskUp()
     'Shift task up in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftUp, arg2:=lastSpecialSelection, _
+    Call Utils.RunTryCatchedCall(f:="ShiftPrio", obj:=PlanningUtils, arg1:=ShiftDirection.ceShiftUp, arg2:=lastSpecialSelection, _
                                  enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
@@ -174,7 +174,7 @@ Sub UI_ShiftTaskDown()
     'Shift task down in the planning list (increase priority). To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftDown, arg2:=lastSpecialSelection, _
+    Call Utils.RunTryCatchedCall(f:="ShiftPrio", obj:=PlanningUtils, arg1:=ShiftDirection.ceShiftDown, arg2:=lastSpecialSelection, _
                                  enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
@@ -189,7 +189,7 @@ Sub UI_GatherTasks()
     'To see the effect the list has to be sorted for descending priority number.
     'Sorting is applied automatically when calling the function.
     
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.GatherTasks", arg1:=lastSpecialSelection, _
+    Call Utils.RunTryCatchedCall(f:="GatherTasks", obj:=PlanningUtils, arg1:=lastSpecialSelection, _
                                  enableEvt:=False, screenUpdating:=False)
     'Since the gather tasks command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the gahter tasks call through 'RunTryCatchedCall'
@@ -201,7 +201,7 @@ Sub UI_RunEbs()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'THE main feature. Run all the steps to get evidence based sheduling data and charts for every contributor.
-    Call Utils.RunTryCatchedCall(f:="EbsUtils.RunEbs", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="RunEbs", obj:=EbsUtils, screenUpdating:=False)
 End Sub
 
 Sub UI_CollectTotalTimesSpent()
@@ -209,7 +209,7 @@ Sub UI_CollectTotalTimesSpent()
     Call MessageUtils.InvokeUIMsg(FN)
     
     'Read the task's data to get the total time a user spent working on it.
-    Call Utils.RunTryCatchedCall(f:="PlanningUtils.CollectTotalTimesSpent", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="CollectTotalTimesSpent", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
 Function HandleChanges(Target As Range)
@@ -351,7 +351,7 @@ End Function
 Function ManageTaskNameChange(changedCell As Range)
     'Manage the change of the task name. Set it to the task sheet
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If CheckHash(hash) Then
         Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
@@ -367,7 +367,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
     ' (4) The entered date value is then replaced with the time h equivalent calculated from 'Now'
     
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If CheckHash(hash) Then
         Dim enteredVal As Variant
         enteredVal = changedCell.Value
@@ -486,7 +486,7 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     'Handle the 'status' change of a task.
     
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If Not CheckHash(hash) Then Exit Function
     
     'Set the value to the task sheet
@@ -560,7 +560,7 @@ End Function
 Function ManageCommentChange(changedCell As Range)
     'Just copy the comment to the task sheet
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If CheckHash(hash) Then
         Call TaskUtils.SetComment(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
@@ -611,7 +611,7 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     '   setNewEbsEstimates:     If true new estimates for the current task will be set based on the current velocity pool of the contributor.
     
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If Not CheckHash(hash) Then Exit Function
     
     Call TaskUtils.SetContributor(TaskUtils.GetTaskSheet(hash), changedCell.Value)
@@ -639,7 +639,7 @@ Function ManageDueDateChange(changedCell As Range)
     'Copy the due date to the task sheet
     
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If CheckHash(hash) Then
         Dim sheet As Worksheet
         Set sheet = TaskUtils.GetTaskSheet(hash)
@@ -664,7 +664,7 @@ Function ManageFinishedOnDateChange(changedCell As Range)
     'Copy the finished on date to the task sheet
     
     Dim hash As String
-    hash = GetTaskHash(changedCell)
+    hash = PlanningUtils.GetTaskHash(changedCell)
     If CheckHash(hash) Then
         Dim sheet As Worksheet
         Set sheet = TaskUtils.GetTaskSheet(hash)
