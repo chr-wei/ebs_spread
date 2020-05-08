@@ -19,8 +19,6 @@ Attribute VB_Name = "TaskUtils"
 
 Option Explicit
 
-
-
 Function HandleFollowHyperlink(ByVal Target As hyperlink)
     Dim clickedCell As Range
     Dim sheet As Worksheet
@@ -44,10 +42,10 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
         accentColor = SettingUtils.GetColors(ceAccentColor)
     
         Select Case clickedCell.Value
-            Case Constants.TASK_SHEET_ACTION_ONE_NAME
-                Call TaskUtils.SetPlainDelta(clickedCell)
-            Case Constants.TASK_SHEET_ACTION_TWOO_NAME
-                Call TaskUtils.SetCalendarDelta(clickedCell)
+        Case Constants.TASK_SHEET_ACTION_ONE_NAME
+            Call TaskUtils.SetPlainDelta(clickedCell)
+        Case Constants.TASK_SHEET_ACTION_TWOO_NAME
+            Call TaskUtils.SetCalendarDelta(clickedCell)
         End Select
         
         'Clear all the accent colors from the cells and highlight the clicked one
@@ -58,9 +56,6 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
         clickedCell.Select
     End If
 End Function
-
-
-
 
 Function GetTaskSheet(hash As String) As Worksheet
     Const FN As String = "GetTaskSheet"
@@ -74,7 +69,7 @@ Function GetTaskSheet(hash As String) As Worksheet
     If TaskUtils.GetAllTaskSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
         Call TaskUtils.VirtualizeTaskSheets
         Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
-            ceVerbose, FN)
+                                        ceVerbose, FN)
     End If
     
     If Utils.SheetExists(hash) Then
@@ -85,7 +80,7 @@ Function GetTaskSheet(hash As String) As Worksheet
         'Load the virtual sheet to a new sheet and use task sheet as template (will copy sheet code as well)
         Dim loadedSheet As Worksheet
         Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(hash, Constants.STORAGE_SHEET_PREFIX, _
-            ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+                                                             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
         
         If Not loadedSheet Is Nothing Then
             'Hide sheet after loading
@@ -110,7 +105,7 @@ Function GetTaskSheet(hash As String) As Worksheet
     Else
         'Add a new worksheet with HASH as name if no sheet exists
         Call MessageUtils.HandleMessage("Cannot find task sheet '" & hash & "'. Create new sheet as fallback.", _
-            ceInfo, FN)
+                                        ceInfo, FN)
                 
         Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
 
@@ -125,8 +120,6 @@ Function GetTaskSheet(hash As String) As Worksheet
         Set GetTaskSheet = sheet
     End If
 End Function
-
-
 
 Function GetAllTaskSheets() As Collection
     'Get all workbook sheets matching the hash pattern
@@ -144,35 +137,25 @@ Function GetAllTaskSheets() As Collection
     Set GetAllTaskSheets = taskSheets
 End Function
 
-
-
 Function GetTimeListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
     Set GetTimeListColumn = Utils.GetListColumn(sheet, TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function GetEbsListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
     Set GetEbsListColumn = Utils.GetListColumn(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-
-
 Function IntersectEbsListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As Range) As Range
     'Get the intersection of a list column and a cell
     Set IntersectEbsListColumn = Utils.IntersectListColAndCells(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-
-
 Function IntersectTimeListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As Range) As Range
     'Wrapper to get the intersection of a list column and a cell
     Set IntersectTimeListColumn = Utils.IntersectListColAndCells(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolatedEstimate As Double)
     'Adds ebs entry (propability, estimate time) pair to the tasks sheet ebs list
@@ -208,8 +191,6 @@ Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolated
     End If
 End Function
 
-
-
 Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Double = -1) As Boolean
     'Adds a new line to the time list of the task sheet tracking the elapsed time of tasks. Additionally sets an indicator showing that the entry is
     'currently tracked
@@ -243,8 +224,8 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         Set indicatorCell = Base.IntersectN(newEntryCell.EntireRow, indicatorCol)
 
         If indicatorCol Is Nothing Or _
-            indicatorCell Is Nothing Or _
-            startTimeCell Is Nothing Then
+           indicatorCell Is Nothing Or _
+           startTimeCell Is Nothing Then
             Exit Function
         End If
         
@@ -274,8 +255,6 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         AddNewTrackingEntry = True
     End If
 End Function
-
-
 
 Function SetEndTimeToSheetTracking(sheet As Worksheet, Optional time As Date = 0)
     'Ends a current tracking entry by setting 'Now'as end time and reset the indicator '<current'tag
@@ -310,14 +289,10 @@ Function SetEndTimeToSheetTracking(sheet As Worksheet, Optional time As Date = 0
     Call TaskUtils.AddSpecialActionsToTimeListRow(sheet, trackingEntry)
 End Function
 
-
-
 Function SetTaskName(sheet As Worksheet, name As String)
     'Wrapper to set the task name
     Call Utils.SetSingleDataCell(sheet, TASK_NAME_HEADER, name)
 End Function
-
-
 
 Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
     Const FN As String = "SetEstimate"
@@ -348,79 +323,75 @@ Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNe
     End If
 End Function
 
-
-
 Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
-        'Populate the list of ebs estimates at the task sheet for the given user estimate.
-        'Estimates are based on velo pool of last successful contributor ebs run
-        '
-        'Input args:
-        '  sheet: The task sheet one wants to add the data to
-        '  userEstimate: The user estimate one wants to get propable finish times for by using the ebs algorithm
+    'Populate the list of ebs estimates at the task sheet for the given user estimate.
+    'Estimates are based on velo pool of last successful contributor ebs run
+    '
+    'Input args:
+    '  sheet: The task sheet one wants to add the data to
+    '  userEstimate: The user estimate one wants to get propable finish times for by using the ebs algorithm
         
-        'Check args
-        If sheet Is Nothing Or userEstimate = -1 Then Exit Function
+    'Check args
+    If sheet Is Nothing Or userEstimate = -1 Then Exit Function
         
-        'Store name to re-read sheet later again. See comment below
-        Dim tHash As String
-        tHash = sheet.name
+    'Store name to re-read sheet later again. See comment below
+    Dim tHash As String
+    tHash = sheet.name
         
-        'Clear list of ebs estimates first
-        Dim br As Range
-        Set br = TaskUtils.GetEbsListBodyRange(sheet)
+    'Clear list of ebs estimates first
+    Dim br As Range
+    Set br = TaskUtils.GetEbsListBodyRange(sheet)
         
-        If Not br Is Nothing Then br.Delete
+    If Not br Is Nothing Then br.Delete
         
-        'Read the name of the contributor to select the latest calculated velocity pool later on
-        Dim contributor As String
-        contributor = Utils.GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
-        If StrComp(contributor, "") = 0 Then Exit Function
+    'Read the name of the contributor to select the latest calculated velocity pool later on
+    Dim contributor As String
+    contributor = Utils.GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
+    If StrComp(contributor, "") = 0 Then Exit Function
         
-        Dim ebsSheet As Worksheet
-        'Only return sheet if it exists (no fallback)
-        Set ebsSheet = EbsUtils.GetEbsSheet(contributor, False)
-        If ebsSheet Is Nothing Then Exit Function
+    Dim ebsSheet As Worksheet
+    'Only return sheet if it exists (no fallback)
+    Set ebsSheet = EbsUtils.GetEbsSheet(contributor, False)
+    If ebsSheet Is Nothing Then Exit Function
         
-        Dim eHash As String
-        eHash = EbsUtils.GetLatestEbsRun(ebsSheet)
-        If Not SanityChecks.CheckHash(eHash) Then Exit Function
+    Dim eHash As String
+    eHash = EbsUtils.GetLatestEbsRun(ebsSheet)
+    If Not SanityChecks.CheckHash(eHash) Then Exit Function
         
-        Dim eHashCol As Range
-        Set eHashCol = EbsUtils.GetEbsMainListColumn(ebsSheet, Constants.EBS_HASH_HEADER, ceData)
+    Dim eHashCol As Range
+    Set eHashCol = EbsUtils.GetEbsMainListColumn(ebsSheet, Constants.EBS_HASH_HEADER, ceData)
         
-        'Get the rundata entry in ebs sheet with the current hash
-        Dim veloPoolCell As Range
-        Set veloPoolCell = EbsUtils.IntersectEbsMainListColumn(ebsSheet, Constants.EBS_VELOCITY_POOL_HEADER, Base.FindAll(eHashCol, eHash))
+    'Get the rundata entry in ebs sheet with the current hash
+    Dim veloPoolCell As Range
+    Set veloPoolCell = EbsUtils.IntersectEbsMainListColumn(ebsSheet, Constants.EBS_VELOCITY_POOL_HEADER, Base.FindAll(eHashCol, eHash))
         
-        If veloPoolCell Is Nothing Then Exit Function
+    If veloPoolCell Is Nothing Then Exit Function
         
-        Dim contribPool() As Double
-        contribPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(veloPoolCell.Value))
+    Dim contribPool() As Double
+    contribPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(veloPoolCell.Value))
         
-        If Not Base.IsArrayAllocated(contribPool) Then Exit Function
+    If Not Base.IsArrayAllocated(contribPool) Then Exit Function
         
-        'Do ebs calculation for the given support points
-        Dim monteCarloTimeEstimates() As Double
-        monteCarloTimeEstimates = EbsUtils.GetMonteCarloTimeEstimates(userEstimate, contribPool, Constants.EBS_VELOCITY_PICKS)
+    'Do ebs calculation for the given support points
+    Dim monteCarloTimeEstimates() As Double
+    monteCarloTimeEstimates = EbsUtils.GetMonteCarloTimeEstimates(userEstimate, contribPool, Constants.EBS_VELOCITY_PICKS)
         
-        If Not Base.IsArrayAllocated(monteCarloTimeEstimates) Then Exit Function
+    If Not Base.IsArrayAllocated(monteCarloTimeEstimates) Then Exit Function
                 
-        Dim supportPoints() As Double
-        supportPoints = Utils.CopyVarArrToDoubleArr(Constants.EBS_SUPPORT_PROPABILITIES)
+    Dim supportPoints() As Double
+    supportPoints = Utils.CopyVarArrToDoubleArr(Constants.EBS_SUPPORT_PROPABILITIES)
         
-        Dim interpolatedEstimates() As Double
-        interpolatedEstimates = EbsUtils.InterpolateEstimates(supportPoints, monteCarloTimeEstimates)
+    Dim interpolatedEstimates() As Double
+    interpolatedEstimates = EbsUtils.InterpolateEstimates(supportPoints, monteCarloTimeEstimates)
         
-        'Now set the values to the sheet
+    'Now set the values to the sheet
         
-        'Iterate over support points
-        Dim rowIdx As Integer
-        For rowIdx = 0 To UBound(supportPoints)
-            Call TaskUtils.AddNewEbsEntry(sheet, CDbl(supportPoints(rowIdx)), interpolatedEstimates(rowIdx))
-        Next rowIdx
+    'Iterate over support points
+    Dim rowIdx As Integer
+    For rowIdx = 0 To UBound(supportPoints)
+        Call TaskUtils.AddNewEbsEntry(sheet, CDbl(supportPoints(rowIdx)), interpolatedEstimates(rowIdx))
+    Next rowIdx
 End Function
-
-
 
 Function GetEbsListBodyRange(sheet As Worksheet) As Range
     'Get the body range of the ebs list of a task sheet
@@ -443,8 +414,6 @@ Function GetEbsListBodyRange(sheet As Worksheet) As Range
     End If
 End Function
 
-
-
 Function GetTimeListBodyRange(sheet As Worksheet) As Range
     'Get the body range of the time tracking list of a task sheet
     '
@@ -466,62 +435,42 @@ Function GetTimeListBodyRange(sheet As Worksheet) As Range
     End If
 End Function
 
-
-
 Function SetHash(sheet As Worksheet, hash As String)
     Call SetSingleDataCell(sheet, T_HASH_HEADER, hash)
 End Function
-
-
 
 Function SetKanbanList(sheet As Worksheet, list As String)
     Call Utils.SetSingleDataCell(sheet, KANBAN_LIST_HEADER, list)
 End Function
 
-
-
 Function SetContributor(sheet As Worksheet, contributor As String)
     Call Utils.SetSingleDataCell(sheet, CONTRIBUTOR_HEADER, contributor)
 End Function
-
-
 
 Function SetDueDate(sheet As Worksheet, datee As Date)
     Call Utils.SetSingleDataCell(sheet, Constants.DUE_DATE_HEADER, datee)
 End Function
 
-
-
 Function UnsetDueDate(sheet As Worksheet)
     Call Utils.SetSingleDataCell(sheet, Constants.DUE_DATE_HEADER, Constants.N_A)
 End Function
-
-
 
 Function SetFinishedOnDate(sheet As Worksheet, datee As Date)
     Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, datee)
 End Function
 
-
-
 Function UnsetFinishedOnDate(sheet As Worksheet)
     Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, Constants.N_A)
 End Function
-
-
 
 Function SetComment(sheet As Worksheet, comment As String)
     Call Utils.SetSingleDataCell(sheet, COMMENT_HEADER, comment)
 End Function
 
-
-
 Function SetTags(sheet As Worksheet, serializedTagHeaders As String, serializedTagValues As String)
     Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER, serializedTagHeaders)
     Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_VALUES_HEADER, serializedTagValues)
 End Function
-
-
 
 Function GetLastEndTimestamp(sheet As Worksheet) As Date
     'Returns the timestamp of the last row of tracked time entries
@@ -548,8 +497,6 @@ Function GetLastEndTimestamp(sheet As Worksheet) As Date
     'Debug.Print endStamps.Address
 End Function
 
-
-
 Function GetVelocity(sheet As Worksheet) As Double
     'Wrapper to get the current veloctiy of the task (user estimated time over elapsed time)
     '2h user estimate over 1h elapsed time = 200% velocity
@@ -567,8 +514,6 @@ Function GetVelocity(sheet As Worksheet) As Double
     End If
 End Function
 
-
-
 Function GetEstimate(sheet As Worksheet) As Double
     'Wrapper to get the user estimate from the sheet (the time the user thought the task would take)
     '
@@ -584,8 +529,6 @@ Function GetEstimate(sheet As Worksheet) As Double
     End If
 End Function
 
-
-
 Function GetName(sheet As Worksheet) As String
     'Wrapper to get the name from the sheet. "" if name is invalid
     '
@@ -594,8 +537,6 @@ Function GetName(sheet As Worksheet) As String
     
     GetName = GetSingleDataCellVal(sheet, Constants.TASK_NAME_HEADER)
 End Function
-
-
 
 Function GetContributor(sheet As Worksheet) As String
     'Wrapper to get the contributor name from the sheet. "" if contributor name does not exist
@@ -608,8 +549,6 @@ Function GetContributor(sheet As Worksheet) As String
     
     GetContributor = GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
 End Function
-
-
 
 Function GetTaskTotalTime(sheet As Worksheet) As Double
     'Wrapper to return the time that was spent on the task
@@ -637,8 +576,6 @@ Function GetTaskTotalTime(sheet As Worksheet) As Double
     End If
 End Function
 
-
-
 Function SetPlainDelta(clickedCell As Range)
     'Restore the 'standard' method to calculate the delta: Plain subtraction of two dates. Formula only works inside a list object
     '
@@ -655,10 +592,8 @@ Function SetPlainDelta(clickedCell As Range)
     
     If deltaTCell Is Nothing Then Exit Function
     
-    deltaTCell.Formula = PLAIN_DELTA_FORMULA 'Be careful here to use english formula format (German ';' become ',') otherwise setting formula will fail
+    deltaTCell.Formula = PLAIN_DELTA_FORMULA     'Be careful here to use english formula format (German ';' become ',') otherwise setting formula will fail
 End Function
-
-
 
 Function SetCalendarDelta(clickedCell As Range)
     'Function calculates the calendar appointment based time delta between two given dates of a time tracking row
@@ -700,8 +635,8 @@ Function SetCalendarDelta(clickedCell As Range)
     Dim deltaT As Double
     Dim appointment
     deltaT = CalendarUtils.MapDateToHours(contributor, oItems, endTime, startTime, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
         
     If deltaT <> -1 Then
         deltaTCell.Value = deltaT
@@ -709,8 +644,6 @@ Function SetCalendarDelta(clickedCell As Range)
         deltaTCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
     End If
 End Function
-
-
 
 Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
     'Highlight the clicked cell in a time list row of a task sheet to visualize the users click.
@@ -728,7 +661,7 @@ Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
     
     'Add the second clickable cell of the row
     Set actionCells = Base.UnionN(actionCells, _
-        TaskUtils.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, clickedCell))
+                                  TaskUtils.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, clickedCell))
     
     actionCells.Interior.color = xlNone
     
@@ -738,8 +671,6 @@ Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
     
     clickedCell.Interior.color = accentColor
 End Function
-
-
 
 Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Range)
     'Add extra actions to the task sheet. The actions can be catched by catching a hyperlink click. See 'TaskUtils.HandleFollowHyperlink'
@@ -772,8 +703,6 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
     End If
 End Function
 
-
-
 Function VirtualizeTaskSheets()
     'Store all task sheets to a virtual storage sheet to prevent excessive memory (ram) consumption
     
@@ -789,4 +718,5 @@ Function VirtualizeTaskSheets()
         sheet.Visible = xlSheetHidden
     Next item
 End Function
+
 

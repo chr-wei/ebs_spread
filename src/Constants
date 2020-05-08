@@ -108,8 +108,8 @@ Public Const EBS_SHOW_POOL_FALSE As String = "No"
 Public Const EBS_UPPER_RND_VELOCITY_LIMIT As Double = 0.2 'limit chosen to generate a uniform distribution for histo lower limit 0.2, upper limit 5.0, bar count = 8
 Public Const EBS_LOWER_RND_VELOCITY_LIMIT As Double = 5 'limit chosen to generate a uniform distribution for histo lower limit 0.2, upper limit 5.0, bar count = 8
 
-Public Const EBS_LOWER_HISTOGRAM_LIMIT As Double = 0.2  '20% estimate
-Public Const EBS_UPPER_HISTOGRAM_LIMIT As Double = 5    '500% estimate
+Public Const EBS_LOWER_HISTOGRAM_LIMIT As Double = 0.2 '20% estimate
+Public Const EBS_UPPER_HISTOGRAM_LIMIT As Double = 5 '500% estimate
 Public Const EBS_HISTOGRAM_BAR_COUNT As Integer = 9
 
 Public Const EBS_TRACK_ENTRIES_DELTA_DAYS As Double = 2 'Days to wait before fetching finished tasks data for a new velocity pool.
@@ -204,15 +204,12 @@ Function EBS_SUPPORT_PROPABILITIES() As Double()
     EBS_SUPPORT_PROPABILITIES = Utils.CopyVarArrToDoubleArr(Array(0.05, 0.2, 0.35, 0.5, 0.65, 0.8, 0.95))
 End Function
 
-
-
 Function EBS_HIGHLIGHT_PROPABILITIES() As Double()
     EBS_HIGHLIGHT_PROPABILITIES = Utils.CopyVarArrToDoubleArr(Array(0.2, 0.5, 0.8))
 End Function
-
-
 
 Function STANDARD_WORKING_DAYS() As Double()
     'Days starting at sunday
     STANDARD_WORKING_DAYS = Utils.CopyVarArrToDoubleArr(Array(vbMonday, vbTuesday, vbWednesday, vbThursday, vbFriday))
 End Function
+

@@ -35,8 +35,6 @@ Enum ColorType
     ceLightColor = 2
 End Enum
 
-
-
 Function GetSettingsSheet() As Worksheet
     'Return the setting sheet (fixed name)
     '
@@ -45,8 +43,6 @@ Function GetSettingsSheet() As Worksheet
     
     Set GetSettingsSheet = ThisWorkbook.Worksheets(Constants.SETTING_SHEET_NAME)
 End Function
-
-
 
 Function GetContributorSettingColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read a specified column of contributor settings
@@ -60,8 +56,6 @@ Function GetContributorSettingColumn(colIdentifier As Variant, rowIdentifier As 
     
     Set GetContributorSettingColumn = Utils.GetListColumn(SettingUtils.GetSettingsSheet, Constants.CONTRIBUTOR_LIST_NAME, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function IntersectContributorAndSettingColumn(contributor As String, colIdentifier As String) As Range
     'Wrapper to read a specific setting for a contributor.
@@ -83,11 +77,9 @@ Function IntersectContributorAndSettingColumn(contributor As String, colIdentifi
     Dim contributorCell As Range
     If SettingUtils.GetContributorCell(contributor, contributorCell) Then
         Set IntersectContributorAndSettingColumn = _
-            Utils.IntersectListColAndCells(SettingUtils.GetSettingsSheet, Constants.CONTRIBUTOR_LIST_NAME, colIdentifier, contributorCell)
+                                                 Utils.IntersectListColAndCells(SettingUtils.GetSettingsSheet, Constants.CONTRIBUTOR_LIST_NAME, colIdentifier, contributorCell)
     End If
 End Function
-
-
 
 Function GetContributorCell(contributor As String, Optional ByRef contributorCell) As Boolean
     'Returns true if contributor entry can be found in list. Additionally the cell is returned if a byref arg is given.
@@ -112,8 +104,6 @@ Function GetContributorCell(contributor As String, Optional ByRef contributorCel
     GetContributorCell = Not contributorCell Is Nothing
 End Function
 
-
-
 Function GetContribWorkTimeSetting(contributor As String, timeSelector As WorkingTime) As Date
     Const FN As String = "GetContribWorkTimeSetting"
     'Read the contributor's work time. Fallback constants are used if the contributor can not be found in the list.
@@ -132,10 +122,10 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
     Dim hourCell As Range
     
     Select Case timeSelector
-        Case WorkingTime.ceWorkingStart
-            Set hourCell = IntersectContributorAndSettingColumn(contributor, Constants.WORKING_HOURS_START_HEADER)
-        Case WorkingTime.ceWorkingEnd
-            Set hourCell = IntersectContributorAndSettingColumn(contributor, Constants.WORKING_HOURS_END_HEADER)
+    Case WorkingTime.ceWorkingStart
+        Set hourCell = IntersectContributorAndSettingColumn(contributor, Constants.WORKING_HOURS_START_HEADER)
+    Case WorkingTime.ceWorkingEnd
+        Set hourCell = IntersectContributorAndSettingColumn(contributor, Constants.WORKING_HOURS_END_HEADER)
     End Select
     
     Dim fallback As Boolean
@@ -155,16 +145,16 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
     
     If fallback Then
         Select Case timeSelector
-            Case WorkingTime.ceWorkingStart
-                contributorWorkingTime = Constants.WORKING_HOURS_START
-                Call MessageUtils.HandleMessage("Falling back to standard working hour start [" & _
-                    Constants.WORKING_HOURS_START & "] for contributor" & contributor & "'", _
-                        ceInfo, FN)
-            Case WorkingTime.ceWorkingEnd
-                contributorWorkingTime = Constants.WORKING_HOURS_END
-                Call MessageUtils.HandleMessage("Falling back to standard working hour end [" & _
-                    Constants.WORKING_HOURS_END & "] for contributor" & contributor & "'", _
-                        ceInfo, FN)
+        Case WorkingTime.ceWorkingStart
+            contributorWorkingTime = Constants.WORKING_HOURS_START
+            Call MessageUtils.HandleMessage("Falling back to standard working hour start [" & _
+                                            Constants.WORKING_HOURS_START & "] for contributor" & contributor & "'", _
+                                            ceInfo, FN)
+        Case WorkingTime.ceWorkingEnd
+            contributorWorkingTime = Constants.WORKING_HOURS_END
+            Call MessageUtils.HandleMessage("Falling back to standard working hour end [" & _
+                                            Constants.WORKING_HOURS_END & "] for contributor" & contributor & "'", _
+                                            ceInfo, FN)
         End Select
     Else
         'Read the setting from the cell
@@ -173,8 +163,6 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
     
     GetContribWorkTimeSetting = contributorWorkingTime
 End Function
-
-
 
 Function GetContributorMailSetting(contributor As String) As String
     'Get the mail address of a contributor
@@ -199,8 +187,6 @@ Function GetContributorMailSetting(contributor As String) As String
     End If
 End Function
 
-
-
 Function GetImportedTaskPostfixSetting() As String
     'Get the postfix setting string that is added to imported tasks
     '
@@ -218,8 +204,6 @@ Function GetImportedTaskPostfixSetting() As String
         GetImportedTaskPostfixSetting = postfix
     End If
 End Function
-
-
 
 Function GetContributorCalIdSetting(contributor As String, Optional ByRef storId As String) As String
     'Get the calendar id of the contributor
@@ -248,8 +232,6 @@ Function GetContributorCalIdSetting(contributor As String, Optional ByRef storId
         storId = Trim(storeIdCell.Value)
     End If
 End Function
-
-
 
 Function GetContributorGetWorkDoneCat(contributor As String) As String
     'Return a category tag a user can specify in the calendar to mark it as 'get work done'. The tag makes the time calculating algorithm
@@ -280,8 +262,6 @@ Function GetContributorGetWorkDoneCat(contributor As String) As String
     End If
 End Function
 
-
-
 Function GetFirstDayOfWeekSetting() As Integer
     'Return first day of week setting. A fallback mechanism is used to always retrieve a value even if
     'no specific setting is set.
@@ -303,8 +283,6 @@ Function GetFirstDayOfWeekSetting() As Integer
         GetFirstDayOfWeekSetting = firstDayOfWeek
     End If
 End Function
-
-
 
 Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As ApptOnOffset) As Double
     'Returns the appointment on- and offset values. with the on- and offset one can specify how long prior and / or after an appointment
@@ -328,10 +306,10 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
     Dim onOffset As Double
     
     Select Case onOffsetSelector
-        Case ApptOnOffset.ceOnset
-            Set cell = SettingUtils.IntersectContributorAndSettingColumn(contributor, APPT_ONSET_HEADER)
-        Case ApptOnOffset.ceOffset
-            Set cell = IntersectContributorAndSettingColumn(contributor, APPT_OFFSET_HEADER)
+    Case ApptOnOffset.ceOnset
+        Set cell = SettingUtils.IntersectContributorAndSettingColumn(contributor, APPT_ONSET_HEADER)
+    Case ApptOnOffset.ceOffset
+        Set cell = IntersectContributorAndSettingColumn(contributor, APPT_OFFSET_HEADER)
     End Select
     
     Dim fallback As Boolean
@@ -350,10 +328,10 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
     
     If fallback Then
         Select Case onOffsetSelector
-            Case ApptOnOffset.ceOnset
-                onOffset = Constants.APPOINTMENT_ONSET_HOURS
-            Case ApptOnOffset.ceOffset
-                onOffset = Constants.APPOINTMENT_OFFSET_HOURS
+        Case ApptOnOffset.ceOnset
+            onOffset = Constants.APPOINTMENT_ONSET_HOURS
+        Case ApptOnOffset.ceOffset
+            onOffset = Constants.APPOINTMENT_OFFSET_HOURS
         End Select
     Else
         onOffset = CDbl(cell.Value)
@@ -361,8 +339,6 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
     
     GetContributorApptOnOffset = onOffset
 End Function
-
-
 
 Function GetContributorWorkingDays(contributor As String) As Double()
     'Function returns the working days of a contributor. By default days from Monday to Friday are returned.
@@ -406,39 +382,35 @@ Function GetContributorWorkingDays(contributor As String) As Double()
     End If
 End Function
 
-
-
 Function GetWeekdayVal(id As String) As Integer
     'This function returns vb constant values for the following three character day ids:
     'Sun, Mon, Tue, Wed, Thu, Fri, Sat'
     Select Case Trim(id)
-        Case "Sun"
-            GetWeekdayVal = vbSunday
-        Case "Mon"
-            GetWeekdayVal = vbMonday
-        Case "Tue"
-            GetWeekdayVal = vbTuesday
-        Case "Wed"
-            GetWeekdayVal = vbWednesday
-        Case "Thu"
-            GetWeekdayVal = vbThursday
-        Case "Fri"
-            GetWeekdayVal = vbFriday
-        Case "Sat"
-            GetWeekdayVal = vbSaturday
-        Case Else
-            'Invalid day
-            GetWeekdayVal = -1
+    Case "Sun"
+        GetWeekdayVal = vbSunday
+    Case "Mon"
+        GetWeekdayVal = vbMonday
+    Case "Tue"
+        GetWeekdayVal = vbTuesday
+    Case "Wed"
+        GetWeekdayVal = vbWednesday
+    Case "Thu"
+        GetWeekdayVal = vbThursday
+    Case "Fri"
+        GetWeekdayVal = vbFriday
+    Case "Sat"
+        GetWeekdayVal = vbSaturday
+    Case Else
+        'Invalid day
+        GetWeekdayVal = -1
     End Select
 End Function
-
-
 
 Function GetColors(colorT As ColorType) As Long
     'Get colors from the setting sheet (colored cell) with cell identifier left of it.
     '
     'Input args:
-    '  colorT: Type of the xolor one wants to read. Sets the cell identifier to get the correct color
+'  colorT: Type of the xolor one wants to read. Sets the cell identifier to get the correct color
     '
     'Output args:
     '  GetColors:  The color you requested
@@ -446,20 +418,22 @@ Function GetColors(colorT As ColorType) As Long
     GetColors = 0
     Dim co As String
     Select Case colorT
-        Case ColorType.ceAccentColor
-            co = SETTINGS_HIGHLIGHT_COLOR_HEADER
-        Case ColorType.ceCommonColor
-            co = SETTINGS_COMMON_COLOR_HEADER
-        Case ColorType.ceLightColor
-            co = SETTINGS_LIGHT_COLOR_HEADER
+    Case ColorType.ceAccentColor
+    co = SETTINGS_HIGHLIGHT_COLOR_HEADER
+    Case ColorType.ceCommonColor
+    co = SETTINGS_COMMON_COLOR_HEADER
+    Case ColorType.ceLightColor
+    co = SETTINGS_LIGHT_COLOR_HEADER
     End Select
     
     Dim dataCell As Range
     Call Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, co, dataCell)
     
     If dataCell Is Nothing Then
-        Exit Function
+    Exit Function
     Else
-        GetColors = CLng(dataCell.Interior.color)
+    GetColors = CLng(dataCell.Interior.color)
     End If
-End Function
+    End Function
+
+

@@ -28,14 +28,14 @@ Const MESSAGE_HEADER As String = "Message"
 Const MESSAGE_CALLER_HEADER As String = "Caller"
 Const MESSAGE_SEVERITY_HEADER As String = "Severity"
 
-Const LIST_MESSAGE_MIN_SEVERITY As Integer = -1 'MessageSeverity.ceVerbose
-Const LIST_MESSAGE_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
+Const LIST_MESSAGE_MIN_SEVERITY As Integer = -1  'MessageSeverity.ceVerbose
+Const LIST_MESSAGE_MAX_SEVERITY As Integer = 3   'MessageSeverity.ceError
 
 Const DIRECT_MESSAGE_MIN_SEVERITY As Integer = 3 'MessageSeverity.ceError
 Const DIRECT_MESSAGE_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
 
-Const MESSAGE_BOX_MIN_SEVERITY As Integer = 3 'MessageSeverity.ceError
-Const MESSAGE_BOX_MAX_SEVERITY As Integer = 3 'MessageSeverity.ceError
+Const MESSAGE_BOX_MIN_SEVERITY As Integer = 3    'MessageSeverity.ceError
+Const MESSAGE_BOX_MAX_SEVERITY As Integer = 3    'MessageSeverity.ceError
 
 Public savedListMaxSeverity As Integer
 
@@ -48,23 +48,18 @@ Enum MessageSeverity
     ceError = 3
 End Enum
 
-
-
 Function InvokeUIMsg(FN As String)
     Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, True)
 End Function
-
-
 
 Function InvokeFnMsg(FN As String)
     Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, False)
 End Function
 
-
 Function HandleMessage(message As String, _
-    severity As MessageSeverity, _
-    Optional caller As String = vbNullString, _
-    Optional clearPreviousMessages As Boolean = False)
+                       severity As MessageSeverity, _
+                       Optional caller As String = vbNullString, _
+                       Optional clearPreviousMessages As Boolean = False)
     
     If clearPreviousMessages Then
         Call MessageUtils.ClearListMessages
@@ -91,8 +86,6 @@ Function HandleMessage(message As String, _
     End If
 End Function
 
-
-
 Function GetMessageSheet() As Worksheet
     'Return the message sheet of this project
     '
@@ -102,8 +95,6 @@ Function GetMessageSheet() As Worksheet
     Set GetMessageSheet = ThisWorkbook.Worksheets(MESSAGE_SHEET_NAME)
 End Function
 
-
-
 Function GetMessageList() As ListObject
     'Return the main list on the task sheet
     '
@@ -111,8 +102,6 @@ Function GetMessageList() As ListObject
     '  GetMessageList:    A reference to the list object with a fixed name
     Set GetMessageList = MessageUtils.GetMessageSheet.ListObjects(MESSAGE_LIST_NAME)
 End Function
-
-
 
 Function GetMessageListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of the message list
@@ -126,8 +115,6 @@ Function GetMessageListColumn(colIdentifier As Variant, rowIdentifier As ListRow
     
     Set GetMessageListColumn = Utils.GetListColumn(GetMessageList, MESSAGE_LIST_NAME, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function PostListMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
     
@@ -166,8 +153,6 @@ Function PostListMessage(message As String, severity As MessageSeverity, Optiona
     End If
 End Function
 
-
-
 Function PostDirectMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
     Dim out As String
     out = "[" & CStr(Now) & "] [" & MessageUtils.GetSeverityString(severity) & "]:" & vbTab & message
@@ -179,37 +164,29 @@ Function PostDirectMessage(message As String, severity As MessageSeverity, Optio
     Debug.Print out
 End Function
 
-
-
 Function PostBoxMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
     Call MsgBox(prompt:=message, title:=MessageUtils.GetSeverityString(severity))
 End Function
 
-
-
 Function GetSeverityString(severity As MessageSeverity) As String
     Select Case severity
-        Case MessageSeverity.ceInfo
-            GetSeverityString = "Info"
-        Case MessageSeverity.ceWarning
-            GetSeverityString = "Warning"
-        Case MessageSeverity.ceError
-            GetSeverityString = "Error"
-        Case MessageSeverity.ceVerbose
-            GetSeverityString = "Verbose"
-        Case Else
-            GetSeverityString = ""
+    Case MessageSeverity.ceInfo
+        GetSeverityString = "Info"
+    Case MessageSeverity.ceWarning
+        GetSeverityString = "Warning"
+    Case MessageSeverity.ceError
+        GetSeverityString = "Error"
+    Case MessageSeverity.ceVerbose
+        GetSeverityString = "Verbose"
+    Case Else
+        GetSeverityString = ""
     End Select
 End Function
-
-
 
 Function IntersectMessageListColumn(colIdentifier As Variant, rowIdentifier As Range) As Range
     'Get the intersection of a list column and a cell
     Set IntersectMessageListColumn = Utils.IntersectListColAndCells(MessageUtils.GetMessageSheet, MESSAGE_LIST_NAME, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function ClearListMessages()
     Dim br As Range
@@ -220,8 +197,6 @@ Function ClearListMessages()
     Call MessageUtils.SetSheetColor(MessageSeverity.ceNoSeverity)
     MessageUtils.savedListMaxSeverity = MessageSeverity.ceNoSeverity
 End Function
-
-
 
 Function GetMessageListBodyRange() As Range
     'Get the body range of the message list.
@@ -238,32 +213,29 @@ Function GetMessageListBodyRange() As Range
     End If
 End Function
 
-
 Function SetSheetColor(severity As MessageSeverity)
     Dim color As Long
     Dim sheet As Worksheet
     Set sheet = MessageUtils.GetMessageSheet
         
     Select Case severity
-        Case MessageSeverity.ceInfo
-            color = vbCyan
-        Case MessageSeverity.ceWarning
-            color = vbYellow
-        Case MessageSeverity.ceError
-            color = vbRed
-        Case MessageSeverity.ceVerbose
-            color = vbGreen
-        Case Else
-            'Reset the color
-            sheet.Tab.ColorIndex = xlNone
-            Exit Function
+    Case MessageSeverity.ceInfo
+        color = vbCyan
+    Case MessageSeverity.ceWarning
+        color = vbYellow
+    Case MessageSeverity.ceError
+        color = vbRed
+    Case MessageSeverity.ceVerbose
+        color = vbGreen
+    Case Else
+        'Reset the color
+        sheet.Tab.ColorIndex = xlNone
+        Exit Function
     End Select
     
     sheet.Tab.color = color
     sheet.Tab.TintAndShade = 0
 End Function
-
-
 
 Function DoDirectPost(severity As MessageSeverity) As Boolean
     If severity >= DIRECT_MESSAGE_MIN_SEVERITY And severity <= DIRECT_MESSAGE_MAX_SEVERITY Then
@@ -273,8 +245,6 @@ Function DoDirectPost(severity As MessageSeverity) As Boolean
     End If
 End Function
 
-
-
 Function DoMessageListPost(severity As MessageSeverity) As Boolean
     If severity >= LIST_MESSAGE_MIN_SEVERITY And severity <= LIST_MESSAGE_MAX_SEVERITY Then
         DoMessageListPost = True
@@ -283,8 +253,6 @@ Function DoMessageListPost(severity As MessageSeverity) As Boolean
     End If
 End Function
 
-
-
 Function DoMessageBoxPost(severity As MessageSeverity) As Boolean
     If severity >= MESSAGE_BOX_MIN_SEVERITY And severity <= MESSAGE_BOX_MAX_SEVERITY Then
         DoMessageBoxPost = True
@@ -292,7 +260,5 @@ Function DoMessageBoxPost(severity As MessageSeverity) As Boolean
         DoMessageBoxPost = False
     End If
 End Function
-
-
 
 

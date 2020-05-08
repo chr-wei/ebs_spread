@@ -24,23 +24,17 @@ Const VIRTUAL_SHEET_STOR_ROWS_HEADER As String = "VIRTUAL_SHEET_RANGE_ROWS"
 Const VIRTUAL_SHEET_STOR_COLS_HEADER As String = "VIRTUAL_SHEET_RANGE_COLS"
 Const VIRTUAL_SHEET_OFFSET As Integer = 2
 
-
-
 Sub Test_StoreAsVirtualSheet()
     Call StoreAsVirtualSheet(Worksheets("test_sheet"), Constants.STORAGE_SHEET_PREFIX)
     Call StoreAsVirtualSheet(Worksheets("full_sheet"), Constants.STORAGE_SHEET_PREFIX)
     Call StoreAsVirtualSheet(Worksheets("too_much"), Constants.STORAGE_SHEET_PREFIX)
 End Sub
 
-
-
 Sub Test_LoadVirtualSheet()
     Call LoadVirtualSheet("full_sheet", Constants.STORAGE_SHEET_PREFIX)
     Call LoadVirtualSheet("test_sheet", Constants.STORAGE_SHEET_PREFIX)
     Call LoadVirtualSheet("too_much", Constants.STORAGE_SHEET_PREFIX)
 End Sub
-
-
 
 Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Optional deleteNonVirtualSheet As Boolean = True)
     Const FN As String = "StoreAsVirtualSheet"
@@ -84,8 +78,6 @@ Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Opti
     End If
 End Function
 
-
-
 Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As Worksheet
     Const FN As String = "GetFreeStorageSheet"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -124,8 +116,6 @@ Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As W
     Set GetFreeStorageSheet = newStorage
 End Function
 
-
-
 Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boolean
     Const FN As String = "StorageIsFull"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -157,8 +147,6 @@ Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boole
     End If
 End Function
 
-
-
 Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional templateSheet As Worksheet = Nothing) As Worksheet
     Const FN As String = "LoadVirtualSheet"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -180,8 +168,8 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     'Check args
     If Utils.SheetExists(sheetName) Then
         Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & _
-            "' will not be loaded. A non-virtual worksheet with the same name already exists'", _
-            ceError, FN)
+                                        "' will not be loaded. A non-virtual worksheet with the same name already exists'", _
+                                        ceError, FN)
         Exit Function
     End If
     
@@ -190,8 +178,8 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     If Not templateSheet Is Nothing Then useSheetTemplate = True
     
     If Not VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
-            Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be loaded.'", _
-            ceError, FN)
+        Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be loaded.'", _
+                                        ceError, FN)
     Else
         'The virtual sheet exists and can be loaded without conflict
         Dim vr As Range
@@ -226,8 +214,6 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     End If
 End Function
 
-
-
 Function DeleteVirtualSheet(sheetName As String, storagePrefix As String)
     Const FN As String = "DeleteVirtualSheet"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -253,8 +239,6 @@ Function DeleteVirtualSheet(sheetName As String, storagePrefix As String)
     Call VirtualSheetUtils.GarbageCollectStorageSheets(storagePrefix)
 End Function
 
-
-
 Function GarbageCollectStorageSheets(storagePrefix As String)
     Const FN As String = "GarbageCollectStorageSheets"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -272,8 +256,6 @@ Function GarbageCollectStorageSheets(storagePrefix As String)
         End If
     Next item
 End Function
-
-
 
 Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String) As Range
     Const FN As String = "GetVirtualStorageDataRange"
@@ -315,7 +297,7 @@ Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String
         Dim startRng As Range
         Dim endRng As Range
         
-        Set startRng = nameCell.Offset(1, -1) 'Bottom left neighbour
+        Set startRng = nameCell.Offset(1, -1)    'Bottom left neighbour
         Set endRng = startRng.Offset(rowCount - 1, colCount - 1)
         Set GetVirtualStorageDataRange = storageSheet.Range(startRng, endRng)
         
@@ -323,8 +305,6 @@ Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String
         'Debug.Print GetVirtualStorageDataRange.Address
     End If
 End Function
-
-
 
 Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Range
     Const FN As String = "GetNewSheetStorage"
@@ -375,8 +355,8 @@ Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Ra
     vSheetNameHeaderCell.Offset(0, 5).Value = inSheet.UsedRange.Columns.Count
     
     'Get the data storage
-    Dim tlc As Range 'tlc = top left cell
-    Dim brc As Range 'brc = bottom right cell
+    Dim tlc As Range                             'tlc = top left cell
+    Dim brc As Range                             'brc = bottom right cell
     
     'Span a range between top left and bottom right
     Set tlc = Utils.GetBottomNeighbour(vSheetNameHeaderCell)
@@ -384,8 +364,6 @@ Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Ra
     
     Set GetNewSheetStorage = freeStorageSheet.Range(tlc, brc)
 End Function
-
-
 
 Function VirtualSheetExists(sheetName As String, storagePrefix As String) As Boolean
     Const FN As String = "VirtualSheetExists"
@@ -412,8 +390,6 @@ Function VirtualSheetExists(sheetName As String, storagePrefix As String) As Boo
 
     VirtualSheetExists = vSheets.Exists(sheetName)
 End Function
-
-
 
 Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
     Const FN As String = "GetAllVirtualSheets"
@@ -469,8 +445,6 @@ Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
     Set GetAllVirtualSheets = vSheets
 End Function
 
-
-
 Function IsStorageSheetEmpty(sheet As Worksheet) As Boolean
     Const FN As String = "IsStorageSheetEmpty"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -486,8 +460,6 @@ Function IsStorageSheetEmpty(sheet As Worksheet) As Boolean
         IsStorageSheetEmpty = False
     End If
 End Function
-
-
 
 Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
     'Find a range of cells containing virtual sheet name headers
@@ -536,8 +508,6 @@ Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
     'Debug.Print result.Address
 End Function
 
-
-
 Function GetAllStorageSheets(storagePrefix As String) As Scripting.Dictionary
     Const FN As String = "GetAllStorageSheets"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -564,8 +534,6 @@ Function GetAllStorageSheets(storagePrefix As String) As Scripting.Dictionary
     Set GetAllStorageSheets = storageSheets
 End Function
 
-
-
 Function SheetIsStorageSheet(sheet As Worksheet, storagePrefix) As Boolean
     Const FN As String = "SheetIsStorageSheet"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -591,3 +559,5 @@ Function SheetIsStorageSheet(sheet As Worksheet, storagePrefix) As Boolean
         SheetIsStorageSheet = False
     End If
 End Function
+
+
