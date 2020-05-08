@@ -1,7 +1,12 @@
 Attribute VB_Name = "ObjFactory"
 Option Explicit
+
 Private BaseObj As Object
 Private UtilsObj As Object
+Private CalendarUtilsObj As Object
+Private PlanningUtilsObj As Object
+Private EbsUtilsObj As Object
+Private TaskUtilsObj As Object
 
 Public Function Base() As Object
     If BaseObj Is Nothing Then Set BaseObj = New Base
@@ -11,4 +16,24 @@ End Function
 Public Function Utils() As Object
     If UtilsObj Is Nothing Then Set UtilsObj = New Utils
     Set Utils = UtilsObj
+End Function
+
+Public Function CalendarUtils() As Object
+    If CalendarUtilsObj Is Nothing Then Set CalendarUtilsObj = New CalendarUtils
+    Set CalendarUtils = CalendarUtilsObj
+End Function
+
+Public Function PlanningUtils() As Object
+    If PlanningUtilsObj Is Nothing Then Set PlanningUtilsObj = New PlanningUtils
+    Set PlanningUtils = PlanningUtilsObj
+End Function
+
+Public Function EbsUtils() As Object
+    If EbsUtilsObj Is Nothing Then Set EbsUtilsObj = New EbsUtils
+    Set EbsUtils = EbsUtilsObj
+End Function
+
+Public Function TaskUtils() As Object
+    If TaskUtilsObj Is Nothing Then Set TaskUtilsObj = New TaskUtils
+    Set TaskUtils = TaskUtilsObj
 End Function
