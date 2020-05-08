@@ -1,4 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
 Attribute VB_Name = "Base"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
@@ -27,14 +35,6 @@ Option Compare Text
 Enum SortDir
     ceDescending = -1
     ceAscending = 1
-End Enum
-
-Enum ComparisonTypes
-    ceStringComp = 0
-    ceEqual = 1
-    ceDoubleLess = 2
-    ceDoubleBigger = 3
-    ceRegex = 4
 End Enum
 
 Sub Test_Base()
@@ -348,7 +348,7 @@ Function Difference(minuend As Range, subtrahend As Range) As Range
     Set Difference = diminishedMinuend
 End Function
 
-Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Variant) As Variant()
+Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Variant, Optional obj As Object) As Variant()
 
     'Runs a function f on every item of an array.
     'f's signature has to be:
@@ -378,19 +378,33 @@ Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Vari
         If IsMissing(additionalArg) Then
             'Calc without additionalArg
             argOut = Application.Run(f, argIn)
+            If obj Is Nothing Or IsMissing(obj) Then
+                argOut = Application.Run(f, argIn)
+            Else
+                argOut = CallByName(obj, f, VbMethod, argIn)
+            End If
+            
         Else
+            Dim addArgVal As Variant
+            
             If IsArray(additionalArg) Then
                 'Calculate element-wise with both arrays
                 If UBound(additionalArg) = UBound(arr) Then
                     'Calc element-wise
-                    argOut = Application.Run(f, argIn, additionalArg(arrIdx))
+                    addArgVal = additionalArg(arrIdx)
                 Else
                     'Calc with first element of additional arg
-                    argOut = Application.Run(f, argIn, additionalArg(0))
+                    addArgVal = additionalArg(0)
                 End If
             Else
                 'Calc with additional arg (no array type, additionalArg is constant in every cycle)
-                argOut = Application.Run(f, argIn, additionalArg)
+                addArgVal = additionalArg
+            End If
+            
+            If obj Is Nothing Or IsMissing(obj) Then
+                argOut = Application.Run(f, argIn, addArgVal)
+            Else
+                argOut = CallByName(obj, f, VbMethod, argIn, addArgVal)
             End If
         End If
         retArr(arrIdx) = argOut
@@ -398,7 +412,7 @@ Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Vari
     CalcOnArray = retArr
 End Function
 
-Function CalcAddition(summand1 As Double, summand2 As Double) As Double
+Function CalcAddition(summand1 As Variant, summand2 As Variant) As Double
 
     'Add-function which works with the 'CalcOnArray'FP (functional programming) mechanism
     '
@@ -412,7 +426,7 @@ Function CalcAddition(summand1 As Double, summand2 As Double) As Double
     CalcAddition = summand1 + summand2
 End Function
 
-Function CalcSubstraction(minuend As Double, subtrahend As Double) As Double
+Function CalcSubstraction(minuend As Variant, subtrahend As Variant) As Double
 
     'Substraction-function which works with the 'CalcOnArray'FP (functional programming) mechanism
     '
@@ -674,5 +688,4 @@ Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant(
     
     ExtractSubArray = subArr
 End Function
-
 

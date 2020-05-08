@@ -1,0 +1,23 @@
+Attribute VB_Name = "Enums"
+Option Explicit
+
+Enum ComparisonTypes
+    ceStringComp = 0
+    ceEqual = 1
+    ceDoubleLess = 2
+    ceDoubleBigger = 3
+    ceRegex = 4
+End Enum
+
+Public Enum ListRowSelect
+    'This enum specifies values to select the table rows which should be fetched.
+    ceHeader = 0
+    ceData = 1
+    ceAll = 2
+End Enum
+
+Public Enum DeserializedType
+    ceString = 0
+    ceDoubles = 1
+    ceDates = 2
+End Enum

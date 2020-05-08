@@ -1,0 +1,14 @@
+Attribute VB_Name = "ObjFactory"
+Option Explicit
+Private BaseObj As Object
+Private UtilsObj As Object
+
+Public Function Base() As Object
+    If BaseObj Is Nothing Then Set BaseObj = New Base
+    Set Base = BaseObj
+End Function
+
+Public Function Utils() As Object
+    If UtilsObj Is Nothing Then Set UtilsObj = New Utils
+    Set Utils = UtilsObj
+End Function

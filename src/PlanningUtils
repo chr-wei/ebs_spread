@@ -88,7 +88,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     
     'Generate a new HASH if no hash was passed
     If Not SanityChecks.CheckHash(newHash) Then
-        newHash = CreateHashString("t")
+        newHash = Utils.CreateHashString("t")
     End If
     
     'Add a new entry to task list'
@@ -487,7 +487,7 @@ Function ReinitPriorities()
     Next cell
     
     'Sort the priorities and the hashes
-    Call QuickSort(prioNumbers, ceAscending, 0, UBound(prioNumbers), hashStrings)
+    Call Base.QuickSort(prioNumbers, ceAscending, 0, UBound(prioNumbers), hashStrings)
     
     Dim newPrio As Long
     

@@ -474,9 +474,9 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     End If
     
     'Now read the resulting hash cells: The hashes of all finished tasks for the current contributor
-    Set hashCells = IntersectN( _
+    Set hashCells = Base.IntersectN( _
                     PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData), _
-                    IntersectN(finishedTasks.EntireRow, _
+                    Base.IntersectN(finishedTasks.EntireRow, _
                                contributorTasks.EntireRow))
     
     'Debug info
@@ -563,7 +563,7 @@ Function GenRandomVelocity(upperLimit As Double, lowerLimit As Double) As Double
     '  GenRandomVelocity:  Single velocity (double) val
     
     'Use a uniform distribution in log scale to get equal count of values for lets say (0.2 to 1) and (1 to 5) as these are equally bad estimate ranges
-    GenRandomVelocity = 10 ^ ((Log10(upperLimit) - Log10(lowerLimit)) * Rnd() + Log10(lowerLimit))
+    GenRandomVelocity = 10 ^ ((Base.Log10(upperLimit) - Base.Log10(lowerLimit)) * Rnd() + Base.Log10(lowerLimit))
 End Function
 
 Function GenRandomIndex(upperLimit As Integer) As Integer
@@ -594,10 +594,10 @@ Function CalcVelocityHistogram(velocities() As Double, ByRef histoX() As Double,
     
     'Convert the specified histogram limits to log scale
     Dim logMin As Double
-    logMin = Log10(Constants.EBS_LOWER_HISTOGRAM_LIMIT)
+    logMin = Base.Log10(Constants.EBS_LOWER_HISTOGRAM_LIMIT)
     
     Dim logMax As Double
-    logMax = Log10(Constants.EBS_UPPER_HISTOGRAM_LIMIT)
+    logMax = Base.Log10(Constants.EBS_UPPER_HISTOGRAM_LIMIT)
     
     'Calc the width of a histogram bar
     Dim logDeltaSpan As Double
@@ -620,7 +620,7 @@ Function CalcVelocityHistogram(velocities() As Double, ByRef histoX() As Double,
     Dim bar As Integer
     
     For Each velo In velocities
-        logVelo = Log10(CDbl(velo))
+        logVelo = Base.Log10(CDbl(velo))
         
         'Sort very high and low velocities to the outer bars
         If logVelo < logMin Then
@@ -821,7 +821,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
         Exit Function
     End If
 
-    Set unfinishedTasksPrioCells = IntersectN( _
+    Set unfinishedTasksPrioCells = Base.IntersectN( _
                                    hashCells.EntireRow, _
                                    PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
     
@@ -902,7 +902,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
              
             'Calculate accumulated time estimates: The array values increase every iteration, do not clear
             accumulatedTimeEstimates = Utils.CopyVarArrToDoubleArr( _
-                                       Base.CalcOnArray("Base.CalcAddition", accumulatedTimeEstimates, remainingTimeEstimates))
+                                       Base.CalcOnArray(f:="CalcAddition", arr:=accumulatedTimeEstimates, additionalArg:=remainingTimeEstimates, obj:=Base))
              
             'Clear data and interpolate the accumulated time estimates (crop data)
             Erase interpolatedHourEstimates
