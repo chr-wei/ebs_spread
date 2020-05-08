@@ -29,7 +29,6 @@ Enum SortDir
     ceAscending = 1
 End Enum
 
-
 Enum ComparisonTypes
     ceStringComp = 0
     ceEqual = 1
@@ -37,7 +36,6 @@ Enum ComparisonTypes
     ceDoubleBigger = 3
     ceRegex = 4
 End Enum
-
 
 Sub Test_Base()
     Dim darr() As Double
@@ -53,12 +51,10 @@ Sub Test_Base()
     Debug.Print Utils.SerializeArray(Base.ExtractSubArray(arrThree, 2, 7))
 End Sub
 
-
-
 Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optional inLow As Long = -1, Optional inHi As Long = -1, _
-    Optional ByRef associate As Variant, _
-    Optional ByRef associate2 As Variant, _
-    Optional ByRef associate3 As Variant)
+                          Optional ByRef associate As Variant, _
+                          Optional ByRef associate2 As Variant, _
+                          Optional ByRef associate3 As Variant)
     
     Const FN As String = "QuickSort"
     'This function sorts an numeric array in ascending or descending order.
@@ -162,10 +158,8 @@ Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optiona
     If (tmpLow < inHi) Then QuickSort vArray, direction, tmpLow, inHi, associate
 End Function
 
-
-
 Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional property As String = "Value", _
-    Optional compType As ComparisonTypes = ComparisonTypes.ceStringComp) As Range
+                 Optional compType As ComparisonTypes = ComparisonTypes.ceStringComp) As Range
     'Find a cell in a given range which matches a given value. By default a text comparison of the cell is performed.
     'This function also works for hidden cells
     
@@ -207,18 +201,18 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                 'Perform the comparison
                 compMatch = False
                 Select Case compType
-                    Case ComparisonTypes.ceRegex
-                        Dim regex As New RegExp
-                        regex.Pattern = propertyVal
-                        compMatch = (regex.test(cellVal))
-                    Case ComparisonTypes.ceStringComp
-                        compMatch = (StrComp(cellVal, propertyVal) = 0)
-                    Case ComparisonTypes.ceEqual
-                        compMatch = (cellVal = propertyVal)
-                    Case ComparisonTypes.ceDoubleLess
-                        compMatch = (CDbl(cellVal) < CDbl(propertyVal))
-                    Case ComparisonTypes.ceDoubleBigger
-                        compMatch = (CDbl(cellVal) > CDbl(propertyVal))
+                Case ComparisonTypes.ceRegex
+                    Dim regex As New RegExp
+                    regex.Pattern = propertyVal
+                    compMatch = (regex.test(cellVal))
+                Case ComparisonTypes.ceStringComp
+                    compMatch = (StrComp(cellVal, propertyVal) = 0)
+                Case ComparisonTypes.ceEqual
+                    compMatch = (cellVal = propertyVal)
+                Case ComparisonTypes.ceDoubleLess
+                    compMatch = (CDbl(cellVal) < CDbl(propertyVal))
+                Case ComparisonTypes.ceDoubleBigger
+                    compMatch = (CDbl(cellVal) > CDbl(propertyVal))
                 End Select
                 
                 If compMatch Then
@@ -240,8 +234,6 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
     'Debug info
     'Debug.Print result.Address
 End Function
-
-
 
 Function DictToArray(dict As Scripting.Dictionary) As Variant
     'Convert a dictionary of strings to a variant array
@@ -275,8 +267,6 @@ Function DictToArray(dict As Scripting.Dictionary) As Variant
     DictToArray = arr
 End Function
 
-
-
 'Function GetUniqueStrings(stringDict As Scripting.Dictionary) As Scripting.Dictionary
 '    'This function takes a dictionary of strings and returns a dictionary only with with unique strings.
 '    'E.g.: {sheep, sheep, dog, cat} becomes {sheep, dog, cat}.
@@ -307,13 +297,9 @@ End Function
 '    Set GetUniqueStrings = uniqueDict
 'End Function
 
-
-
 Function Log10(x As Double) As Double
     Log10 = Log(x) / Log(10#)
 End Function
-
-
 
 Function Difference(minuend As Range, subtrahend As Range) As Range
     'This function calcs the difference of input ranges
@@ -361,8 +347,6 @@ Function Difference(minuend As Range, subtrahend As Range) As Range
     
     Set Difference = diminishedMinuend
 End Function
-
-
 
 Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Variant) As Variant()
 
@@ -414,8 +398,6 @@ Function CalcOnArray(f As String, arr As Variant, Optional additionalArg As Vari
     CalcOnArray = retArr
 End Function
 
-
-
 Function CalcAddition(summand1 As Double, summand2 As Double) As Double
 
     'Add-function which works with the 'CalcOnArray'FP (functional programming) mechanism
@@ -430,8 +412,6 @@ Function CalcAddition(summand1 As Double, summand2 As Double) As Double
     CalcAddition = summand1 + summand2
 End Function
 
-
-
 Function CalcSubstraction(minuend As Double, subtrahend As Double) As Double
 
     'Substraction-function which works with the 'CalcOnArray'FP (functional programming) mechanism
@@ -445,8 +425,6 @@ Function CalcSubstraction(minuend As Double, subtrahend As Double) As Double
     
     CalcSubstraction = minuend - subtrahend
 End Function
-
-
 
 Public Function IsArrayAllocated(arr As Variant) As Boolean
     'Source: http://www.cpearson.com/excel/vbaarrays.htm
@@ -501,8 +479,6 @@ Public Function IsArrayAllocated(arr As Variant) As Boolean
     End If
 End Function
 
-
-
 Function Max(val1 As Variant, Optional val2 As Variant) As Variant
     'Returns the maximum value of two values or of a passed array
     '
@@ -529,8 +505,6 @@ Function Max(val1 As Variant, Optional val2 As Variant) As Variant
         Max = val2
     End If
 End Function
-
-
 
 Function Min(val1 As Variant, Optional val2 As Variant) As Variant
     'Returns the minimum value of two values or of a passed array
@@ -560,8 +534,6 @@ Function Min(val1 As Variant, Optional val2 As Variant) As Variant
     End If
 End Function
 
-
-
 Function UnionN(first As Range, second As Range) As Range
     'Returns the union of two ranges and checks for input args being nothing
     '
@@ -583,8 +555,6 @@ Function UnionN(first As Range, second As Range) As Range
     End If
 End Function
 
-
-
 Function IntersectN(first As Range, second As Range) As Range
     'Returns the intersection of two ranges and checks for input args being nothing
     '
@@ -601,8 +571,6 @@ Function IntersectN(first As Range, second As Range) As Range
         Set IntersectN = Intersect(first, second)
     End If
 End Function
-
-
 
 Function GetArrayDimension(arr As Variant) As Long
     'Returns the dimension of an array 'perpendicular' to Ubound(arr)
@@ -625,8 +593,6 @@ Function GetArrayDimension(arr As Variant) As Long
 Err:
     GetArrayDimension = idx - 1
 End Function
-
-
 
 Function ConcatToArray(arr As Variant, concatee As Variant) As Variant
     'Concatenates an array and a single value or a second array
@@ -679,8 +645,6 @@ Function ConcatToArray(arr As Variant, concatee As Variant) As Variant
     ConcatToArray = outArray
 End Function
 
-
-
 Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant()
     'This function extracts a subarray out of an array. Passed bounds have to be in range of the array bounds
     '
@@ -710,3 +674,5 @@ Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant(
     
     ExtractSubArray = subArr
 End Function
+
+

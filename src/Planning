@@ -43,14 +43,10 @@ Enum CumulativeMode
     ceSingle = 2
 End Enum
 
-
-
 Private Sub Worksheet_SelectionChange(ByVal Target As Range)
     'Run a catched call to the main selection handler method in this sheet
     Call Utils.RunTryCatchedCall(f:="HandleSelectionChanges", obj:=Planning, arg1:=Target, screenUpdating:=False)
 End Sub
-
-
 
 Private Sub Worksheet_Change(ByVal Target As Range)
     Const FN As String = "Planning.Worksheet_Change"
@@ -60,8 +56,6 @@ Private Sub Worksheet_Change(ByVal Target As Range)
     Call Utils.RunTryCatchedCall(f:="HandleChanges", obj:=Planning, arg1:=Target, screenUpdating:=False)
 End Sub
 
-
-
 Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
     Const FN As String = "Planning.Worksheet_FollowHyperlink"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -70,8 +64,6 @@ Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.FollowTaskSheetLink", arg1:=Target, screenUpdating:=False)
 End Sub
 
-
-
 Sub UI_AddNewTask()
     Const FN As String = "Planning.UI_AddNewTask"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -79,8 +71,6 @@ Sub UI_AddNewTask()
     'Add a new task
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddNewTask", enableEvt:=False, screenUpdating:=False)
 End Sub
-
-
 
 Sub UI_CopyTask()
     Const FN As String = "Planning.UI_CopyTask"
@@ -98,7 +88,7 @@ Sub UI_CopyTask()
         'Call this function with events to copy the task data from worksheet to task sheet immediately
         'Only call with disabled events to not mix up the cell validation values
         Utils.RunTryCatchedCall f:="PlanningUtils.CopyTask", arg1:=newHash, arg2:=copiedHash, _
-            enableEvt:=False, screenUpdating:=False
+                                enableEvt:=False, screenUpdating:=False
         
         'Select the new task
         Dim copiedCell As Range
@@ -110,8 +100,6 @@ Sub UI_CopyTask()
     End If
 End Sub
 
-
-
 Sub UI_DeleteSelectedTask()
     Const FN As String = "Planning.UI_DeleteSelectedTask"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -119,8 +107,6 @@ Sub UI_DeleteSelectedTask()
     'Delete the entire task (cannot be undone). Delete the task sheet (named by tHash) and the task row entry in the planning sheet
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.DeleteSelectedTask", screenUpdating:=False)
 End Sub
-
-
 
 Sub UI_EndAllTasks()
     Const FN As String = "Planning.UI_EndAllTasks"
@@ -130,8 +116,6 @@ Sub UI_EndAllTasks()
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.EndAllTasks", screenUpdating:=False)
 End Sub
 
-
-
 Sub UI_StartSelectedTask()
     Const FN As String = "Planning.UI_StartSelectedTask"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -139,8 +123,6 @@ Sub UI_StartSelectedTask()
     'Track the selected task (add timestamp)
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.StartSelectedTask", screenUpdating:=False)
 End Sub
-
-
 
 Sub UI_AddFiveteenMinutesToSelectedTask()
     Const FN As String = "Planning.UI_AddFiveteenMinutesToSelectedTask"
@@ -155,8 +137,6 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
         Call Utils.RunTryCatchedCall(f:="PlanningUtils.AddXHoursTime", arg1:=hash, arg2:=CDbl(0.25), screenUpdating:=False)
     End If
 End Sub
-
-
 
 Sub UI_AddZeroMinutesToSelectedTask()
     Const FN As String = "Planning.UI_AddZeroMinutesToSelectedTask"
@@ -173,8 +153,6 @@ Sub UI_AddZeroMinutesToSelectedTask()
     End If
 End Sub
 
-
-
 Sub UI_ShiftTaskUp()
     Const FN As String = "Planning.UI_ShiftTaskUp"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -183,13 +161,11 @@ Sub UI_ShiftTaskUp()
     'Sorting is applied automatically when calling the function.
     
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftUp, arg2:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False)
+                                 enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
-
-
 
 Sub UI_ShiftTaskDown()
     Const FN As String = "Planning.UI_ShiftTaskDown"
@@ -199,13 +175,11 @@ Sub UI_ShiftTaskDown()
     'Sorting is applied automatically when calling the function.
     
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.ShiftPrio", arg1:=ShiftDirection.ceShiftDown, arg2:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False)
+                                 enableEvt:=False, screenUpdating:=False)
     'Since the shift prio command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the Shift prio call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
-
-
 
 Sub UI_GatherTasks()
     Const FN As String = "Planning.UI_GatherTasks"
@@ -216,13 +190,11 @@ Sub UI_GatherTasks()
     'Sorting is applied automatically when calling the function.
     
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.GatherTasks", arg1:=lastSpecialSelection, _
-        enableEvt:=False, screenUpdating:=False)
+                                 enableEvt:=False, screenUpdating:=False)
     'Since the gather tasks command changes the selection with disabled events, handle the selection change manually afterwards.
     'Somehow this does not work when you handle the change inside the gahter tasks call through 'RunTryCatchedCall'
     Call Planning.HandleSelectionChanges(PlanningUtils.GetPlanningSelection)
 End Sub
-
-
 
 Sub UI_RunEbs()
     Const FN As String = "Planning.UI_RunEbs"
@@ -232,8 +204,6 @@ Sub UI_RunEbs()
     Call Utils.RunTryCatchedCall(f:="EbsUtils.RunEbs", screenUpdating:=False)
 End Sub
 
-
-
 Sub UI_CollectTotalTimesSpent()
     Const FN As String = "Planning.UI_CollectTotalTimesSpent"
     Call MessageUtils.InvokeUIMsg(FN)
@@ -241,8 +211,6 @@ Sub UI_CollectTotalTimesSpent()
     'Read the task's data to get the total time a user spent working on it.
     Call Utils.RunTryCatchedCall(f:="PlanningUtils.CollectTotalTimesSpent", screenUpdating:=False)
 End Sub
-
-
 
 Function HandleChanges(Target As Range)
     Const FN As String = "Planning.HandleChanges"
@@ -254,7 +222,7 @@ Function HandleChanges(Target As Range)
     'For user-defined headers (e.g. tag headers with fixed prefix but variable suffix) the header is first normalized (set to its regex expression)
     
     Dim header As String
-    header = Utils.GetListColumnHeader(Target) 'The header can only be fetched if a cell inside the list object is selected
+    header = Utils.GetListColumnHeader(Target)   'The header can only be fetched if a cell inside the list object is selected
     If Target.Count <> 1 Then
         'Currently only changes to one cell will be handled. Do only select single cells inside the table, otherwise deletion of values will fail.
         'To do: Call the steps below on every cell of the selection with for each loop and test.
@@ -263,30 +231,30 @@ Function HandleChanges(Target As Range)
 
     If StrComp(header, "") = 0 Then
         'Use a fallback for special cells above ebs data columns of the table: Do additional checking of the cell above even when
-        'reading the header fails (this is the case if the special cell above the list is selected)
+            'reading the header fails (this is the case if the special cell above the list is selected)
         
-        Dim regex As New RegExp
-        regex.Global = True
-        regex.Pattern = Constants.EBS_COLUMN_REGEX
-        Dim bn As Range
-        Set bn = Utils.GetBottomNeighbour(Target)
+            Dim regex As New RegExp
+            regex.Global = True
+            regex.Pattern = Constants.EBS_COLUMN_REGEX
+            Dim bn As Range
+            Set bn = Utils.GetBottomNeighbour(Target)
         
-        'Test if the bottom neighbour of the selected cell is an ebs column.
-        'Set the header so that the handler for the ebs column is called
-        If regex.test(bn.Value) Then
-            Set Target = bn
-            header = bn.Value
-        Else
-            Exit Function
+            'Test if the bottom neighbour of the selected cell is an ebs column.
+            'Set the header so that the handler for the ebs column is called
+            If regex.test(bn.Value) Then
+                Set Target = bn
+                header = bn.Value
+            Else
+                Exit Function
+            End If
         End If
-    End If
     
-    'Make tag names and ebs column names comparable to standard value (set regex expression as 'header')
-    header = UnifyTagName(header)
-    header = UnifyEbsColumnName(header)
-    
-    'Call the specific handler depending on the column header
-    Select Case (header)
+        'Make tag names and ebs column names comparable to standard value (set regex expression as 'header')
+        header = UnifyTagName(header)
+        header = UnifyEbsColumnName(header)
+        
+        'Call the specific handler depending on the column header
+        Select Case (header)
         Case TASK_NAME_HEADER
             Call ManageTaskNameChange(Target)
         Case TASK_PRIORITY_HEADER
@@ -309,10 +277,8 @@ Function HandleChanges(Target As Range)
             Call ManageContributorChange(Target)
         Case T_HASH_HEADER:
             Call ManageHashChange(Target)
-    End Select
-End Function
-
-
+        End Select
+    End Function
 
 Function HandleSelectionChanges(Target As Range)
     'Main selection handler. The function checks if a cell of the planning list object was selected.
@@ -336,8 +302,8 @@ Function HandleSelectionChanges(Target As Range)
     'Call highlighting for kanban list col, contributor col and tag cols
     Dim highlight As Range
     Select Case (header)
-        Case Constants.TAG_REGEX, Constants.CONTRIBUTOR_HEADER, Constants.KANBAN_LIST_HEADER
-            Set highlight = ManageHighlightableSelChange(Target)
+    Case Constants.TAG_REGEX, Constants.CONTRIBUTOR_HEADER, Constants.KANBAN_LIST_HEADER
+        Set highlight = ManageHighlightableSelChange(Target)
     End Select
     
     'Store the special highlight selection (only the range of multiple equivalent values in the selected column are stored, not the full row range)
@@ -350,8 +316,6 @@ Function HandleSelectionChanges(Target As Range)
     'Debug info
     'Debug.Print "Last savedSelection is: " + lastSpecialSelection.Address
 End Function
-
-
 
 Function UnifyTagName(header As String) As String
     'Replace the custom tag header (fixed prefix but variable suffix) with its regex expression
@@ -367,8 +331,6 @@ Function UnifyTagName(header As String) As String
         UnifyTagName = header
     End If
 End Function
-
-
 
 Function UnifyEbsColumnName(header As String) As String
     'Replace the ebs column name (propability and date/time setting stored in name) with its regex expression
@@ -386,7 +348,6 @@ Function UnifyEbsColumnName(header As String) As String
     End If
 End Function
 
-
 Function ManageTaskNameChange(changedCell As Range)
     'Manage the change of the task name. Set it to the task sheet
     Dim hash As String
@@ -395,8 +356,6 @@ Function ManageTaskNameChange(changedCell As Range)
         Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
 End Function
-
-
 
 Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates As Boolean = True)
     Const FN As String = "ManageEstimateChange"
@@ -424,7 +383,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
             ElseIf CDbl(enteredVal) > 100 And CDbl(enteredVal) <= CDbl(Now) Then
                 'More than 100 hours is not allowed.
                 Call MessageUtils.HandleMessage("Invalid estimate entered. " & enteredVal & " is more than 100h", _
-                    ceWarning, FN)
+                                                ceWarning, FN)
                 ues = UserEstimateStatus.ceInvalid
             ElseIf CDbl(enteredVal) > CDbl(Now) Or enteredVal = CalendarUtils.GetStartOfDay(Now) Then
                 'Entered date has to be later than 'NOW'. This does not apply, if the date without clock time is e.g. 16/07/2019 and 'NOW' is 16/07/2019 07:00.
@@ -435,7 +394,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                     ues = UserEstimateStatus.ceValidDate
                 Else
                     Call MessageUtils.HandleMessage("Invalid estimate entered. " & CDate(enteredVal) & " is more than 100 days from 'Now' on", _
-                        ceWarning, FN)
+                                                    ceWarning, FN)
                     ues = UserEstimateStatus.ceInvalid
                 End If
             Else
@@ -477,12 +436,12 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                 
             'Calc a mapped hour value: The free time in between all appointments and the given dates
             outputVal = CalendarUtils.MapDateToHours( _
-                contributor, _
-                calItems, _
-                enteredDate, _
-                Now, _
-                SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-                SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                        contributor, _
+                        calItems, _
+                        enteredDate, _
+                        Now, _
+                        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
             
             If outputVal > 0 Then
                 ues = UserEstimateStatus.ceValidHours
@@ -494,38 +453,34 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         
         'Adjust formatting of the planning sheet cell to display the enterd value correctly
         Select Case ues
-            Case UserEstimateStatus.ceValidHours, UserEstimateStatus.ceValidDate
-                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(outputVal), setNewEbsEstimates)
-                changedCell.Value = outputVal
-                changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
+        Case UserEstimateStatus.ceValidHours, UserEstimateStatus.ceValidDate
+            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(outputVal), setNewEbsEstimates)
+            changedCell.Value = outputVal
+            changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
                 
-            Case UserEstimateStatus.ceInvalid
-                Dim placeholder As String
+        Case UserEstimateStatus.ceInvalid
+            Dim placeholder As String
                 
-                Select Case enteredVal
-                    Case Constants.N_A, ""
-                        'Just leave it N/A
-                        placeholder = Constants.N_A
-                    Case Else
-                        'Value was malformed and not empty or N/A. Set placeholder to cells and append shortened malformed val
-                        placeholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
-                End Select
+            Select Case enteredVal
+            Case Constants.N_A, ""
+                'Just leave it N/A
+                placeholder = Constants.N_A
+            Case Else
+                'Value was malformed and not empty or N/A. Set placeholder to cells and append shortened malformed val
+                placeholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
+            End Select
                 
-                changedCell.Value = placeholder
-                changedCell.NumberFormat = "General"
-                Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), placeholder, setNewEbsEstimates)
+            changedCell.Value = placeholder
+            changedCell.NumberFormat = "General"
+            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), placeholder, setNewEbsEstimates)
         End Select
     End If
 End Function
-
-
 
 Function ManageTaskPriorityChange()
     'Sort the data column priority
     Call PlanningUtils.OrganizePrioColumn
 End Function
-
-
 
 Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnDate As Boolean = True)
     'Handle the 'status' change of a task.
@@ -547,24 +502,24 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     Set prioCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
     
     Select Case (changedCell.Value)
-        Case Constants.KANBAN_LIST_DONE
-            If PlanningUtils.IsTaskTracking(changedCell) Then
-                Call PlanningUtils.EndAllTasks
-            End If
+    Case Constants.KANBAN_LIST_DONE
+        If PlanningUtils.IsTaskTracking(changedCell) Then
+            Call PlanningUtils.EndAllTasks
+        End If
                       
-            prioCell.Value = Constants.N_A
+        prioCell.Value = Constants.N_A
                 
-        Case Else
-            'Set a priority if no proper value is set
-            If Not IsNumeric(prioCell.Value) Then
-                prioCell.Value = Constants.TASK_PRIO_INITIAL
-            End If
+    Case Else
+        'Set a priority if no proper value is set
+        If Not IsNumeric(prioCell.Value) Then
+            prioCell.Value = Constants.TASK_PRIO_INITIAL
+        End If
     End Select
     
     'Change the finished on date depending on the kanban list value
     If changeFinishedOnDate Then
         Select Case (changedCell.Value)
-            Case Constants.KANBAN_LIST_DONE
+        Case Constants.KANBAN_LIST_DONE
             
             'When the task is changed to 'done' the end time stamp in the sheet can be set. It is set to the last
             'time the user tracked time for this task. If no time was tracked the time stamp is set to 'Now'
@@ -583,9 +538,9 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
                 
             finishedOnCell.Value = datee
             
-            Case Else
-                'The task is active again: Delete finished on date
-                finishedOnCell.Value = Constants.N_A
+        Case Else
+            'The task is active again: Delete finished on date
+            finishedOnCell.Value = Constants.N_A
         End Select
         
         'Manage finished on date change for planning and task sheet manually
@@ -596,15 +551,11 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     Call PlanningUtils.OrganizePrioColumn
 End Function
 
-
-
 Function ManageHashChange(changedCell As Range)
     'To do: Prevent editing of the cells. (optional)
     'changedCell.Value = valueOnSelecting
     'MsgBox "Changing the HASH is not allowed. Value was reset."
 End Function
-
-
 
 Function ManageCommentChange(changedCell As Range)
     'Just copy the comment to the task sheet
@@ -614,8 +565,6 @@ Function ManageCommentChange(changedCell As Range)
         Call TaskUtils.SetComment(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
 End Function
-
-
 
 Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boolean = True)
     'Store tags inside the task sheet and update the list validation if tag changes
@@ -641,22 +590,16 @@ Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boo
     End If
 End Function
 
-
-
 Function ManageEbsColChange(changedCell As Range)
     'Collect the data of task sheets ebs estimates (non-cumulative estimates of task self time) or
     'of ebs sheet estimates (cumulative estimates of task queue for a specific user)
     Call PlanningUtils.CollectEbsColData(changedCell)
 End Function
 
-
-
 Function ManageHighlightableSelChange(changedCell As Range) As Range
     'Set highlight to special multi-selected cells and return the highlighted range (column cells, no entire row selection)
     Set ManageHighlightableSelChange = PlanningUtils.SetMultiCellHighlight(changedCell)
 End Function
-
-
 
 Function ManageContributorChange(changedCell As Range, Optional setCellValidation As Boolean = True, Optional setNewEbsEstimates As Boolean = True)
     'Mange the contributor change
@@ -692,8 +635,6 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     End If
 End Function
 
-
-
 Function ManageDueDateChange(changedCell As Range)
     'Copy the due date to the task sheet
     
@@ -707,19 +648,17 @@ Function ManageDueDateChange(changedCell As Range)
             Call TaskUtils.SetDueDate(sheet, CDate(changedCell.Value))
         Else
             Select Case changedCell.Value
-                Case "", Constants.N_A
-                    changedCell.Value = Constants.N_A
-                Case Else
-                    'The cell content was set neither to a date nor to N/A
-                    changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+            Case "", Constants.N_A
+                changedCell.Value = Constants.N_A
+            Case Else
+                'The cell content was set neither to a date nor to N/A
+                changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
             Call TaskUtils.UnsetDueDate(sheet)
         End If
     End If
 End Function
-
-
 
 Function ManageFinishedOnDateChange(changedCell As Range)
     'Copy the finished on date to the task sheet
@@ -734,14 +673,16 @@ Function ManageFinishedOnDateChange(changedCell As Range)
             Call TaskUtils.SetFinishedOnDate(sheet, CDate(changedCell.Value))
         Else
             Select Case changedCell.Value
-                Case "", Constants.N_A
-                    changedCell.Value = Constants.N_A
-                Case Else
-                    'The cell content was set neither to a date nor to N/A
-                    changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+            Case "", Constants.N_A
+                changedCell.Value = Constants.N_A
+            Case Else
+                'The cell content was set neither to a date nor to N/A
+                changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
             Call TaskUtils.UnsetFinishedOnDate(sheet)
         End If
     End If
 End Function
+
+

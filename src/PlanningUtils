@@ -34,8 +34,6 @@ Public Enum CopySource
     ceCopyFromWorksheetData = -1
 End Enum
 
-
-
 Function GetPlanningSheet() As Worksheet
     Const FN As String = "PlanningUtils.GetPlanningSheet"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -48,8 +46,6 @@ Function GetPlanningSheet() As Worksheet
     Set GetPlanningSheet = ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME)
 End Function
 
-
-
 Function GetTaskList() As ListObject
     Const FN As String = "PlanningUtils.GetTaskList"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -60,8 +56,6 @@ Function GetTaskList() As ListObject
     '  GetTaskList:    A reference to the list object with a fixed name
     Set GetTaskList = PlanningUtils.GetPlanningSheet.ListObjects(Constants.TASK_LIST_NAME)
 End Function
-
-
 
 Function GetTaskListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     Const FN As String = "PlanningUtils.GetTaskListColumn"
@@ -78,8 +72,6 @@ Function GetTaskListColumn(colIdentifier As Variant, rowIdentifier As ListRowSel
     
     Set GetTaskListColumn = Utils.GetListColumn(GetPlanningSheet, Constants.TASK_LIST_NAME, colIdentifier, rowIdentifier)
 End Function
-
-
 
 Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell As Range)
     Const FN As String = "PlanningUtils.AddNewTask"
@@ -122,8 +114,6 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     End If
 End Function
 
-
-
 Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Const FN As String = "PlanningUtils.AddNewTaskLine"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -163,7 +153,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     'Get all the edited cells:
     'First get the new line the task will be added to
     gotEntryData = Utils.GetNewEntry(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, _
-        newEntryCell, newFormattedNumber)
+                                     newEntryCell, newFormattedNumber)
     Set taskNameCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, TASK_NAME_HEADER, newEntryCell)
     Set taskEstimateCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, TASK_ESTIMATE_HEADER, newEntryCell)
     Set taskKanbanListCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, KANBAN_LIST_HEADER, newEntryCell)
@@ -173,13 +163,13 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Set taskFinishedOnCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, Constants.TASK_FINISHED_ON_HEADER, newEntryCell)
     
     If newEntryCell Is Nothing Or _
-        taskNameCell Is Nothing Or _
-        taskEstimateCell Is Nothing Or _
-        taskKanbanListCell Is Nothing Or _
-        taskContributorCell Is Nothing Or _
-        taskHashCell Is Nothing Or _
-        taskFinishedOnCell Is Nothing Or _
-        taskPrioCell Is Nothing Then
+       taskNameCell Is Nothing Or _
+       taskEstimateCell Is Nothing Or _
+       taskKanbanListCell Is Nothing Or _
+       taskContributorCell Is Nothing Or _
+       taskHashCell Is Nothing Or _
+       taskFinishedOnCell Is Nothing Or _
+       taskPrioCell Is Nothing Then
         'Exit if a cell could not be found
         Exit Function
     End If
@@ -216,8 +206,6 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     AddNewTaskLine = True
 End Function
 
-
-
 Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     Const FN As String = "PlanningUtils.GetTaskHash"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -247,7 +235,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     'Check if we are in task sheet and reset range if condition does not apply
     If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) <> 0 Then
         Call MessageUtils.HandleMessage("Please give/select a range of the main sheet called '" & Constants.PLANNING_SHEET_NAME & "'.", _
-            ceError, FN)
+                                        ceError, FN)
         Set rng = Nothing
         Exit Function
     End If
@@ -255,7 +243,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     'Check if only one row is selected and reset range if condition does not apply
     If Not rng.Rows.Count = 1 Then
         Call MessageUtils.HandleMessage("Please give/select a range with only one row.", _
-            ceError, FN)
+                                        ceError, FN)
         Set rng = Nothing
         Exit Function
     End If
@@ -271,8 +259,6 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     'Print out debug info
     'Debug.Print "Hash of selected task is: " & hashOfTask
 End Function
-
-
 
 Function IsTaskTracking(entry As Variant) As Boolean
     Const FN As String = "PlanningUtils.IsTaskTracking"
@@ -293,12 +279,12 @@ Function IsTaskTracking(entry As Variant) As Boolean
     Dim taskHash As String
     
     Select Case TypeName(entry)
-        Case "String"
-            taskHash = entry
-        Case "Range"
-            Dim rng As Range
-            Set rng = entry
-            taskHash = PlanningUtils.GetTaskHash(rng)
+    Case "String"
+        taskHash = entry
+    Case "Range"
+        Dim rng As Range
+        Set rng = entry
+        taskHash = PlanningUtils.GetTaskHash(rng)
     End Select
     
     If StrComp(taskHash, "") = 0 Then
@@ -312,8 +298,6 @@ Function IsTaskTracking(entry As Variant) As Boolean
         IsTaskTracking = StrComp(indicatorCell.Value, Constants.INDICATOR) = 0
     End If
 End Function
-
-
 
 Function EndAllTasks()
     Const FN As String = "PlanningUtils.EndAllTasks"
@@ -338,8 +322,6 @@ Function EndAllTasks()
     End If
 End Function
 
-
-
 Function DeleteSelectedTask()
     Const FN As String = "PlanningUtils.DeleteSelectedTask"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -360,8 +342,6 @@ Function DeleteSelectedTask()
         Call Utils.DeleteFilteredListObjectRow(entryCell)
     End If
 End Function
-
-
 
 Function StartSelectedTask()
     Const FN As String = "PlanningUtils.StartSelectedTask"
@@ -402,15 +382,13 @@ Function StartSelectedTask()
             Set kanbanListCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
             
             If StrComp(kanbanListCell.Value, Constants.KANBAN_LIST_TODO) = 0 Or _
-                StrComp(kanbanListCell.Value, Constants.KANBAN_LIST_DONE) = 0 Then
+                                                                           StrComp(kanbanListCell.Value, Constants.KANBAN_LIST_DONE) = 0 Then
                 kanbanListCell.Value = Constants.KANBAN_LIST_IN_PROGRESS
                 Call TaskUtils.SetKanbanList(taskSheet, Constants.KANBAN_LIST_IN_PROGRESS)
             End If
         End If
     End If
 End Function
-
-
 
 Function IntersectHashAndListColumn(hash As String, colIdentifier As Variant) As Range
     Const FN As String = "PlanningUtils.IntersectHashAndListColumn"
@@ -435,10 +413,8 @@ Function IntersectHashAndListColumn(hash As String, colIdentifier As Variant) As
     Set hashCell = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
     Set hashCell = Base.FindAll(hashCell, hash)
     Set IntersectHashAndListColumn = _
-        Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, colIdentifier, hashCell)
+                                   Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, colIdentifier, hashCell)
 End Function
-
-
 
 Function ReinitPriorities()
     Const FN As String = "PlanningUtils.ReinitPriorities"
@@ -457,17 +433,17 @@ Function ReinitPriorities()
     If Not finishedTasks Is Nothing Then
         'Get task that do not have any priority - all finished tasks
         Set noPriorities = Base.IntersectN(finishedTasks.EntireRow, _
-            PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
+                                           PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
     End If
     
     If Not unfinishedTasks Is Nothing Then
         'Get taks that do have a priority - all unfinished tasks
         Set priorities = Base.IntersectN(unfinishedTasks.EntireRow, _
-            PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
+                                         PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
            
         'Intersect the unfinished task rows with the column that contains their hashes
         Set hashes = Base.IntersectN(unfinishedTasks.EntireRow, _
-            PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData))
+                                     PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData))
     End If
     
     'Write N/A to all tasks with no priority
@@ -528,8 +504,6 @@ Function ReinitPriorities()
     Next newPrio
 End Function
 
-
-
 Function SetMultiCellHighlight(Optional sel As Range) As Range
     Const FN As String = "PlanningUtils.SetMultiCellHighlight"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -582,8 +556,6 @@ Function SetMultiCellHighlight(Optional sel As Range) As Range
     'multiSel.Select
 End Function
 
-
-
 Function ResetHighlight()
     Const FN As String = "PlanningUtils.ResetHighlight"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -600,8 +572,6 @@ Function ResetHighlight()
         dbc.Interior.color = xlNone
     End If
 End Function
-
-
 
 Function GetAllListValidatedCols() As Range
     Const FN As String = "PlanningUtils.GetAllListValidatedCols"
@@ -632,8 +602,6 @@ Function GetAllListValidatedCols() As Range
     Set GetAllListValidatedCols = allListValidatedCols
 End Function
 
-
-
 Function CopyTask(newHash As String, sourceListHash As String)
     Const FN As String = "PlanningUtils.CopyTask"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -650,17 +618,15 @@ Function CopyTask(newHash As String, sourceListHash As String)
     If VirtualSheetUtils.VirtualSheetExists(newHash, Constants.COPY_STORAGE_SHEET_PREFIX) Then
         Dim loadedSheet As Worksheet
         Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(newHash, Constants.COPY_STORAGE_SHEET_PREFIX, _
-            ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
+                                                             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
         If Not loadedSheet Is Nothing Then
             Call TaskUtils.SetHash(loadedSheet, newHash)
             
             Call PlanningUtils.BacksyncTask(syncedHash:=newHash, _
-                taskNamePostfix:=" (copy)")
+                                            taskNamePostfix:=" (copy)")
         End If
     End If
 End Function
-
-
 
 Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
     Const FN As String = "PlanningUtils.ShiftPrio"
@@ -711,37 +677,37 @@ Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
     '(4) After changing the priorities reinit them and resort them by calling the 'PlanningUtils.OrganizePrioColumn'function
     
     Select Case dir
-        Case ShiftDirection.ceShiftUp
-            For Each area In rng.areas
-                Dim topNeighbour As Range
-                Set topNeighbour = Utils.GetTopNeighbour(area)
+    Case ShiftDirection.ceShiftUp
+        For Each area In rng.areas
+            Dim topNeighbour As Range
+            Set topNeighbour = Utils.GetTopNeighbour(area)
                               
-                If IsNumeric(topNeighbour.Value) Then
-                    cellAreaCount = area.cells.Count
+            If IsNumeric(topNeighbour.Value) Then
+                cellAreaCount = area.cells.Count
                 
-                    For idx = 1 To cellAreaCount
-                        'Calculate a value slightly higher than the top neighbour priority and maintain the original order of the tasks
-                        newVal = topNeighbour.Value + (cellAreaCount - idx + 1) * 0.001
-                        area.cells(idx) = newVal
-                    Next idx
-                End If
-            Next area
+                For idx = 1 To cellAreaCount
+                    'Calculate a value slightly higher than the top neighbour priority and maintain the original order of the tasks
+                    newVal = topNeighbour.Value + (cellAreaCount - idx + 1) * 0.001
+                    area.cells(idx) = newVal
+                Next idx
+            End If
+        Next area
         
-        Case ShiftDirection.ceShiftDown
-            For Each area In rng.areas
-                Dim bottomNeighbour As Range
-                Set bottomNeighbour = Utils.GetBottomNeighbour(area)
+    Case ShiftDirection.ceShiftDown
+        For Each area In rng.areas
+            Dim bottomNeighbour As Range
+            Set bottomNeighbour = Utils.GetBottomNeighbour(area)
                               
-                If IsNumeric(bottomNeighbour.Value) Then
-                    cellAreaCount = area.cells.Count
+            If IsNumeric(bottomNeighbour.Value) Then
+                cellAreaCount = area.cells.Count
                 
-                    For idx = 1 To cellAreaCount
-                        'Calculate a value slightly lower than the top neighbour priority and maintain the original order of the tasks
-                        newVal = bottomNeighbour.Value - (idx + 1) * 0.001
-                        area.cells(idx) = newVal
-                    Next idx
-                End If
-            Next area
+                For idx = 1 To cellAreaCount
+                    'Calculate a value slightly lower than the top neighbour priority and maintain the original order of the tasks
+                    newVal = bottomNeighbour.Value - (idx + 1) * 0.001
+                    area.cells(idx) = newVal
+                Next idx
+            End If
+        Next area
     End Select
     
     'If you break here you can see the changed values in the spreadsheet
@@ -757,8 +723,6 @@ Function ShiftPrio(dir As ShiftDirection, Optional rng As Range)
     End If
     
 End Function
-
-
 
 Function GatherTasks(Optional rng As Range)
     Const FN As String = "PlanningUtils.GatherTasks"
@@ -833,8 +797,6 @@ Function GatherTasks(Optional rng As Range)
     
 End Function
 
-
-
 Function OrganizePrioColumn()
     Const FN As String = "PlanningUtils.OrganizePrioColumn"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -867,8 +829,6 @@ Function OrganizePrioColumn()
     End With
 End Function
 
-
-
 Function GetCumulativeMode(ebsColCell As Range) As CumulativeMode
     Const FN As String = "PlanningUtils.GetCumulativeMode"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -896,14 +856,12 @@ Function GetCumulativeMode(ebsColCell As Range) As CumulativeMode
     Set cumulativeSetCell = Utils.GetTopNeighbour(headerCell)
     
     Select Case cumulativeSetCell.Value
-        Case "single"
-            GetCumulativeMode = CumulativeMode.ceSingle
-        Case "cumulative"
-            GetCumulativeMode = CumulativeMode.ceCumulative
-        End Select
+    Case "single"
+        GetCumulativeMode = CumulativeMode.ceSingle
+    Case "cumulative"
+        GetCumulativeMode = CumulativeMode.ceCumulative
+    End Select
 End Function
-
-
 
 Function CollectEbsColData(headerCell As Range)
     Const FN As String = "PlanningUtils.CollectEbsColData"
@@ -980,10 +938,10 @@ Function CollectEbsColData(headerCell As Range)
         
         'Decide which header to use to get data from the ebs sheet
         Select Case estType
-            Case EstimateType.ceTime
-                estHeader = Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER
-            Case EstimateType.ceDate
-                estHeader = Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER
+        Case EstimateType.ceTime
+            estHeader = Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER
+        Case EstimateType.ceDate
+            estHeader = Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER
         End Select
         
         Dim hash As String
@@ -1002,121 +960,119 @@ Function CollectEbsColData(headerCell As Range)
         Dim estArray() As Double
         
         Select Case cumuMode
-            Case CumulativeMode.ceCumulative
+        Case CumulativeMode.ceCumulative
                 
-                For Each cell In unfinishedTasks
-                    'Cycle through all unfinished tasks and get cumulative estimates for them. The estimates are only valid in the
-                    'queued order of the last ebs run. If the user reordered the tasks after the current ebs run one has to rerun this method
-                    'to get the current estimate values. The method is therefore triggered after each ebs run.
-                    hash = PlanningUtils.GetTaskHash(cell)
+            For Each cell In unfinishedTasks
+                'Cycle through all unfinished tasks and get cumulative estimates for them. The estimates are only valid in the
+                'queued order of the last ebs run. If the user reordered the tasks after the current ebs run one has to rerun this method
+                'to get the current estimate values. The method is therefore triggered after each ebs run.
+                hash = PlanningUtils.GetTaskHash(cell)
                     
-                    If SanityChecks.CheckHash(hash) Then
-                        'Read the data for the current contributor: First get ebs sheet of contributor
-                        contributor = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
-                        Set contribSheet = EbsUtils.GetEbsSheet(contributor)
-                        If contribSheet Is Nothing Then GoTo r2yNextCell
+                If SanityChecks.CheckHash(hash) Then
+                    'Read the data for the current contributor: First get ebs sheet of contributor
+                    contributor = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
+                    Set contribSheet = EbsUtils.GetEbsSheet(contributor)
+                    If contribSheet Is Nothing Then GoTo r2yNextCell
                         
-                        'Get all the hashes
-                        Set tHashCol = EbsUtils.GetRunDataListColumn(contribSheet, Constants.T_HASH_HEADER, ceData)
-                        If tHashCol Is Nothing Then GoTo r2yNextCell
+                    'Get all the hashes
+                    Set tHashCol = EbsUtils.GetRunDataListColumn(contribSheet, Constants.T_HASH_HEADER, ceData)
+                    If tHashCol Is Nothing Then GoTo r2yNextCell
                         
-                        'Get the rundata entry in ebs sheet with the current hash
-                        Set ebsRunDataHashCell = Base.FindAll(tHashCol, hash)
-                        If ebsRunDataHashCell Is Nothing Then GoTo r2yNextCell
+                    'Get the rundata entry in ebs sheet with the current hash
+                    Set ebsRunDataHashCell = Base.FindAll(tHashCol, hash)
+                    If ebsRunDataHashCell Is Nothing Then GoTo r2yNextCell
                         
-                        'Intersect to get the cell with the stored estimate array in it.
-                        Set estimateCell = EbsUtils.IntersectRunDataColumn(contribSheet, estHeader, ebsRunDataHashCell)
-                        If estimateCell Is Nothing Then GoTo r2yNextCell
+                    'Intersect to get the cell with the stored estimate array in it.
+                    Set estimateCell = EbsUtils.IntersectRunDataColumn(contribSheet, estHeader, ebsRunDataHashCell)
+                    If estimateCell Is Nothing Then GoTo r2yNextCell
                         
-                        'Intersect to get the support points cell as well
-                        Set supportPointsCell = EbsUtils.IntersectRunDataColumn(contribSheet, Constants.EBS_SUPPORT_POINT_HEADER, ebsRunDataHashCell)
-                        If supportPointsCell Is Nothing Then GoTo r2yNextCell
+                    'Intersect to get the support points cell as well
+                    Set supportPointsCell = EbsUtils.IntersectRunDataColumn(contribSheet, Constants.EBS_SUPPORT_POINT_HEADER, ebsRunDataHashCell)
+                    If supportPointsCell Is Nothing Then GoTo r2yNextCell
                         
-                        'Deserialize support points and estimates, interpolated for the whished value
-                        supportPoints = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(supportPointsCell.Value))
-                        If Not Base.IsArrayAllocated(supportPoints) Then GoTo r2yNextCell
+                    'Deserialize support points and estimates, interpolated for the whished value
+                    supportPoints = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(supportPointsCell.Value))
+                    If Not Base.IsArrayAllocated(supportPoints) Then GoTo r2yNextCell
                         
-                        Select Case estType
-                            Case EstimateType.ceTime
-                                estArray = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(estimateCell.Value))
-                            Case EstimateType.ceDate
-                                'Cascade array casting as date strings cannot be converted to double directly
-                                estArray = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(estimateCell.Value)))
-                        End Select
+                    Select Case estType
+                    Case EstimateType.ceTime
+                        estArray = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(estimateCell.Value))
+                    Case EstimateType.ceDate
+                        'Cascade array casting as date strings cannot be converted to double directly
+                        estArray = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(estimateCell.Value)))
+                    End Select
                         
-                        interpolatedVal = Utils.InterpolateArray(supportPoints, estArray, percentage)
-                        
-                        Select Case estType
-                            Case EstimateType.ceTime
-                                'Use this number format to crop the decimal places
-                                cell.NumberFormat = "0.00"
-                                'Only one value was interpolated and returned in the array.
-                                cell.Value = interpolatedVal(0)
-                            Case EstimateType.ceDate
-                                'General format will display date correctly, reset the format. Otherwise date will be displayed in numbers (650000,3)
-                                cell.NumberFormat = "General"
-                                cell.Value = CDate(interpolatedVal(0))
-                        End Select
-                    End If
-r2yNextCell:
-                Next cell
-
-            Case CumulativeMode.ceSingle
-                'For non-cumulative values the task sheets data will be read. The data is generated when the user enters an estimate in the
-                'planning sheet.
-                'Cumulative data instead (see above) will be read from the ebs sheet of the contributor. So the data sources are very different -
-                'With non-cumulative (single) data one can compare the user estimate, the real used time to finish the task and the ebs estimate.
-                'This will make evaluation of the ebs algorithm possible.
-                
-                'Get the data from all! tasks
-                
-                Dim cycleRange As Range
-                Set cycleRange = Base.UnionN(finishedTasks, unfinishedTasks)
-                                    
-                If estType = EstimateType.ceDate Then
-                    'For non-cumulative mode only time values are allowed. Calculating date values would be possible but is not useful as tasks can only
-                    'finished one after another
-                    Exit Function
-                End If
-                
-                For Each cell In cycleRange
-                    hash = PlanningUtils.GetTaskHash(cell)
-                    
-                    'Read the task sheet
-                    Dim taskSheet As Worksheet
-                    Set taskSheet = TaskUtils.GetTaskSheet(hash)
-                    
-                    'Actually multiple cells are read here and converted to an array afterwards
-                    Set supportPointsCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
-                    Set estimateCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.EBS_SELF_TIME_HEADER, ceData)
-                    
-                    If supportPointsCell Is Nothing Or estimateCell Is Nothing Then
-                        GoTo g5hNextCell
-                    End If
-                    
-                    supportPoints = Utils.CopyVarArrToDoubleArr(supportPointsCell.Value)
-                    'Time est array (h) is converted here
-                    estArray = Utils.CopyVarArrToDoubleArr(estimateCell.Value)
-                    
-                    If Not Base.IsArrayAllocated(supportPoints) Or Not Base.IsArrayAllocated(estArray) Then
-                        GoTo g5hNextCell
-                    End If
-                    
-                    'Now interpolate
                     interpolatedVal = Utils.InterpolateArray(supportPoints, estArray, percentage)
-                    
-                    cell.NumberFormat = "0.00"
-                    cell.Value = interpolatedVal
-g5hNextCell:
-                Next cell
+                        
+                    Select Case estType
+                    Case EstimateType.ceTime
+                        'Use this number format to crop the decimal places
+                        cell.NumberFormat = "0.00"
+                        'Only one value was interpolated and returned in the array.
+                        cell.Value = interpolatedVal(0)
+                    Case EstimateType.ceDate
+                        'General format will display date correctly, reset the format. Otherwise date will be displayed in numbers (650000,3)
+                        cell.NumberFormat = "General"
+                        cell.Value = CDate(interpolatedVal(0))
+                    End Select
+                End If
+r2yNextCell:
+            Next cell
+
+        Case CumulativeMode.ceSingle
+            'For non-cumulative values the task sheets data will be read. The data is generated when the user enters an estimate in the
+            'planning sheet.
+            'Cumulative data instead (see above) will be read from the ebs sheet of the contributor. So the data sources are very different -
+            'With non-cumulative (single) data one can compare the user estimate, the real used time to finish the task and the ebs estimate.
+            'This will make evaluation of the ebs algorithm possible.
                 
-            Case CumulativeMode.ceInvalid
+            'Get the data from all! tasks
+                
+            Dim cycleRange As Range
+            Set cycleRange = Base.UnionN(finishedTasks, unfinishedTasks)
+                                    
+            If estType = EstimateType.ceDate Then
+                'For non-cumulative mode only time values are allowed. Calculating date values would be possible but is not useful as tasks can only
+                'finished one after another
                 Exit Function
+            End If
+                
+            For Each cell In cycleRange
+                hash = PlanningUtils.GetTaskHash(cell)
+                    
+                'Read the task sheet
+                Dim taskSheet As Worksheet
+                Set taskSheet = TaskUtils.GetTaskSheet(hash)
+                    
+                'Actually multiple cells are read here and converted to an array afterwards
+                Set supportPointsCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
+                Set estimateCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.EBS_SELF_TIME_HEADER, ceData)
+                    
+                If supportPointsCell Is Nothing Or estimateCell Is Nothing Then
+                    GoTo g5hNextCell
+                End If
+                    
+                supportPoints = Utils.CopyVarArrToDoubleArr(supportPointsCell.Value)
+                'Time est array (h) is converted here
+                estArray = Utils.CopyVarArrToDoubleArr(estimateCell.Value)
+                    
+                If Not Base.IsArrayAllocated(supportPoints) Or Not Base.IsArrayAllocated(estArray) Then
+                    GoTo g5hNextCell
+                End If
+                    
+                'Now interpolate
+                interpolatedVal = Utils.InterpolateArray(supportPoints, estArray, percentage)
+                    
+                cell.NumberFormat = "0.00"
+                cell.Value = interpolatedVal
+g5hNextCell:
+            Next cell
+                
+        Case CumulativeMode.ceInvalid
+            Exit Function
         End Select
     End If
 End Function
-
-
 
 Function GetUnfinishedTasks() As Range
     Const FN As String = "PlanningUtils.GetUnfinishedTasks"
@@ -1142,8 +1098,6 @@ Function GetUnfinishedTasks() As Range
     Set GetUnfinishedTasks = Base.Difference(kanbanData, finishedTasks)
 End Function
 
-
-
 Function GetFinishedTasks() As Range
     Const FN As String = "PlanningUtils.GetFinishedTasks"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1163,8 +1117,6 @@ Function GetFinishedTasks() As Range
     'Debug.Print "Kanban data: " & kanbanData.Address
 End Function
 
-
-
 Function CollectTotalTimesSpent()
     Const FN As String = "PlanningUtils.CollectTotalTimesSpent"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1172,8 +1124,8 @@ Function CollectTotalTimesSpent()
     'For every task on planning sheet that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
     Set timeCells = Base.IntersectN( _
-        PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
-        PlanningUtils.GetVisibleTasks.EntireRow)
+                    PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
+                    PlanningUtils.GetVisibleTasks.EntireRow)
     
     If timeCells Is Nothing Then Exit Function
     
@@ -1195,8 +1147,6 @@ Function CollectTotalTimesSpent()
     Next cell
 End Function
 
-
-
 Function UpdateAllEbsCols()
     Const FN As String = "PlanningUtils.UpdateAllEbsCols"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1211,8 +1161,6 @@ Function UpdateAllEbsCols()
         Call PlanningUtils.CollectEbsColData(headerCell)
     Next headerCell
 End Function
-
-
 
 Function GetTaskListBodyRange() As Range
     Const FN As String = "PlanningUtils.GetTaskListBodyRange"
@@ -1231,8 +1179,6 @@ Function GetTaskListBodyRange() As Range
         Set GetTaskListBodyRange = dbc
     End If
 End Function
-
-
 
 Function FollowTaskSheetLink(Target As hyperlink)
     Const FN As String = "PlanningUtils.FollowTaskSheetLink"
@@ -1254,8 +1200,6 @@ Function FollowTaskSheetLink(Target As hyperlink)
     End If
 End Function
 
-
-
 Function GetTagHeaderCells() As Range
     Const FN As String = "PlanningUtils.GetTagHeaderCells"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1263,8 +1207,6 @@ Function GetTagHeaderCells() As Range
     'Returns all headers for tags
     Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
 End Function
-
-
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
     Const FN As String = "PlanningUtils.GetSerializedTags"
@@ -1317,8 +1259,6 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
     End If
 End Function
 
-
-
 Function GetVisibleTasks() As Range
     Const FN As String = "PlanningUtils.GetVisibleTasks"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1344,13 +1284,9 @@ Function GetVisibleTasks() As Range
     Set GetVisibleTasks = visibleHashes
 End Function
 
-
-
 Function hashExists(hash As String) As Boolean
     hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
 End Function
-
-
 
 Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String = "")
     Const FN As String = "BacksyncTask"
@@ -1369,7 +1305,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     
     If Application.EnableEvents = True Then
         Call MessageUtils.HandleMessage("Do not run this function with enabled events. Trouble ahead - exiting function.", _
-            ceError, FN)
+                                        ceError, FN)
         Debug.Print
         Exit Function
     End If
@@ -1381,7 +1317,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     If doBacksync Then
         'Task could be found in planning sheet. Backsync the task
         Call MessageUtils.HandleMessage("Backsynced task '" & syncedHash & "'", _
-            ceInfo, FN)
+                                        ceInfo, FN)
     Else
         'The task will be 'imported' as it is not existent in the planning sheet
         Dim entryAdded As Boolean
@@ -1390,10 +1326,10 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
         
         If entryAdded Then
             Call MessageUtils.HandleMessage("Syncing task '" & syncedHash & "' with list", _
-                ceInfo, FN)
+                                            ceInfo, FN)
         Else
             Call MessageUtils.HandleMessage("Could not sync task '" & syncedHash & "' with list. Failed to create a new task line", _
-                ceError, FN)
+                                            ceError, FN)
             Exit Function
         End If
     End If
@@ -1402,7 +1338,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     
     'Collect all the copied field headers
     copiedFields = Array(TASK_NAME_HEADER, TASK_PRIORITY_HEADER, TASK_ESTIMATE_HEADER, KANBAN_LIST_HEADER, COMMENT_HEADER, DUE_DATE_HEADER, _
-        CONTRIBUTOR_HEADER, TASK_FINISHED_ON_HEADER)
+                         CONTRIBUTOR_HEADER, TASK_FINISHED_ON_HEADER)
     
     'Add the tag headers as well (dynamically, because the user can use different tag column names)
     Dim header As Variant
@@ -1428,42 +1364,42 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
         Dim existingVal As Variant: existingVal = ""
         
         Select Case unifiedHeader
-            Case TAG_REGEX
-                'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
-                'the current tag header
+        Case TAG_REGEX
+            'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
+            'the current tag header
                         
-                Dim readSerTagHeaders As String
-                Dim readSerTagValues As String
-                readSerTagHeaders = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_HEADERS_HEADER)
-                readSerTagValues = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_VALUES_HEADER)
+            Dim readSerTagHeaders As String
+            Dim readSerTagValues As String
+            readSerTagHeaders = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+            readSerTagValues = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_VALUES_HEADER)
                         
-                Dim readTagHeaders() As String
-                Dim readTagValues() As String
+            Dim readTagHeaders() As String
+            Dim readTagValues() As String
                         
-                readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
-                readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
+            readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
+            readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
                         
-                If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
-                    'Values were deserialized successfully
-                    Dim headIdx As Integer
-                    For headIdx = 0 To UBound(readTagHeaders)
-                        If StrComp(readTagHeaders(headIdx), header) = 0 Then
-                            'Tag for current header was found.
-                            existingVal = readTagValues(headIdx)
+            If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
+                'Values were deserialized successfully
+                Dim headIdx As Integer
+                For headIdx = 0 To UBound(readTagHeaders)
+                    If StrComp(readTagHeaders(headIdx), header) = 0 Then
+                        'Tag for current header was found.
+                        existingVal = readTagValues(headIdx)
                                     
-                            'Break loop
-                            headIdx = UBound(readTagHeaders)
-                        End If
-                    Next headIdx
-                End If
+                        'Break loop
+                        headIdx = UBound(readTagHeaders)
+                    End If
+                Next headIdx
+            End If
                         
-            Case Constants.TASK_PRIORITY_HEADER
-                'Task sheet does not have a priority value stored. Set to initial priority
-                existingVal = Constants.TASK_PRIO_INITIAL
+        Case Constants.TASK_PRIORITY_HEADER
+            'Task sheet does not have a priority value stored. Set to initial priority
+            existingVal = Constants.TASK_PRIO_INITIAL
                     
-            Case Else
-                'Just pass the header here to retrieve the value of the sheet
-                existingVal = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), CStr(header))
+        Case Else
+            'Just pass the header here to retrieve the value of the sheet
+            existingVal = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), CStr(header))
         End Select
         
         'Now save the value to the new task and run handlers
@@ -1476,22 +1412,22 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
         
         'Handle cell value changes here
         Select Case unifiedHeader
-            Case TASK_NAME_HEADER
-                'Copy name and handle name change to copy the name to the task sheet
-                existingVal = existingVal + taskNamePostfix
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
+        Case TASK_NAME_HEADER
+            'Copy name and handle name change to copy the name to the task sheet
+            existingVal = existingVal + taskNamePostfix
+            cell.Value = existingVal
+            Call Planning.HandleChanges(cell)
             
-            Case TASK_ESTIMATE_HEADER
-                If IsNumeric(existingVal) Then
-                    cell.Value = CDbl(existingVal)
-                Else
-                    cell.Value = existingVal
-                End If
-                Call Planning.ManageEstimateChange(cell, False)
+        Case TASK_ESTIMATE_HEADER
+            If IsNumeric(existingVal) Then
+                cell.Value = CDbl(existingVal)
+            Else
+                cell.Value = existingVal
+            End If
+            Call Planning.ManageEstimateChange(cell, False)
                 
-            Case KANBAN_LIST_HEADER
-                'Copy the value and manage change: Do not update the finished on date. This happens individually
+        Case KANBAN_LIST_HEADER
+            'Copy the value and manage change: Do not update the finished on date. This happens individually
                 cell.Value = existingVal
                 Call Planning.ManageKanbanListChange(cell, False)
                 
@@ -1520,19 +1456,17 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                 'Copy values and handle change to copy values to task sheet
                 cell.Value = existingVal
                 Call Planning.HandleChanges(cell)
-        End Select
-    Next header
+            End Select
+        Next header
     
-    'Manage the changed tags
-    If Not lastTagCell Is Nothing Then
-        Call Planning.ManageTagChange(lastTagCell, False)
-    End If
+        'Manage the changed tags
+        If Not lastTagCell Is Nothing Then
+            Call Planning.ManageTagChange(lastTagCell, False)
+        End If
     
-    'At the end sort the tasks with their priorities
-    PlanningUtils.OrganizePrioColumn
-End Function
-
-
+        'At the end sort the tasks with their priorities
+        PlanningUtils.OrganizePrioColumn
+    End Function
 
 Function RewriteCopiedSheetHash(newHash As String)
     Dim nameCell As Range
@@ -1541,15 +1475,11 @@ Function RewriteCopiedSheetHash(newHash As String)
     nameCell.Value = newHash
 End Function
 
-
-
 Function GetPlanningSelection() As Range
     'Activate planning sheet to get valid selection
     PlanningUtils.GetPlanningSheet.Activate
     Set GetPlanningSelection = Selection
 End Function
-
-
 
 Function SelectOnPlanningSheet(rng As Range) As Range
     If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) = 0 Then
@@ -1557,8 +1487,6 @@ Function SelectOnPlanningSheet(rng As Range) As Range
         rng.Select
     End If
 End Function
-
-
 
 Function AddXHoursTime(hash As String, deltaT As Double)
     'Wrapper to add some hours to the tracking sheet
@@ -1574,3 +1502,5 @@ Function AddXHoursTime(hash As String, deltaT As Double)
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.GetTaskSheet(hash), deltaT)
 End Function
+
+

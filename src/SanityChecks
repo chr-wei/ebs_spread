@@ -26,3 +26,4 @@ Function CheckHash(hash As String) As Boolean
     regex.Pattern = Constants.HASH_REGEXP
     CheckHash = regex.test(hash)
 End Function
+

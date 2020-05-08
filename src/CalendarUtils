@@ -24,13 +24,9 @@ Enum DateExtremum
     ceEarliest = 1
 End Enum
 
-
-
 Sub Test_GetCalItems()
     Call CalendarUtils.GetCalItems("Me", False)
 End Sub
-
-
 
 Sub Test_MultiMapHoursToDate()
     Debug.Print ""
@@ -55,11 +51,11 @@ Sub Test_MultiMapHoursToDate()
     Debug.Print "#### Test with speed improvement ####"
 
     allRetrievedDates = CalendarUtils.MultiMapHoursToDate(contributor, oItems, _
-        multiHours, _
-        startingTime, _
-        hourSetpoints, dateSetpoints, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                          multiHours, _
+                                                          startingTime, _
+                                                          hourSetpoints, dateSetpoints, _
+                                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
 
     Dim idx As Integer
     For idx = 0 To UBound(allRetrievedDates)
@@ -73,95 +69,93 @@ Sub Test_MultiMapHoursToDate()
 
     mapHour = 6
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-        mapHour, _
-        startingTime, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 7
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 60
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 120
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 2
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 6
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 10
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 0
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 5
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 
     mapHour = 40
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
     
     startingTime = CDate("04/09/2019 11:00")
     mapHour = 1
     retrievedDate = CalendarUtils.MapHoursToDate(contributor, oItems, _
-    mapHour, _
-    startingTime, _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-    SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                 mapHour, _
+                                                 startingTime, _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                 SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     Debug.Print "Mapped hour " & mapHour & " to " & retrievedDate
 End Sub
-
-
 
 Sub Test_MapDateToHours()
     'A test method which maps dates to hours
@@ -181,72 +175,69 @@ Sub Test_MapDateToHours()
     startingDate = CDate("06/17/2019 08:00")
     endingDate = CDate("06/18/2019 08:00")
     Debug.Print "Testing 1: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result nok.
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result nok.
         
     startingDate = CDate("06/17/2019 08:00")
     endingDate = CDate("06/18/2019 10:00")
     Debug.Print "Testing 2: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
         
     startingDate = CDate("06/17/2019 06:00")
     endingDate = CDate("06/18/2019 10:00")
     Debug.Print "Testing 3: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
         
     startingDate = CDate("06/17/2019 06:00")
     endingDate = CDate("06/19/2019 06:00")
     Debug.Print "Testing 4: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
         
     startingDate = CDate("06/24/2019 06:00")
     endingDate = CDate("06/28/2019 19:00")
     Debug.Print "Testing 5: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset)) 'Result ok.
         
     startingDate = CDate("07/15/2019 22:00")
     endingDate = CDate("07/25/2019 00:00")
     Debug.Print "Testing 6: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
     
     startingDate = CDate("11/08/2019 17:20")
     endingDate = CDate("14/08/2019 17:20")
     Debug.Print "Testing 7: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
         
     startingDate = CDate("03/09/2019 00:00")
     endingDate = CDate("06/09/2019 23:30")
     Debug.Print "Testing 8: " & CStr(startingDate) & " to " & endingDate & " -> " & MapDateToHours(contributor, oItems, _
-        endingDate, startingDate, _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-        SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+                                                                                                   endingDate, startingDate, _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                                                                                   SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
 End Sub
 
-
-
-
 Function MultiMapHoursToDate( _
-    contributor As String, _
-    appointmentList As Outlook.Items, _
-    inHours() As Double, _
-    inStart As Date, _
-    Optional inHourSetpoints As Variant, Optional inDateSetpoints As Variant, _
-    Optional ByVal appointmentOnsetHours As Double = 0, _
-    Optional ByVal appointmentOffsetHours As Double = 0, _
-    Optional ByVal maxIterations As Integer = 32767) As Date()
+         contributor As String, _
+         appointmentList As Outlook.Items, _
+         inHours() As Double, _
+         inStart As Date, _
+         Optional inHourSetpoints As Variant, Optional inDateSetpoints As Variant, _
+         Optional ByVal appointmentOnsetHours As Double = 0, _
+         Optional ByVal appointmentOffsetHours As Double = 0, _
+         Optional ByVal maxIterations As Integer = 32767) As Date()
     
     Const FN As String = "MultiMapHoursToDate"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -279,10 +270,10 @@ Function MultiMapHoursToDate( _
     Dim useSetpoints As Boolean: useSetpoints = False
     Dim bndSetpoints As Integer: bndSetpoints = 0
     If Base.IsArrayAllocated(inHourSetpoints) And StrComp(TypeName(inHourSetpoints), "Double()") = 0 And _
-        Base.IsArrayAllocated(inDateSetpoints) And StrComp(TypeName(inDateSetpoints), "Date()") = 0 Then
+                                                                                                   Base.IsArrayAllocated(inDateSetpoints) And StrComp(TypeName(inDateSetpoints), "Date()") = 0 Then
         'Check if double and dates arrays were passed and initialized
         If (UBound(inHourSetpoints)) = UBound(inDateSetpoints) And _
-            (LBound(inHourSetpoints) = LBound(inDateSetpoints)) Then
+                                                               (LBound(inHourSetpoints) = LBound(inDateSetpoints)) Then
             'Check if bounds of setpoints are the same
             bndSetpoints = UBound(inHourSetpoints)
             useSetpoints = True
@@ -307,7 +298,7 @@ Function MultiMapHoursToDate( _
         Dim improveSpeed As Boolean: improveSpeed = False
         
         thisProcessedHours = Base.ExtractSubArray(inHours, LBound(inHours), LBound(inHours) + hourIdx - 1)
-        thisMappedDates = allMappedDates 'Use allMappedDates directly without sub array extraction as the allMappedDates-array only contains processed results
+        thisMappedDates = allMappedDates         'Use allMappedDates directly without sub array extraction as the allMappedDates-array only contains processed results
             
         If useSetpoints Then
             'If external setpoints are available: Concatenate the internal (the already processed 'inHours' / 'mappedDates') setpoints and
@@ -361,13 +352,13 @@ Function MultiMapHoursToDate( _
         
         'Finally map the (chosen)hours to a date
         mappedDate = CalendarUtils.MapHoursToDate( _
-            contributor, _
-            appointmentList, _
-            chosenHours, _
-            chosenStart, _
-            appointmentOnsetHours, _
-            appointmentOffsetHours, _
-            maxIterations)
+                     contributor, _
+                     appointmentList, _
+                     chosenHours, _
+                     chosenStart, _
+                     appointmentOnsetHours, _
+                     appointmentOffsetHours, _
+                     maxIterations)
         
         'Increase the resulting array with every run
         ReDim Preserve allMappedDates(0 To hourIdx)
@@ -377,16 +368,14 @@ Function MultiMapHoursToDate( _
     MultiMapHoursToDate = allMappedDates
 End Function
 
-
-
 Function MapHoursToDate( _
-    contributor As String, _
-    appointmentList As Outlook.Items, _
-    ByVal remainingHours As Double, _
-    ByVal startingTime As Date, _
-    Optional ByVal appointmentOnsetHours As Double = 0, _
-    Optional ByVal appointmentOffsetHours As Double = 0, _
-    Optional ByVal maxIterations As Integer = 32767) As Date
+         contributor As String, _
+         appointmentList As Outlook.Items, _
+         ByVal remainingHours As Double, _
+         ByVal startingTime As Date, _
+         Optional ByVal appointmentOnsetHours As Double = 0, _
+         Optional ByVal appointmentOffsetHours As Double = 0, _
+         Optional ByVal maxIterations As Integer = 32767) As Date
     
     'Maps hours to a date regarding the standard outlook calendar. Events, working hours, preparation and post-action times are
     'taken into account. E.g.:
@@ -424,9 +413,9 @@ Function MapHoursToDate( _
     
     'Check args
     If remainingHours < 0 Or _
-        appointmentOnsetHours < 0 Or _
-        appointmentOffsetHours < 0 Or _
-        maxIterations < 1 Then
+       appointmentOnsetHours < 0 Or _
+       appointmentOffsetHours < 0 Or _
+       maxIterations < 1 Then
         Exit Function
     End If
     
@@ -478,8 +467,8 @@ Function MapHoursToDate( _
         If Not noCalItemsFlag Then
             'Get the next event block from outlook cal.
             Call CalendarUtils.GetNextAppointmentBlock(sortedList, startingTime, _
-                blockStart, blockEnd, _
-                appointmentOnsetHours, appointmentOffsetHours)
+                                                       blockStart, blockEnd, _
+                                                       appointmentOnsetHours, appointmentOffsetHours)
             If blockStart = CDate(0) Or blockEnd = CDate(0) Then
                 noCalItemsFlag = True
             End If
@@ -489,17 +478,17 @@ Function MapHoursToDate( _
         'Take working hours into account. As one cannot add code leisure events to the restricted list the above actions (sorting and restricting)
         'have to be done here again manually.
         Call CalendarUtils.GetLeisureAppointments(startingTime, contributor, _
-            preWorkLeisureStart, preWorkLeisureEnd, _
-            postWorkLeisureStart, postWorkLeisureEnd)
+                                                  preWorkLeisureStart, preWorkLeisureEnd, _
+                                                  postWorkLeisureStart, postWorkLeisureEnd)
             
         Call CalendarUtils.FilterAppointmentForMinEnd(startingTime, preWorkLeisureStart, preWorkLeisureEnd) 'see also restriction from above
         Call CalendarUtils.FilterAppointmentForMinEnd(startingTime, postWorkLeisureStart, postWorkLeisureEnd) 'see also restriction from above
         
         'Blockify the outlook and leisure time events or return the earliest of them if they are not overlapping. Question here: What is the next event?
         Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, preWorkLeisureStart, preWorkLeisureEnd, _
-            blockStart, blockEnd) 'combine leisure times with 'normal'events to a block
+                                                 blockStart, blockEnd) 'combine leisure times with 'normal'events to a block
         Call CalendarUtils.MergeOrReturnEarliest(blockStart, blockEnd, postWorkLeisureStart, postWorkLeisureEnd, _
-            blockStart, blockEnd)
+                                                 blockStart, blockEnd)
 
         'Start calculating the remaining time left from the captured data
         If blockStart = CDate(0) Then
@@ -531,14 +520,12 @@ Function MapHoursToDate( _
     'Debug.Print MapHoursToDate
 End Function
 
-
-
 Function MapDateToHours(contributor As String, appointmentList As Outlook.Items, _
-    ByVal endingDate As Date, _
-    ByVal startingDate As Date, _
-    Optional ByVal appointmentOnsetHours As Double = 0, _
-    Optional ByVal appointmentOffsetHours As Double = 0, _
-    Optional ByVal maxIterations As Integer = 32767) As Double
+                        ByVal endingDate As Date, _
+                        ByVal startingDate As Date, _
+                        Optional ByVal appointmentOnsetHours As Double = 0, _
+                        Optional ByVal appointmentOffsetHours As Double = 0, _
+                        Optional ByVal maxIterations As Integer = 32767) As Double
     
     Const FN As String = "MapDateToHours"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -581,9 +568,9 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     
     'Check args
     If endingDate < startingDate Or _
-        appointmentOnsetHours < 0 Or _
-        appointmentOffsetHours < 0 Or _
-        maxIterations < 1 Then
+       appointmentOnsetHours < 0 Or _
+       appointmentOffsetHours < 0 Or _
+       maxIterations < 1 Then
         Exit Function
     End If
     
@@ -648,8 +635,8 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
         Else
             'Search for the next outlook event block start and end limits
             Call CalendarUtils.GetNextAppointmentBlock(sortedList, startingDate, _
-                blockStart, blockEnd, _
-                appointmentOnsetHours, appointmentOffsetHours)
+                                                       blockStart, blockEnd, _
+                                                       appointmentOnsetHours, appointmentOffsetHours)
         End If
 
         'Take working hours into account
@@ -706,13 +693,11 @@ Function MapDateToHours(contributor As String, appointmentList As Outlook.Items,
     MapDateToHours = timeDifference * 24
 End Function
 
-
-
 Function GetNextAppointmentBlock( _
-    appointmentList As Outlook.Items, ByVal startTime As Date, _
-    ByRef blockStart As Date, ByRef blockEnd As Date, _
-    Optional appointmentOnsetHours As Double = 0, _
-    Optional appointmentOffsetHours As Double = 0)
+         appointmentList As Outlook.Items, ByVal startTime As Date, _
+         ByRef blockStart As Date, ByRef blockEnd As Date, _
+         Optional appointmentOnsetHours As Double = 0, _
+         Optional appointmentOffsetHours As Double = 0)
     
     'This function returns the limits of the next 'block' of appointments. A block is a bunch of appointments overlapping or nearly overlapping
     'within a threshhold. The threshold is a sum of the time which you need to analyze a previous event + the time you need to prepare for the next event.
@@ -742,12 +727,12 @@ Function GetNextAppointmentBlock( _
     Dim dFormatString As String
     Dim dSep As String: dSep = Application.International(xlDateSeparator)
     Select Case Application.International(xlDateOrder)
-        Case 0 ' = month-day-year
-            dFormatString = "mm" & dSep & "dd" & dSep & "yyyy HH:nn"
-        Case 1 ' = day-month-year
-            dFormatString = "dd" & dSep & "mm" & dSep & "yyyy HH:nn"
-        Case 2 ' = year-month-day
-            dFormatString = "yyyy" & dSep & "mm" & dSep & "dd HH:nn"
+    Case 0                                       ' = month-day-year
+        dFormatString = "mm" & dSep & "dd" & dSep & "yyyy HH:nn"
+    Case 1                                       ' = day-month-year
+        dFormatString = "dd" & dSep & "mm" & dSep & "yyyy HH:nn"
+    Case 2                                       ' = year-month-day
+        dFormatString = "yyyy" & dSep & "mm" & dSep & "dd HH:nn"
     End Select
     'Be careful here: Searching without 'IncludeRecurrences' = True will produce wrong results: If an recurring appointment is found the start and end
     'date of the first element of the series will be returned. This may result in a setback in time (before starting time), since the recurring appointments
@@ -774,7 +759,7 @@ Function GetNextAppointmentBlock( _
             twoStart = appointment.start
             twoEnd = appointment.End
             apptsAreOverlapping = _
-                CalendarUtils.AppointmentsAreOverlapping(oneStart, oneEnd, twoStart, twoEnd, appointmentOnsetHours + appointmentOffsetHours)
+                                CalendarUtils.AppointmentsAreOverlapping(oneStart, oneEnd, twoStart, twoEnd, appointmentOnsetHours + appointmentOffsetHours)
         Else
             'Appointments are not overlapping anymore - stop search
             apptsAreOverlapping = False
@@ -784,12 +769,10 @@ Function GetNextAppointmentBlock( _
     blockEnd = oneEnd + appointmentOffsetHours / 24
 End Function
 
-
-
 Function AppointmentsAreOverlapping( _
-    ByVal startOne As Date, ByVal endOne As Date, _
-    ByVal startTwo As Date, ByVal endTwo As Date, _
-    Optional minDeltaHours As Double = 0#) As Boolean
+         ByVal startOne As Date, ByVal endOne As Date, _
+         ByVal startTwo As Date, ByVal endTwo As Date, _
+         Optional minDeltaHours As Double = 0#) As Boolean
     
     'This function checks if two appointments are overlapping. A threshold can be defined to mark close events as overlapping.
     '
@@ -827,8 +810,6 @@ Function AppointmentsAreOverlapping( _
         AppointmentsAreOverlapping = False
     End If
 End Function
-
-
 
 Function GetWorkingHours(contributor As String, ByVal refDay As Date, ByRef workStart As Date, ByRef workEnd As Date)
 
@@ -869,11 +850,9 @@ Function GetWorkingHours(contributor As String, ByVal refDay As Date, ByRef work
     Next workingDay
 End Function
 
-
-
 Function GetLeisureAppointments(ByVal refDay As Date, contributor As String, _
-    ByRef preWorkLeisureStart As Date, ByRef preWorkLeisureEnd As Date, _
-    ByRef postWorkLeisureStart As Date, ByRef postWorkLeisureEnd As Date)
+                                ByRef preWorkLeisureStart As Date, ByRef preWorkLeisureEnd As Date, _
+                                ByRef postWorkLeisureStart As Date, ByRef postWorkLeisureEnd As Date)
     
     'This function returns two events' limits to block a day with leisure time to mark on which time spans a contributor is not working:
     '  (1) First event e.g. from 21/01/2019 0:00 to 21/01/2019 08:00 (time prior to start working)
@@ -916,11 +895,9 @@ Function GetLeisureAppointments(ByVal refDay As Date, contributor As String, _
     End If
 End Function
 
-
-
 Function MergeOrReturnEarliest( _
-    ByVal apptOneStart As Date, ByVal apptOneEnd As Date, ByVal apptTwoStart As Date, ByVal apptTwoEnd As Date, _
-    ByRef apptReturnStart As Date, ByRef apptReturnEnd As Date)
+         ByVal apptOneStart As Date, ByVal apptOneEnd As Date, ByVal apptTwoStart As Date, ByVal apptTwoEnd As Date, _
+         ByRef apptReturnStart As Date, ByRef apptReturnEnd As Date)
 
     'This function checks two passed events limits overlap. If the events are not overlapping the limits of the earliest event are returned, otherwise the
     'limits of the whole merged block are returned
@@ -976,8 +953,6 @@ Function MergeOrReturnEarliest( _
     End If
 End Function
 
-
-
 Function FilterAppointmentForMinEnd(ByVal dateMinLimit As Date, ByRef apptStart As Date, ByRef apptEnd As Date)
     
     'This function returns invalid appointment limits (CDate(0)) if a passed appointment ends prior to a given date
@@ -997,21 +972,15 @@ Function FilterAppointmentForMinEnd(ByVal dateMinLimit As Date, ByRef apptStart 
     End If
 End Function
 
-
-
 Function GetStartOfDay(refDay As Date) As Date
     'Set the reference day date to date DAY 0:00
     GetStartOfDay = DateSerial(Year(refDay), Month(refDay), day(refDay))
 End Function
 
-
-
 Function GetEndOfDay(refDay As Date) As Date
     'Set the reference day date to date DAY+1 0:00
     GetEndOfDay = CalendarUtils.GetStartOfDay(refDay) + 1
 End Function
-
-
 
 Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outlook.Items
     Const FN As String = "GetCalItems"
@@ -1057,8 +1026,8 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
     End If
     If Err.Number <> 0 Then
         Call MessageUtils.HandleMessage( _
-            "Error reading calendar of cal id: " & calId & ". Processing calendar events not possible.", _
-            ceWarning, FN)
+             "Error reading calendar of cal id: " & calId & ". Processing calendar events not possible.", _
+             ceWarning, FN)
         Err.Clear
     End If
     On Error GoTo 0
@@ -1084,7 +1053,7 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
         'blockerCat = SettingUtils.GetContributorGetWorkDoneCat(contributor)
         
         'If StrComp(blockerCat, "") <> 0 Then
-            'restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
+        'restriction = "(" + restriction + ")" + " AND NOT [Categories] = '" + blockerCat + "'"
         'End If
           
         'Filter the items according to their restrictions
@@ -1100,8 +1069,6 @@ Function GetCalItems(contributor As String, useOptionalAppts As Boolean) As Outl
     'Debug info
     'Debug.Print "Count of filtered items is: " & filteredItems.Count
 End Function
-
-
 
 Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef folderPath As String) As String
     Const FN As String = "GetSelectedCalendarId"
@@ -1135,4 +1102,5 @@ Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef f
     'Debug.Print "Folder ID is: " & id
     'Debug.Print "Folder path is: " & folderPath
 End Function
+
 
