@@ -21,7 +21,7 @@
                 "clear": true
             },
             "args": ["\"${workspaceFolder}\\dev_tools\\XLSX_VBA_EXPORT.vbs\"", "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\"", "\"${workspaceFolder}\\src\""],
-            "command": "WScript"
+            "command": "CScript"
         }
     ]
 }
