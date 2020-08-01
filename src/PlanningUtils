@@ -80,7 +80,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     '  newHash:    If no hash value was given one can read the newly generated hash from here
     
     'Generate a new HASH if no hash was passed
-    If Not SanityChecks.CheckHash(newHash) Then
+    If Not SanityUtils.CheckHash(newHash) Then
         newHash = Utils.CreateHashString("t")
     End If
     
@@ -328,7 +328,7 @@ Function DeleteSelectedTask()
     'We pass an empty entryCell here to get the selected cell.
     hash = PlanningUtils.GetTaskHash(entryCell)
     
-    If Not SanityChecks.CheckHash(hash) Then
+    If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
         Call Utils.DeleteWorksheetSilently(TaskUtils.GetTaskSheet(hash))
@@ -355,7 +355,7 @@ Function StartSelectedTask()
     'We pass an empty entryCell here to retrieve the cell of the function.
     hash = PlanningUtils.GetTaskHash(entryCell)
     
-    If Not SanityChecks.CheckHash(hash) Then
+    If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
         'Fetch the sheets
@@ -400,7 +400,7 @@ Function IntersectHashAndListColumn(hash As String, colIdentifier As Variant) As
     Set IntersectHashAndListColumn = Nothing
     
     'Check args
-    If Not SanityChecks.CheckHash(hash) Then Exit Function
+    If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     Dim hashCell As Range
     Set hashCell = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
@@ -961,7 +961,7 @@ Function CollectEbsColData(headerCell As Range)
                 'to get the current estimate values. The method is therefore triggered after each ebs run.
                 hash = PlanningUtils.GetTaskHash(cell)
                     
-                If SanityChecks.CheckHash(hash) Then
+                If SanityUtils.CheckHash(hash) Then
                     'Read the data for the current contributor: First get ebs sheet of contributor
                     contributor = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
                     Set contribSheet = EbsUtils.GetEbsSheet(contributor)
@@ -1131,7 +1131,7 @@ Function CollectTotalTimesSpent()
         'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheet
         hash = PlanningUtils.GetTaskHash(cell)
         
-        If SanityChecks.CheckHash(hash) Then
+        If SanityUtils.CheckHash(hash) Then
             Set sheet = TaskUtils.GetTaskSheet(hash)
             totalTime = TaskUtils.GetTaskTotalTime(sheet)
             cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
@@ -1215,7 +1215,7 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
     '   GetSerializedTags:      The serialized tag values
     
     'Check args
-    If Not SanityChecks.CheckHash(hash) Then Exit Function
+    If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     'Init output
     GetSerializedTags = ""
@@ -1495,4 +1495,5 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.GetTaskSheet(CStr(hash)), CDbl(deltaT))
 End Function
+
 

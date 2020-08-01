@@ -137,7 +137,7 @@ Function GetAllTaskSheets() As Collection
     
     'Get task sheets (they have a hash set as their name)
     For Each sheet In ThisWorkbook.Worksheets
-        If SanityChecks.CheckHash(sheet.name) Then
+        If SanityUtils.CheckHash(sheet.name) Then
             Call taskSheets.Add(sheet)
         End If
     Next sheet
@@ -364,7 +364,7 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
         
     Dim eHash As String
     eHash = EbsUtils.GetLatestEbsRun(ebsSheet)
-    If Not SanityChecks.CheckHash(eHash) Then Exit Function
+    If Not SanityUtils.CheckHash(eHash) Then Exit Function
         
     Dim eHashCol As Range
     Set eHashCol = EbsUtils.GetEbsMainListColumn(ebsSheet, Constants.EBS_HASH_HEADER, ceData)
@@ -571,7 +571,7 @@ Function GetTaskTotalTime(sheet As Worksheet) As Double
     
     'Check args
     If sheet Is Nothing Then Exit Function
-    If Not SanityChecks.CheckHash(sheet.name) Then Exit Function
+    If Not SanityUtils.CheckHash(sheet.name) Then Exit Function
     
     Dim val As String
     val = Utils.GetSingleDataCellVal(sheet, Constants.TASK_TOTAL_TIME_HEADER)
@@ -726,4 +726,5 @@ Function VirtualizeTaskSheets()
         sheet.Visible = xlSheetHidden
     Next item
 End Function
+
 
