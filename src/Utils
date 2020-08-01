@@ -994,12 +994,11 @@ Function GetAutoFilters(lo As ListObject) As Variant()
     Dim filt As Filters: Set filt = lo.AutoFilter.Filters
     Dim fCount As Long: fCount = filt.Count
 
-    
     Dim fIdx As Long
     Dim cFilter As Filter
     Dim onFilterFields() As Long
     
-    For fIdx = 0 To filt.Count - 1
+    For fIdx = 0 To fCount - 1
         'Cycle through all filter fields and store the field numbers if filter is set to 'on'
         Set cFilter = filt(fIdx + 1)
         If cFilter.On Then
@@ -1101,4 +1100,5 @@ Function DeleteWorksheetSilently(sheet As Worksheet)
     sheet.Delete
     Application.DisplayAlerts = True
 End Function
+
 
