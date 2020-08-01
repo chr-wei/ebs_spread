@@ -7,6 +7,11 @@ Private CalendarUtilsObj As Object
 Private PlanningUtilsObj As Object
 Private EbsUtilsObj As Object
 Private TaskUtilsObj As Object
+Private ExportImportUtilsObj As Object
+Private MessageUtilsObj As Object
+Private SanityUtilsObj As Object
+Private SettingUtilsObj As Object
+Private VirtualSheetUtilsObj As Object
 
 Public Function Base() As Object
     If BaseObj Is Nothing Then Set BaseObj = New Base
@@ -36,4 +41,29 @@ End Function
 Public Function TaskUtils() As Object
     If TaskUtilsObj Is Nothing Then Set TaskUtilsObj = New TaskUtils
     Set TaskUtils = TaskUtilsObj
+End Function
+
+Public Function ExportImportUtils() As Object
+    If ExportImportUtilsObj Is Nothing Then Set ExportImportUtilsObj = New ExportImportUtils
+    Set ExportImportUtils = ExportImportUtilsObj
+End Function
+
+Public Function MessageUtils() As Object
+    If MessageUtilsObj Is Nothing Then Set MessageUtilsObj = New MessageUtils
+    Set MessageUtils = MessageUtilsObj
+End Function
+
+Public Function SanityUtils() As Object
+    If SanityUtilsObj Is Nothing Then Set SanityUtilsObj = New SanityUtils
+    Set SanityUtils = SanityUtilsObj
+End Function
+
+Public Function SettingUtils() As Object
+    If SettingUtilsObj Is Nothing Then Set SettingUtilsObj = New SettingUtils
+    Set SettingUtils = SettingUtilsObj
+End Function
+
+Public Function VirtualSheetUtils() As Object
+    If VirtualSheetUtilsObj Is Nothing Then Set VirtualSheetUtilsObj = New VirtualSheetUtils
+    Set VirtualSheetUtils = VirtualSheetUtilsObj
 End Function
