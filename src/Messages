@@ -30,6 +30,6 @@ Option Explicit
 Sub UI_ClearMessages()
     Const FN As String = "UI_ClearMessages"
     Call MessageUtils.InvokeUIMsg(FN)
-    Call Utils.RunTryCatchedCall(f:="MessageUtils.ClearListMessages", screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="ClearListMessages", obj:=MessageUtils, screenUpdating:=False)
 End Sub
 
