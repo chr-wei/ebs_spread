@@ -1106,3 +1106,4 @@ Function GetSelectedCalendarId(Optional ByRef storId As String, Optional ByRef f
     'Debug.Print "Folder path is: " & folderPath
 End Function
 
+
