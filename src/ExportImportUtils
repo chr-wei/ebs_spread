@@ -1,4 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
 Attribute VB_Name = "ExportImportUtils"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '  This macro collection lets you organize your tasks and schedules
 '  for you with the evidence based schedule (EBS) approach by Joel Spolsky.
 '
@@ -55,7 +63,7 @@ Function ImportTasks()
     
     For Each key In vSheets.Keys
         Dim cpHash As String: cpHash = key
-        If SanityChecks.CheckHash(cpHash) Then
+        If SanityUtils.CheckHash(cpHash) Then
             Dim loadedSheet As Worksheet
             Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
             If Not loadedSheet Is Nothing Then
