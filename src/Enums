@@ -52,3 +52,19 @@ Enum PropabilityChartScale
     ceChartScaleTime = -1
     ceChartScaleDate = 1
 End Enum
+
+Enum WorkingTime
+    ceWorkingStart = -1
+    ceWorkingEnd = 1
+End Enum
+
+Enum ApptOnOffset
+    ceOnset = -1
+    ceOffset = 1
+End Enum
+
+Enum ColorType
+    ceAccentColor = 0
+    ceCommonColor = 1
+    ceLightColor = 2
+End Enum
