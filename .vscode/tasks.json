@@ -11,7 +11,8 @@
                     "shell": {
                         "executable": "cmd.exe",
                         "args": [
-                            "/d", "/c"
+                            "/d",
+                            "/c"
                         ]
                     }
                 }
@@ -20,8 +21,17 @@
                 "reveal": "silent",
                 "clear": true
             },
-            "args": ["\"${workspaceFolder}\\dev_tools\\XLSX_VBA_EXPORT.vbs\"", "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\"", "\"${workspaceFolder}\\src\""],
-            "command": "CScript"
+            "args": [
+                "\"${workspaceFolder}\\dev_tools\\XLSX_VBA_EXPORT.vbs\"",
+                "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\"",
+                "\"${workspaceFolder}\\src\""
+            ],
+            "command": "CScript",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
