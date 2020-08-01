@@ -82,7 +82,7 @@ Sub UI_CopyTask()
     Dim copiedHash As String
     copiedHash = PlanningUtils.GetTaskHash()
     
-    If SanityChecks.CheckHash(copiedHash) Then
+    If SanityUtils.CheckHash(copiedHash) Then
         Dim newHash As String
         newHash = Utils.CreateHashString("t")
         'Call this function with events to copy the task data from worksheet to task sheet immediately
@@ -133,7 +133,7 @@ Sub UI_AddFiveteenMinutesToSelectedTask()
     'Get the hash of the selected task
     hash = PlanningUtils.GetTaskHash()
     
-    If SanityChecks.CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Call Utils.RunTryCatchedCall(f:="AddXHoursTime", obj:=PlanningUtils, arg1:=hash, arg2:=CDbl(0.25), screenUpdating:=False)
     End If
 End Sub
@@ -148,7 +148,7 @@ Sub UI_AddZeroMinutesToSelectedTask()
     'Get the hash of the selected task
     hash = PlanningUtils.GetTaskHash()
     
-    If SanityChecks.CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Call Utils.RunTryCatchedCall(f:="AddXHoursTime", obj:=PlanningUtils, arg1:=hash, arg2:=CDbl(0), screenUpdating:=False)
     End If
 End Sub
@@ -352,7 +352,7 @@ Function ManageTaskNameChange(changedCell As Range)
     'Manage the change of the task name. Set it to the task sheet
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
 End Function
@@ -368,7 +368,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Dim enteredVal As Variant
         enteredVal = changedCell.Value
         
@@ -487,7 +487,7 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If Not CheckHash(hash) Then Exit Function
+    If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     'Set the value to the task sheet
     Dim sheet As Worksheet
@@ -561,7 +561,7 @@ Function ManageCommentChange(changedCell As Range)
     'Just copy the comment to the task sheet
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Call TaskUtils.SetComment(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     End If
 End Function
@@ -573,7 +573,7 @@ Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boo
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     
-    If SanityChecks.CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Dim serializedTags As String
         Dim serializedTagHeaders As String
         serializedTags = PlanningUtils.GetSerializedTags(hash, serializedTagHeaders)
@@ -612,7 +612,7 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If Not CheckHash(hash) Then Exit Function
+    If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     Call TaskUtils.SetContributor(TaskUtils.GetTaskSheet(hash), changedCell.Value)
     
@@ -640,7 +640,7 @@ Function ManageDueDateChange(changedCell As Range)
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Dim sheet As Worksheet
         Set sheet = TaskUtils.GetTaskSheet(hash)
         
@@ -665,7 +665,7 @@ Function ManageFinishedOnDateChange(changedCell As Range)
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
-    If CheckHash(hash) Then
+    If SanityUtils.CheckHash(hash) Then
         Dim sheet As Worksheet
         Set sheet = TaskUtils.GetTaskSheet(hash)
         

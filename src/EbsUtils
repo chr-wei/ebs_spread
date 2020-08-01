@@ -474,7 +474,7 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     Set hashCells = Base.IntersectN( _
                     PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData), _
                     Base.IntersectN(finishedTasks.EntireRow, _
-                               contributorTasks.EntireRow))
+                                    contributorTasks.EntireRow))
     
     'Debug info
     'Debug.Print "hashCells: " + hashCells.Address
@@ -989,7 +989,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
         newEntryCell.Value = newFormattedEntry
         
         If IsNumeric(prios(hashIdx)) Then prioEntryCell.Value = prios(hashIdx) Else prioEntryCell.Value = Constants.N_A
-        If SanityChecks.CheckHash(currentHash) Then hashEntryCell.Value = currentHash Else hashEntryCell.Value = Constants.N_A
+        If SanityUtils.CheckHash(currentHash) Then hashEntryCell.Value = currentHash Else hashEntryCell.Value = Constants.N_A
         If IsNumeric(spentTime) Then spentTimeEntryCell.Value = spentTime Else spentTimeEntryCell.Value = Constants.N_A
         If userEstimate <> -1 Then userEstimateCell.Value = userEstimate Else userEstimateCell.Value = Constants.N_A
         If Base.IsArrayAllocated(monteCarloTimeEstimates) Then monteCarloEstimateCell.Value = Utils.SerializeArray(monteCarloTimeEstimates) Else _
@@ -1659,7 +1659,5 @@ Function DeleteAllEbsSheets()
         End If
     Next sheet
 End Function
-
-
 
 
