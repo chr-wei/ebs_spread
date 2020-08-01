@@ -561,7 +561,7 @@ End Function
 Public Function SHA256(sMessage As String) As String
     Dim hash(7) As Long
     Dim M() As Long
-    Dim W(63) As Long
+    Dim w(63) As Long
     Dim a As Long
     Dim b As Long
     Dim c As Long
@@ -601,14 +601,14 @@ Public Function SHA256(sMessage As String) As String
         
         For j = 0 To 63
             If j < 16 Then
-                W(j) = M(j + i)
+                w(j) = M(j + i)
             Else
-                W(j) = AddUnsigned(AddUnsigned(AddUnsigned(Gamma1(W(j - 2)), _
-                                                           W(j - 7)), Gamma0(W(j - 15))), W(j - 16))
+                w(j) = AddUnsigned(AddUnsigned(AddUnsigned(Gamma1(w(j - 2)), _
+                                                           w(j - 7)), Gamma0(w(j - 15))), w(j - 16))
             End If
             
             T1 = AddUnsigned(AddUnsigned(AddUnsigned(AddUnsigned(h, Sigma1(e)), _
-                                                     Ch(e, f, g)), K(j)), W(j))
+                                                     Ch(e, f, g)), K(j)), w(j))
             T2 = AddUnsigned(Sigma0(a), Maj(a, b, c))
             
             h = g
