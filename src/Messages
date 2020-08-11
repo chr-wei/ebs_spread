@@ -32,4 +32,3 @@ Sub UI_ClearMessages()
     Call MessageUtils.InvokeUIMsg(FN)
     Call Utils.RunTryCatchedCall(f:="ClearListMessages", obj:=MessageUtils, screenUpdating:=False)
 End Sub
-

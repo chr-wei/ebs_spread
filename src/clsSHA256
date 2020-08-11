@@ -641,5 +641,3 @@ Public Function SHA256(sMessage As String) As String
                    Right("00000000" & Hex(hash(6)), 8) & _
                    Right("00000000" & Hex(hash(7)), 8))
 End Function
-
-

@@ -427,5 +427,3 @@ Function GetColors(colorT As ColorType) As Long
     GetColors = CLng(dataCell.Interior.color)
     End If
     End Function
-
-

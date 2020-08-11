@@ -268,5 +268,3 @@ Function DoMessageBoxPost(severity As MessageSeverity) As Boolean
         DoMessageBoxPost = False
     End If
 End Function
-
-

@@ -84,5 +84,3 @@ Function RewriteImportSheetHashes()
         nameCell.Value = Utils.CreateHashString("t")
     Next item
 End Function
-
-

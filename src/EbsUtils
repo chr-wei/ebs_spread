@@ -1659,5 +1659,3 @@ Function DeleteAllEbsSheets()
         End If
     Next sheet
 End Function
-
-

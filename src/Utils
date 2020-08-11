@@ -1100,5 +1100,3 @@ Function DeleteWorksheetSilently(sheet As Worksheet)
     sheet.Delete
     Application.DisplayAlerts = True
 End Function
-
-
