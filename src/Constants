@@ -212,4 +212,3 @@ Function STANDARD_WORKING_DAYS() As Double()
     'Days starting at sunday
     STANDARD_WORKING_DAYS = Utils.CopyVarArrToDoubleArr(Array(vbMonday, vbTuesday, vbWednesday, vbThursday, vbFriday))
 End Function
-

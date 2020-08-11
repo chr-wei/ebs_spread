@@ -1495,5 +1495,3 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.GetTaskSheet(CStr(hash)), CDbl(deltaT))
 End Function
-
-

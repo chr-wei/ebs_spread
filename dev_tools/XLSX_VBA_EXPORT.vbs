@@ -10,6 +10,7 @@ Option Explicit
 Const msoAutomationSecurityForceDisable = 3
 ' OpenTextFile iomode
 Const ForReading = 1
+Const ForWriting = 2
 Const ForAppending = 8
 
 Dim App, AutoSec, Doc, FileSys
@@ -46,12 +47,13 @@ If Err = 0 Then
 		For cmpIdx = 0 To componentCount - 1
 			TgtFilepath = FileSys.GetAbsolutePathName(WScript.Arguments(1) & "\" & Names(cmpIdx))
 			Doc.VBProject.VBComponents(Names(cmpIdx)).Export TgtFilepath
+			DeleteEmptyTrailingLines TgtFilepath
 		Next
 	End If
 	referenceCount = Doc.VBProject.References.Count
 	If referenceCount > 0 Then
-	     Set TgtFile = FileSys.CreateTextFile(WScript.Arguments(1) & "\" & "REFERENCES", True)
-		 TgtFile.WriteLine "'********REFERENCES********"
+	    Set TgtFile = FileSys.CreateTextFile(WScript.Arguments(1) & "\" & "REFERENCES", True)
+		TgtFile.WriteLine "'********REFERENCES********"
 		ReDim Names(referenceCount - 1)
 		refIdx = 0
 		For Each Reference In Doc.VBProject.References
@@ -74,3 +76,28 @@ End If
 App.AutomationSecurity = AutoSec
 App.Quit
 WScript.Quit Err
+
+Function DeleteEmptyTrailingLines(filepath)
+	Dim tgtFile, strLine, strNewContents, strHeldBack
+	Set tgtFile = Filesys.OpenTextFile(filepath, ForReading)
+	strHeldBack = ""
+	strLine = ""
+	
+	Do Until tgtFile.AtEndOfStream
+    	strLine = TgtFile.Readline
+		If Len(Trim(strLine)) > 0 Then
+			strNewContents = strNewContents & strHeldBack & strLine
+			strHeldBack = vbCrLf
+    	Else
+			'Hold back content with empty lines. These will only be added to content if non-empty lines follow
+			'--> Prevents trailing lines at the end of the file.
+			strHeldBack = strHeldBack & strLine & vbCrLf
+		End If
+	Loop
+
+	TgtFile.Close
+
+	Set tgtFile = Filesys.OpenTextFile(filepath, ForWriting)
+	TgtFile.Write strNewContents
+	TgtFile.Close
+End Function

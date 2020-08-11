@@ -44,4 +44,3 @@ Function DeleteShortcuts()
     Call Application.OnKey("+^{T}", "")          'Ctrl+Shift+'T'
     Call Application.OnKey("+^{G}", "")          'Ctrl+Shift+'G'
 End Function
-

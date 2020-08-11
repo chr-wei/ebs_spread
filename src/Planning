@@ -684,5 +684,3 @@ Function ManageFinishedOnDateChange(changedCell As Range)
         End If
     End If
 End Function
-
-

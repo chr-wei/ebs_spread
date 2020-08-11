@@ -10,4 +10,3 @@ Attribute VB_Exposed = True
 Private Sub Worksheet_FollowHyperlink(ByVal Target As hyperlink)
     Call Utils.RunTryCatchedCall(f:="HandleFollowHyperlink", obj:=TaskUtils, arg1:=Target, screenUpdating:=False)
 End Sub
-

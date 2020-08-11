@@ -726,5 +726,3 @@ Function VirtualizeTaskSheets()
         sheet.Visible = xlSheetHidden
     Next item
 End Function
-
-

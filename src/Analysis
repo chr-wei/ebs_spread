@@ -512,5 +512,3 @@ Function CalcIndexArray(axisSize As Long) As Long()
     
     CalcIndexArray = indexArray
 End Function
-
-
