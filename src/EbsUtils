@@ -1654,7 +1654,7 @@ Function DeleteAllEbsSheets()
     regex.Pattern = Constants.EBS_SHEET_REGEX
     Dim sheet As Worksheet
     For Each sheet In ThisWorkbook.Worksheets
-        If regex.test(sheet.name) Then
+        If regex.Test(sheet.name) Then
             Call Utils.DeleteWorksheetSilently(sheet)
         End If
     Next sheet
