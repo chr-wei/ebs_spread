@@ -877,7 +877,7 @@ Function CollectEbsColData(headerCell As Range)
     
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.test(header) Then
+    If regex.Test(header) Then
         'If the header text of the cell is an ebs col header: read the col propability of the estimates to be displayed
         Dim matches As MatchCollection
         Set matches = regex.Execute(header)

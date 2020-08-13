@@ -179,6 +179,23 @@ Function GetTopLeftCell(rng As Range) As Range
     Set GetTopLeftCell = rng.cells(1, 1)
 End Function
 
+Function GetTopRightCell(rng As Range) As Range
+    'Function returns the top left cell of a given range. This method was written to prevent errors with the cells.End(xlDown) property.
+    '
+    'Input args:
+    '   rng:            Range of any size to get the top left cell of
+    '
+    'Output args:
+    '   GetTopRightCell: The top right cell of the range
+    
+    'Init output
+    Set GetTopRightCell = Nothing
+    
+    'Check args
+    If rng Is Nothing Then Exit Function
+    Set GetTopRightCell = rng.cells(1, rng.Columns.Count)
+End Function
+
 Function GetBottomRightCell(rng As Range) As Range
     'Function returns the bottom right cell of a given range. This method was written to prevent errors with the cells.End(xlDown) property.
     '
@@ -563,7 +580,7 @@ Function DeserializeArray(serialized As String) As Variant
     regex.Global = True
     regex.Pattern = Constants.SERIALIZED_ARRAY_REGEX
 
-    If Not regex.test(serialized) Then
+    If Not regex.Test(serialized) Then
         Exit Function
     End If
     
@@ -1099,4 +1116,98 @@ Function DeleteWorksheetSilently(sheet As Worksheet)
     sheet.Visible = xlSheetVisible               'Make visible prior to deletion to prevent errors
     sheet.Delete
     Application.DisplayAlerts = True
+End Function
+
+Function GetListObjectsOfRange(rng As Range) As Variant()
+    
+    'Check args
+    If rng Is Nothing Then Exit Function
+    
+    Dim divCellOne As Range
+    Dim divCellTwo As Range
+    
+    Dim topLeftQuarter As Range
+    Dim bottomRightQuarter As Range
+    Dim topRightQuarter As Range
+    Dim bottomLeftQuarter As Range
+    
+    Dim lists() As Variant
+    
+    Dim lo As ListObject
+    Set lo = rng.ListObject
+    
+    If lo Is Nothing Then
+        Exit Function
+    Else
+        lists = Array(lo.name)
+        
+        Call Utils.GetWindmillRanges(rng, Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange), _
+            bottomLeftQuarter, bottomRightQuarter, topRightQuarter, topLeftQuarter)
+    
+        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topLeftQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomRightQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topRightQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomLeftQuarter))
+        
+        GetListObjectsOfRange = lists
+    End If
+End Function
+
+
+Function GetWindmillRanges(rng As Range, sectionRange As Range, _
+    ByRef windmillWingOne As Range, _
+    ByRef windmillWingTwo As Range, _
+    ByRef windmillWingThree As Range, _
+    ByRef windmillWingFour As Range)
+    
+    ' |4 4 4 4|3|
+    ' |1| sss |3|
+    ' |1| sss |3|
+    ' |1| sss |3|
+    ' |1|2 2 2 2|
+    
+    If Base.IntersectN(rng, sectionRange) Is Nothing Then
+        Exit Function
+    Else
+        Set sectionRange = Base.IntersectN(rng, sectionRange)
+        
+        Dim upleft As Range
+        Dim upright As Range
+        Dim bottomright As Range
+        Dim bottomleft As Range
+        Dim par As Worksheet: Set par = rng.Parent
+        Dim maxCols As Long: maxCols = par.Columns.Count
+        Dim maxRows As Long: maxRows = par.Rows.Count
+        
+        Set upleft = Utils.GetTopLeftCell(sectionRange)
+        If upleft.Column > 1 Then
+            Set upleft = Utils.GetLeftNeighbour(upleft)
+            If upleft.Column >= GetBottomLeftCell(rng).Column Then Set windmillWingOne = Base.IntersectN(rng, par.Range(Utils.GetBottomLeftCell(rng), upleft))
+        End If
+        
+        Set bottomleft = Utils.GetBottomLeftCell(sectionRange)
+        If bottomleft.Row < maxRows Then
+            Set bottomleft = Utils.GetBottomNeighbour(bottomleft)
+            If bottomleft.Row <= GetBottomRightCell(rng).Row Then Set windmillWingTwo = par.Range(Utils.GetBottomRightCell(rng), bottomleft)
+        End If
+        
+        Set bottomright = Utils.GetBottomRightCell(sectionRange)
+        If bottomright.Column > 1 Then
+            Set bottomright = Utils.GetRightNeighbour(bottomright)
+            If bottomright.Column <= GetTopRightCell(rng).Column Then Set windmillWingThree = Base.IntersectN(rng, par.Range(Utils.GetTopRightCell(rng), bottomright))
+        End If
+        
+        Set upright = Utils.GetTopRightCell(sectionRange)
+        If upright.Row > 1 Then
+            Set upright = Utils.GetTopNeighbour(upright)
+            If upright.Row >= Utils.GetTopLeftCell(rng).Row Then Set windmillWingFour = par.Range(Utils.GetTopLeftCell(rng), upright)
+        End If
+    End If
+    ' Debug info
+'    On Error Resume Next
+'    Debug.Print windmillWingOne.Address
+'    Debug.Print windmillWingTwo.Address
+'    Debug.Print windmillWingThree.Address
+'    Debug.Print windmillWingFour.Address
+'    On Error GoTo 0
 End Function

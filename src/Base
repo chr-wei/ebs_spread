@@ -204,7 +204,7 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                 Case ComparisonTypes.ceRegex
                     Dim regex As New RegExp
                     regex.Pattern = propertyVal
-                    compMatch = (regex.test(cellVal))
+                    compMatch = (regex.Test(cellVal))
                 Case ComparisonTypes.ceStringComp
                     compMatch = (StrComp(cellVal, propertyVal) = 0)
                 Case ComparisonTypes.ceEqual
@@ -624,6 +624,13 @@ Function ConcatToArray(arr As Variant, concatee As Variant) As Variant
     ConcatToArray = outArray
     
     'Check args and concat
+    If Not Base.IsArrayAllocated(arr) Then
+        arr = concatee
+        Erase concatee
+    End If
+    
+    If Not Base.IsArrayAllocated(arr) Then Exit Function
+    
     Dim arrCount As Long: arrCount = UBound(arr) - LBound(arr) + 1
     Dim arrIdx As Long
     
