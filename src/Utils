@@ -70,48 +70,9 @@ Function GetListColumn(sheetArea As Variant, listId As Variant, colIdentifier As
         Exit Function
     End If
     
-    'List identifier can either be string or integer
-    Select Case (TypeName(listId))
-        Case "Integer", "Long"
-            ' Do nothing
-            
-        Case "String"
-            If TypeName(sheetArea) = "Range" Then
-                Call MessageUtils.HandleMessage("Variable 'listId' is of type '" & TypeName(listId) & _
-                    "'. This is not valid if 'sheetArea' is of type 'Range'.", ceError, FN)
-                Exit Function
-            End If
-            
-        Case Else
-            Call MessageUtils.HandleMessage("Variable 'listId' of type '" & TypeName(listId) & "' is not a valid input type.'", ceError, FN)
-            Exit Function
-    End Select
-    
     Dim lo As ListObject
-        
-    Select Case TypeName(sheetArea)
-        Case "Worksheet"
-            Set lo = sheetArea.ListObjects(listId)
-        Case "Range"
-            Dim lists() As Variant
-            Dim idx As Long
-            Dim addrList() As Variant
-            Dim addr As String
-            
-            lists = Utils.GetListObjectsOfRange(sheetArea.Offset(0, 0))
-            ReDim addrList(0 To UBound(lists))
-            
-            For idx = 0 To UBound(lists)
-                addrList(idx) = Base.UnionN(lists(idx).HeaderRowRange, lists(idx).DataBodyRange).Address
-            Next idx
-            
-            Call Base.QuickSort(vArray:=addrList, direction:=ceAscending, associate:=lists)
-            Set lo = lists(listId)
-                
-        Case Else
-            Call MessageUtils.HandleMessage("Variable 'sheetArea' of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
-            Exit Function
-    End Select
+    Set lo = Utils.GetListObjectById(sheetArea, listId)
+    If lo Is Nothing Then Exit Function
         
     'First find the list column
     Dim lc As ListColumn
@@ -287,11 +248,11 @@ Function GetTopNeighbour(rng As Range) As Range
     Set GetTopNeighbour = Utils.GetTopLeftCell(rng).Offset(-1, 0)
 End Function
 
-Function GetNumberedEntries(sheet As Worksheet, listId As Variant) As Range
+Function GetNumberedEntries(sheetArea As Variant, listId As Variant) As Range
     'Returns the range of all valid entries in a list. Every valid entry has a #00001 number in the first column i.e. it is not empty
     '
     'Input args:
-    '   sheet:  The sheet which contains the list
+    '   sheetArea:  The sheetArea which contains the list. Can be of type Worksheet or range
     '   listId: The id of the list which entries should be examined
     '
     'Output args:
@@ -302,7 +263,7 @@ Function GetNumberedEntries(sheet As Worksheet, listId As Variant) As Range
     
     'Read the entries of the first column of a list
     Dim entries As Range
-    Set entries = Utils.GetListColumn(sheet.UsedRange, listId, 1, ceData)
+    Set entries = Utils.GetListColumn(sheetArea, listId, 1, ceData)
     If entries Is Nothing Then
         Set GetNumberedEntries = Nothing
         Exit Function
@@ -375,11 +336,11 @@ Function GetNextEntryNumber(numberedEntries As Range) As Long
     GetNextEntryNumber = entryNumbers(UBound(entryNumbers)) + 1
 End Function
 
-Function GetNewEntry(sheet As Worksheet, listId As Variant, ByRef newEntry As Range, ByRef newFormattedNumber As String) As Boolean
+Function GetNewEntry(sheetArea As Variant, listId As Variant, ByRef newEntry As Range, ByRef newFormattedNumber As String) As Boolean
     'Returns a new valid entry (line) of a list to insert data in.
     '
     'Input args:
-    '   sheet:  The sheet containing the list you want to add an entry in
+    '   sheetArea:  The sheetArea containing the list you want to add an entry in. Can be of type Worksheet or Range
     '   listId: The id of the list the entry should be added to. A number will be added to the first column of the list
     '
     'Output args:
@@ -390,25 +351,34 @@ Function GetNewEntry(sheet As Worksheet, listId As Variant, ByRef newEntry As Ra
     GetNewEntry = False
     
     'Check args
-    If sheet Is Nothing Or StrComp(CStr(listId), "") = 0 Then
+    If sheetArea Is Nothing Or StrComp(CStr(listId), "") = 0 Then
         Exit Function
     End If
     
     Dim entries As Range
     Dim head As Range
-    Set entries = Utils.GetNumberedEntries(sheet, listId)
+    Set entries = Utils.GetNumberedEntries(sheetArea, listId)
     
     If entries Is Nothing Then
         'If no entries could be found get the header cell. Next cell will be selected below the header cell. GetNumberedEntries will return 'Nothing'
         'if there is a data row in the list which has no numbered entry in the first column (means no entry for us)
-        Set head = Utils.GetListColumn(sheet, listId, 1, ceHeader)
+        Set head = Utils.GetListColumn(sheetArea, listId, 1, ceHeader)
         
         'Debug info
         'Debug.Print entries.Address
     Else
-        'Add a row to the list
         Dim lo As ListObject
-        Set lo = sheet.ListObjects(listId)
+        
+        Select Case TypeName(sheetArea)
+        Case "Worksheet"
+            Set lo = sheetArea.ListObjects(listId)
+        Case "Range"
+            Dim listDict As Scripting.Dictionary
+            Set listDict = Utils.GetListObjectById(sheetArea)
+            Set lo = listDict.Items()(listId - 1)
+        End Select
+        
+        'Add a row to the list
         Call lo.ListRows.Add
     End If
     
@@ -420,12 +390,12 @@ Function GetNewEntry(sheet As Worksheet, listId As Variant, ByRef newEntry As Ra
     GetNewEntry = True
 End Function
 
-Function IntersectListColAndCells(sheet As Worksheet, listId As Variant, colIdentifier As Variant, rowIdentifier As Range) As Range
+Function IntersectListColAndCells(sheetArea As Variant, listId As Variant, colIdentifier As Variant, rowIdentifier As Range) As Range
     'Intersect a range of rows with a single column of a list object
     'The function is mostly used to get single cells from a list object
     '
     'Input args:
-    '   sheet:          The sheet the list object resides on
+    '   sheetArea:      The sheetArea the list object resides on. Can be of type worksheet or range
     '   listId:         The id of the list. Can be 'String' type or 'Integer' type
     '   colIdentifier:  The column you want to intersect. Can be a header 'String' or a cell 'Range' in the column.
     '   rowIdentifier:  A range of cells marking rows inside the list object
@@ -434,17 +404,15 @@ Function IntersectListColAndCells(sheet As Worksheet, listId As Variant, colIden
     Set IntersectListColAndCells = Nothing
     
     'Check args
-    If (sheet Is Nothing Or StrComp(colIdentifier, "") = 0 Or rowIdentifier Is Nothing) Then
+    If (sheetArea Is Nothing Or StrComp(colIdentifier, "") = 0 Or rowIdentifier Is Nothing) Then
         Exit Function
     End If
     
     Dim listCol As Range
-
-    Set listCol = Utils.GetListColumn(sheet, listId, colIdentifier, ceAll)
+    Set listCol = Utils.GetListColumn(sheetArea, listId, colIdentifier, ceAll)
     
     If Not listCol Is Nothing Then
-        Set IntersectListColAndCells = _
-                                     Base.IntersectN(listCol, rowIdentifier.EntireRow)
+        Set IntersectListColAndCells = Base.IntersectN(listCol, rowIdentifier.EntireRow)
     End If
     'Debug info
 End Function
@@ -921,18 +889,19 @@ Function GetSingleDataCellVal(sheetArea As Variant, headerText As String, Option
     'Init output
     GetSingleDataCellVal = ""
     
+    Dim area As Range
     Select Case TypeName(sheetArea)
-        Case "Worksheet"
-            Set sheetArea = sheetArea.UsedRange
-        Case "Range"
-            'Do nothing
-        Case Else
-            Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
-            Exit Function
+    Case "Worksheet"
+        Set area = sheetArea.UsedRange
+    Case "Range"
+        Set area = sheetArea
+    Case Else
+        Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+        Exit Function
     End Select
     
     Dim headerCell As Range
-    Set headerCell = Utils.FindSheetCell(Base.CRange(sheetArea), headerText)
+    Set headerCell = Utils.FindSheetCell(area, headerText)
     
     If Not headerCell Is Nothing Then
         Set headerCell = Utils.GetTopLeftCell(headerCell)
@@ -954,21 +923,23 @@ Function SetSingleDataCell(sheetArea As Variant, headerText As String, data As V
     '   sheetArea:              The sheetArea the header is to be found
     '   headerText:             The header text to search
     '   data:                   The data you want to set to the cell
-
+    
+    Dim area As Range
+    
     Select Case TypeName(sheetArea)
-        Case "Worksheet"
-            Set sheetArea = sheetArea.UsedRange
-        Case "Range"
-            'Do nothing
-        Case Else
-            Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
-            Exit Function
+    Case "Worksheet"
+        Set area = sheetArea.UsedRange
+    Case "Range"
+        Set area = sheetArea
+    Case Else
+        Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+        Exit Function
     End Select
     
     Dim headerCell As Range
     Dim dataCell As Range
     
-    Set headerCell = Utils.FindSheetCell(Base.CRange(sheetArea), headerText)
+    Set headerCell = Utils.FindSheetCell(area, headerText)
     If Not headerCell Is Nothing Then
         Set dataCell = Utils.GetRightNeighbour(headerCell)
         dataCell.Value = data
@@ -1177,7 +1148,65 @@ Function DeleteWorksheetSilently(sheet As Worksheet)
     Application.DisplayAlerts = True
 End Function
 
-Function GetListObjectsOfRange(rng As Range) As Variant()
+Function GetListObjectById(sheetArea As Variant, listId As Variant) As ListObject
+    Const FN As String = "GetListObjectById"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
+    'Check args
+    If sheetArea Is Nothing Then Exit Function
+    
+    
+    Select Case (TypeName(listId))
+    Case "Integer", "Long"
+        ' Do nothing
+            
+    Case "String"
+        If TypeName(sheetArea) = "Range" Then
+            Call MessageUtils.HandleMessage("Variable 'listId' is of type '" & TypeName(listId) & _
+                                            "'. This is not valid if 'sheetArea' is of type 'Range'.", ceError, FN)
+            Exit Function
+        End If
+            
+    Case Else
+        Call MessageUtils.HandleMessage("Variable 'listId' of type '" & TypeName(listId) & "' is not a valid input type.'", ceError, FN)
+        Exit Function
+    End Select
+            
+    Select Case TypeName(sheetArea)
+    Case "Worksheet"
+        Set GetListObjectById = sheetArea.ListObjects(listId)
+    Case "Range"
+        Dim sheet As Worksheet
+        Dim names() As Variant
+        Dim item As Variant
+        Dim address As Variant
+        Dim dict As Scripting.Dictionary
+            
+        names = GetListObjectNames(Base.CRange(sheetArea))
+        Set sheet = sheetArea.Parent
+    
+        If Base.IsArrayAllocated(names) Then
+            Dim lo As ListObject
+            For Each item In names
+                Set lo = sheet.ListObjects(item)
+                address = Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange).address
+                If Not dict.Exists(address) Then Call dict.Add(address, lo)
+            Next item
+        
+            Dim k() As Variant: k = dict.Keys()
+            'Set GetListObjectBylistId = dict
+        
+            Call Base.QuickSort(k, ceAscending)
+        
+            Set GetListObjectById = dict.item(k(listId - 1))
+        End If
+    Case Else
+        Call MessageUtils.HandleMessage("Variable 'sheetArea' of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+        Exit Function
+    End Select
+End Function
+
+Function GetListObjectNames(rng As Range) As Variant()
     
     'Check args
     If rng Is Nothing Then Exit Function
@@ -1203,12 +1232,11 @@ Function GetListObjectsOfRange(rng As Range) As Variant()
         Call Utils.GetWindmillRanges(rng, Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange), _
                                      bottomLeftQuarter, bottomRightQuarter, topRightQuarter, topLeftQuarter)
     
-        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topLeftQuarter))
-        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomRightQuarter))
-        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topRightQuarter))
-        lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomLeftQuarter))
-        'xx bug. list objects are added and then converted to strings
-        GetListObjectsOfRange = lists
+        lists = Base.ConcatToArray(lists, GetListObjectNames(topLeftQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectNames(bottomRightQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectNames(topRightQuarter))
+        lists = Base.ConcatToArray(lists, GetListObjectNames(bottomLeftQuarter))
+        GetListObjectNames = lists
     End If
 End Function
 

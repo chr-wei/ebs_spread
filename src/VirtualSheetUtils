@@ -462,7 +462,7 @@ Function IsStorageSheetEmpty(sheet As Worksheet) As Boolean
     
     'Check args
     If sheet Is Nothing Then Exit Function
-    If StrComp(sheet.UsedRange.Address, "$A$1") = 0 Then
+    If StrComp(sheet.UsedRange.address, "$A$1") = 0 Then
         IsStorageSheetEmpty = True
     Else
         IsStorageSheetEmpty = False
@@ -508,7 +508,7 @@ Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
         Set strt = rngLastMatch.Offset(rowOffset, 0)
         
         Set rngLastMatch = rng.FindNext(strt)
-    Loop Until StrComp(rngFirstMatch.Address, rngLastMatch.Address) = 0 'Loop until the first match is found again
+    Loop Until StrComp(rngFirstMatch.address, rngLastMatch.address) = 0 'Loop until the first match is found again
     
     Set FindAllSheetNameHeaders = result
     
