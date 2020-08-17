@@ -145,24 +145,24 @@ Function GetAllTaskSheets() As Collection
     Set GetAllTaskSheets = taskSheets
 End Function
 
-Function GetTimeListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetTimeListColumn(sheetArea As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
-    Set GetTimeListColumn = Utils.GetListColumn(sheet, TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
+    Set GetTimeListColumn = Utils.GetListColumn(sheetArea, TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-Function GetEbsListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetEbsListColumn(sheetArea As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
-    Set GetEbsListColumn = Utils.GetListColumn(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
+    Set GetEbsListColumn = Utils.GetListColumn(sheetArea, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-Function IntersectEbsListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As Range) As Range
+Function IntersectEbsListColumn(sheetArea As Variant, colIdentifier As Variant, rowIdentifier As Range) As Range
     'Get the intersection of a list column and a cell
-    Set IntersectEbsListColumn = Utils.IntersectListColAndCells(sheet, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
+    Set IntersectEbsListColumn = Utils.IntersectListColAndCells(sheetArea, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-Function IntersectTimeListColumn(sheet As Worksheet, colIdentifier As Variant, rowIdentifier As Range) As Range
+Function IntersectTimeListColumn(sheetArea As Variant, colIdentifier As Variant, rowIdentifier As Range) As Range
     'Wrapper to get the intersection of a list column and a cell
-    Set IntersectTimeListColumn = Utils.IntersectListColAndCells(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
+    Set IntersectTimeListColumn = Utils.IntersectListColAndCells(sheetArea, Constants.TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
 Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolatedEstimate As Double)
@@ -223,7 +223,7 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     Dim newFormattedNumber As String
     Dim entryReceived As Boolean
     
-    entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber)
+    entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber) 'xx
     If entryReceived Then
         Set startTimeCol = TaskUtils.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
         Set indicatorCol = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
@@ -703,8 +703,8 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
         actionTwooCell.Value = Constants.TASK_SHEET_ACTION_TWOO_NAME
         
         'Add the hyperlinks which will be catched by an 'TaskUtils.HandleFollowHyperlink'
-        Call Utils.AddSubtileHyperlink(actionOneCell, actionOneCell.Address)
-        Call Utils.AddSubtileHyperlink(actionTwooCell, actionTwooCell.Address)
+        Call Utils.AddSubtileHyperlink(actionOneCell, actionOneCell.address)
+        Call Utils.AddSubtileHyperlink(actionTwooCell, actionTwooCell.address)
         
         'Set color for first action cell: Plain delta calc
         Call TaskUtils.SetClickActionHighlight(sheet, actionOneCell)
