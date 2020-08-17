@@ -47,14 +47,17 @@ Function CreateHashString(Optional prefix As String = "") As String
                                     ceVerbose, FN)
 End Function
 
-Function GetListColumn(sheet As Worksheet, listId As Variant, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetListColumn(sheetArea As Variant, listId As Variant, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+    Const FN As String = "GetListColumn"
+    MessageUtils.InvokeFnMsg (FN)
+    
     'Get the data of a column of a list / table.
     '
     'Input args:
-    '  sheet:  The sheet one wants to retrieve a list with a specific column for
-    '  listId: The id (name or index) of the list you want to retrieve
-    '  colIdentifier:  The cell of a column or its header name
-    '  rowIdentifier:  A selector which returns either the header section, the data body range section or header and body section of the selected column.
+    '  sheetArea:       The sheet area one wants to retrieve a list with a specific column for. Can be of type range or Worksheet
+    '  listId:          The id (name or index) of the list you want to retrieve
+    '  colIdentifier:   The cell of a column or its header name
+    '  rowIdentifier:   A selector which returns either the header section, the data body range section or header and body section of the selected column.
     '
     'Output args:
     '  GetListColumn: The range of the column (header, body or body and header)
@@ -63,18 +66,53 @@ Function GetListColumn(sheet As Worksheet, listId As Variant, colIdentifier As V
     Set GetListColumn = Nothing
     
     'Check args
-    If sheet Is Nothing Then
+    If sheetArea Is Nothing Then
         Exit Function
     End If
     
-    Dim lo As ListObject
-    
     'List identifier can either be string or integer
     Select Case (TypeName(listId))
-    Case "Integer", "String"
-        Set lo = sheet.ListObjects(listId)
+        Case "Integer", "Long"
+            ' Do nothing
+            
+        Case "String"
+            If TypeName(sheetArea) = "Range" Then
+                Call MessageUtils.HandleMessage("Variable 'listId' is of type '" & TypeName(listId) & _
+                    "'. This is not valid if 'sheetArea' is of type 'Range'.", ceError, FN)
+                Exit Function
+            End If
+            
+        Case Else
+            Call MessageUtils.HandleMessage("Variable 'listId' of type '" & TypeName(listId) & "' is not a valid input type.'", ceError, FN)
+            Exit Function
     End Select
     
+    Dim lo As ListObject
+        
+    Select Case TypeName(sheetArea)
+        Case "Worksheet"
+            Set lo = sheetArea.ListObjects(listId)
+        Case "Range"
+            Dim lists() As Variant
+            Dim idx As Long
+            Dim addrList() As Variant
+            Dim addr As String
+            
+            lists = Utils.GetListObjectsOfRange(sheetArea.Offset(0, 0))
+            ReDim addrList(0 To UBound(lists))
+            
+            For idx = 0 To UBound(lists)
+                addrList(idx) = Base.UnionN(lists(idx).HeaderRowRange, lists(idx).DataBodyRange).Address
+            Next idx
+            
+            Call Base.QuickSort(vArray:=addrList, direction:=ceAscending, associate:=lists)
+            Set lo = lists(listId)
+                
+        Case Else
+            Call MessageUtils.HandleMessage("Variable 'sheetArea' of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+            Exit Function
+    End Select
+        
     'First find the list column
     Dim lc As ListColumn
     Select Case (TypeName(colIdentifier))
@@ -140,11 +178,11 @@ Function GetListColumnHeader(cells As Range) As String
     'Debug.Print cells.Address
 End Function
 
-Function FindSheetCell(sheet As Worksheet, findString As String, Optional compType As ComparisonTypes = ComparisonTypes.ceStringComp) As Range
+Function FindSheetCell(sheetArea As Range, findString As String, Optional compType As ComparisonTypes = ComparisonTypes.ceStringComp) As Range
     'Wrapper function to find all cells of a given worksheet which values match the passed string
     '
     'Input args:
-    '  sheet: The sheet one wants to find a value in
+    '  sheetArea: The sheetArea one wants to find a value in
     '  findSring: The value one wants to find
     '  compType: The comparison mehtod used to compare the cell value (vba 'Like'method, regexp or double comparison
     
@@ -152,11 +190,9 @@ Function FindSheetCell(sheet As Worksheet, findString As String, Optional compTy
     Set FindSheetCell = Nothing
     
     Dim foundCells As Range
-    Dim sheetRange As Range
     If StrComp(Trim(findString), "") <> 0 Then
         'Only search if a value was passed. Only search in the used range
-        Set sheetRange = sheet.UsedRange
-        Set foundCells = Base.FindAll(sheetRange, findString, , compType)
+        Set foundCells = Base.FindAll(sheetArea, findString, , compType)
     End If
     
     Set FindSheetCell = foundCells
@@ -266,7 +302,7 @@ Function GetNumberedEntries(sheet As Worksheet, listId As Variant) As Range
     
     'Read the entries of the first column of a list
     Dim entries As Range
-    Set entries = Utils.GetListColumn(sheet, listId, 1, ceData)
+    Set entries = Utils.GetListColumn(sheet.UsedRange, listId, 1, ceData)
     If entries Is Nothing Then
         Set GetNumberedEntries = Nothing
         Exit Function
@@ -868,11 +904,14 @@ Function CopyVarArrToDateArr(varArr As Variant) As Date()
     CopyVarArrToDateArr = dateArr
 End Function
 
-Function GetSingleDataCellVal(sheet As Worksheet, headerText As String, Optional ByRef dataCell As Range) As String
+Function GetSingleDataCellVal(sheetArea As Variant, headerText As String, Optional ByRef dataCell As Range) As String
+    Const FN As String = "GetSingleDataCellVal"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'Read a value of a cell that has a 'header' specifier to its left. The cell is identified by that header (cell)
     '
     'Input args:
-    '   sheet:  The sheet the value is to be found
+    '   sheetArea:  The sheetArea the value is to be found. Can a worksheet or range type
     '   headerText: The header text to search
     '
     'Output args:
@@ -882,8 +921,18 @@ Function GetSingleDataCellVal(sheet As Worksheet, headerText As String, Optional
     'Init output
     GetSingleDataCellVal = ""
     
+    Select Case TypeName(sheetArea)
+        Case "Worksheet"
+            Set sheetArea = sheetArea.UsedRange
+        Case "Range"
+            'Do nothing
+        Case Else
+            Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+            Exit Function
+    End Select
+    
     Dim headerCell As Range
-    Set headerCell = Utils.FindSheetCell(sheet, headerText)
+    Set headerCell = Utils.FindSheetCell(Base.CRange(sheetArea), headerText)
     
     If Not headerCell Is Nothing Then
         Set headerCell = Utils.GetTopLeftCell(headerCell)
@@ -895,27 +944,37 @@ Function GetSingleDataCellVal(sheet As Worksheet, headerText As String, Optional
     End If
 End Function
 
-Function SetSingleDataCell(sheet As Worksheet, headerText As String, data As Variant)
+Function SetSingleDataCell(sheetArea As Variant, headerText As String, data As Variant)
     Const FN As String = "Utils.SetSingleDataCell"
     Call MessageUtils.InvokeFnMsg(FN)
     
     'Set a value of a cell that has a 'header' specifier to its left. The cell is identified by that header (cell)
     '
     'Input args:
-    '   sheet:                  The sheet the header is to be found
+    '   sheetArea:              The sheetArea the header is to be found
     '   headerText:             The header text to search
     '   data:                   The data you want to set to the cell
 
+    Select Case TypeName(sheetArea)
+        Case "Worksheet"
+            Set sheetArea = sheetArea.UsedRange
+        Case "Range"
+            'Do nothing
+        Case Else
+            Call MessageUtils.HandleMessage("Variable of type '" & TypeName(sheetArea) & "' is not a valid input type.'", ceError, FN)
+            Exit Function
+    End Select
+    
     Dim headerCell As Range
     Dim dataCell As Range
     
-    Set headerCell = Utils.FindSheetCell(sheet, headerText)
+    Set headerCell = Utils.FindSheetCell(Base.CRange(sheetArea), headerText)
     If Not headerCell Is Nothing Then
         Set dataCell = Utils.GetRightNeighbour(headerCell)
         dataCell.Value = data
     Else
         'Debug info
-        Call MessageUtils.HandleMessage("Header cell '" & headerText & " 'could not be found on worksheet '" & sheet.name & "'.", ceError, FN)
+        Call MessageUtils.HandleMessage("Header cell '" & headerText & " 'could not be found on worksheet '" & sheetArea.name & "'.", ceError, FN)
     End If
 End Function
 
@@ -1139,26 +1198,25 @@ Function GetListObjectsOfRange(rng As Range) As Variant()
     If lo Is Nothing Then
         Exit Function
     Else
-        lists = Array(lo.name)
+        lists = Array(lo)
         
         Call Utils.GetWindmillRanges(rng, Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange), _
-            bottomLeftQuarter, bottomRightQuarter, topRightQuarter, topLeftQuarter)
+                                     bottomLeftQuarter, bottomRightQuarter, topRightQuarter, topLeftQuarter)
     
         lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topLeftQuarter))
         lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomRightQuarter))
         lists = Base.ConcatToArray(lists, GetListObjectsOfRange(topRightQuarter))
         lists = Base.ConcatToArray(lists, GetListObjectsOfRange(bottomLeftQuarter))
-        
+        'xx bug. list objects are added and then converted to strings
         GetListObjectsOfRange = lists
     End If
 End Function
 
-
 Function GetWindmillRanges(rng As Range, sectionRange As Range, _
-    ByRef windmillWingOne As Range, _
-    ByRef windmillWingTwo As Range, _
-    ByRef windmillWingThree As Range, _
-    ByRef windmillWingFour As Range)
+                           ByRef windmillWingOne As Range, _
+                           ByRef windmillWingTwo As Range, _
+                           ByRef windmillWingThree As Range, _
+                           ByRef windmillWingFour As Range)
     
     ' |4 4 4 4|3|
     ' |1| sss |3|
@@ -1204,10 +1262,10 @@ Function GetWindmillRanges(rng As Range, sectionRange As Range, _
         End If
     End If
     ' Debug info
-'    On Error Resume Next
-'    Debug.Print windmillWingOne.Address
-'    Debug.Print windmillWingTwo.Address
-'    Debug.Print windmillWingThree.Address
-'    Debug.Print windmillWingFour.Address
-'    On Error GoTo 0
+    '    On Error Resume Next
+    '    Debug.Print windmillWingOne.Address
+    '    Debug.Print windmillWingTwo.Address
+    '    Debug.Print windmillWingThree.Address
+    '    Debug.Print windmillWingFour.Address
+    '    On Error GoTo 0
 End Function

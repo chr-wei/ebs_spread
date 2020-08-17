@@ -123,11 +123,11 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     'Init output
     AddNewTaskLine = False
     
-    Dim hashExists As Boolean
-    hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
+    Dim HashExists As Boolean
+    HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
     
     'Check args
-    If StrComp(hash, "") = 0 Or hashExists Then
+    If StrComp(hash, "") = 0 Or HashExists Then
         'Do not add a new entry if the hash already exists or if the hash is empty
         Exit Function
     End If
@@ -194,7 +194,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Call PlanningUtils.OrganizePrioColumn
     
     'Search for the hash here as tasks can get reordered with priority sorting
-    Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet, hash)
+    Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
     
     AddNewTaskLine = True
 End Function
@@ -308,7 +308,7 @@ Function EndAllTasks()
 
     'After setting end times to all task sheets we delete the '<current'tracker in the main sheet as well
     Dim indicatorCells As Range
-    Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, Constants.INDICATOR)
+    Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.INDICATOR)
     
     If Not indicatorCells Is Nothing Then
         indicatorCells.Value = ""
@@ -1147,7 +1147,7 @@ Function UpdateAllEbsCols()
     'Find all ebs cols on planning sheet and call the update function for them
     
     Dim colHeaderCells As Range
-    Set colHeaderCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, Constants.EBS_COLUMN_REGEX, ceRegex)
+    Set colHeaderCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.EBS_COLUMN_REGEX, ceRegex)
     Dim headerCell As Range
     
     For Each headerCell In colHeaderCells
@@ -1198,7 +1198,7 @@ Function GetTagHeaderCells() As Range
     Call MessageUtils.InvokeFnMsg(FN)
         
     'Returns all headers for tags
-    Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
+    Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet.UsedRange, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
 End Function
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
@@ -1277,8 +1277,8 @@ Function GetVisibleTasks() As Range
     Set GetVisibleTasks = visibleHashes
 End Function
 
-Function hashExists(hash As String) As Boolean
-    hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
+Function HashExists(hash As String) As Boolean
+    HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
 End Function
 
 Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String = "")
@@ -1305,7 +1305,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     
     'First add a new task and return the cell of the entry to have a reference for further copying
     Dim doBacksync As Boolean
-    doBacksync = PlanningUtils.hashExists(syncedHash)
+    doBacksync = PlanningUtils.HashExists(syncedHash)
     
     If doBacksync Then
         'Task could be found in planning sheet. Backsync the task

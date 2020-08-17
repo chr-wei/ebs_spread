@@ -695,3 +695,7 @@ Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant(
     
     ExtractSubArray = subArr
 End Function
+
+Function CRange(rng As Variant) As Range
+    Set CRange = rng
+End Function
