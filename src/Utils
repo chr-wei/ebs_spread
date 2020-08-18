@@ -1180,7 +1180,7 @@ Function GetListObjectById(sheetArea As Variant, listId As Variant) As ListObjec
         Dim names() As Variant
         Dim item As Variant
         Dim address As Variant
-        Dim dict As Scripting.Dictionary
+        Dim dict As New Scripting.Dictionary
             
         names = GetListObjectNames(Base.CRange(sheetArea))
         Set sheet = sheetArea.Parent

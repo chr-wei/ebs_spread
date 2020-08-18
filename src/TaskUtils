@@ -122,7 +122,15 @@ Function AddTaskSheet(hash As String) As Worksheet
     '
     'Input args:
     '   hash:       The hash of the task
-        
+    
+    'Many open sheets inside a workbook have been found to consume
+    'a lot of ram memory. Virtualize them to prevent memory problems
+    If TaskUtils.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
+        Call TaskUtils.VirtualizeTaskSheets
+        Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
+                                        ceVerbose, FN)
+    End If
+    
     If Utils.SheetExists(hash) Or _
         VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
         
@@ -332,7 +340,7 @@ Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date =
     trackingEntry.Value = ""
     
     'Add special functions to the currently ended tracking entry which let you control delta time calculation (see also 'TaskUtils.HandleFollowHyperlink')
-    Call TaskUtils.AddSpecialActionsToTimeListRow(sheetArea, trackingEntry)
+    'Call TaskUtils.AddSpecialActionsToTimeListRow(sheetArea, trackingEntry) ToDo: Feature disabled as it will be moved and called with Worksheet param
 End Function
 
 Function SetTaskName(sheetArea As Variant, name As String)
@@ -505,21 +513,21 @@ Function UnsetDueDate(sheetArea As Worksheet)
     Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, Constants.N_A)
 End Function
 
-Function SetFinishedOnDate(sheet As Worksheet, datee As Date)
-    Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, datee)
+Function SetFinishedOnDate(sheetArea As Variant, datee As Date)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_FINISHED_ON_HEADER, datee)
 End Function
 
-Function UnsetFinishedOnDate(sheet As Worksheet)
-    Call Utils.SetSingleDataCell(sheet, Constants.TASK_FINISHED_ON_HEADER, Constants.N_A)
+Function UnsetFinishedOnDate(sheetArea As Variant)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_FINISHED_ON_HEADER, Constants.N_A)
 End Function
 
-Function SetComment(sheet As Worksheet, comment As String)
-    Call Utils.SetSingleDataCell(sheet, COMMENT_HEADER, comment)
+Function SetComment(sheetArea As Variant, comment As String)
+    Call Utils.SetSingleDataCell(sheetArea, COMMENT_HEADER, comment)
 End Function
 
-Function SetTags(sheet As Worksheet, serializedTagHeaders As String, serializedTagValues As String)
-    Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_HEADERS_HEADER, serializedTagHeaders)
-    Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_VALUES_HEADER, serializedTagValues)
+Function SetTags(sheetArea As Variant, serializedTagHeaders As String, serializedTagValues As String)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER, serializedTagHeaders)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER, serializedTagValues)
 End Function
 
 Function GetLastEndTimestamp(sheetArea As Variant) As Date
