@@ -514,7 +514,7 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     Dim hashSheet As Worksheet
     
     For hashIdx = 0 To upperLimit
-        Set hashSheet = TaskUtils.GetTaskSheet(CStr(hashes(hashIdx)))
+        Set hashSheet = TaskUtils.GetTaskSheetArea(CStr(hashes(hashIdx)))
         
         'Read the velocity from the sheet's cell
         velocity = TaskUtils.GetVelocity(hashSheet)
@@ -880,14 +880,14 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
                       
         'Base of the calculations is the estimate of the user
         userEstimate = -1
-        userEstimate = TaskUtils.GetEstimate(TaskUtils.GetTaskSheet(currentHash))
+        userEstimate = TaskUtils.GetEstimate(TaskUtils.GetTaskSheetArea(currentHash))
         
         If userEstimate <> -1 Then
             'Valid user estimate was found
         
             'Set the spent time of the task
             spentTime = -1
-            spentTime = TaskUtils.GetTaskTotalTime(TaskUtils.GetTaskSheet(currentHash))
+            spentTime = TaskUtils.GetTaskTotalTime(TaskUtils.GetTaskSheetArea(currentHash))
              
             'Calculate time estimates: Total time needed to complete the task
             Erase monteCarloTimeEstimates

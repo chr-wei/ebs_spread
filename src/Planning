@@ -353,7 +353,7 @@ Function ManageTaskNameChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheet(hash), changedCell.Value)
+        Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
     End If
 End Function
 
@@ -454,7 +454,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         'Adjust formatting of the planning sheet cell to display the enterd value correctly
         Select Case ues
         Case UserEstimateStatus.ceValidHours, UserEstimateStatus.ceValidDate
-            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), CDbl(outputVal), setNewEbsEstimates)
+            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheetArea(hash), CDbl(outputVal), setNewEbsEstimates)
             changedCell.Value = outputVal
             changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
                 
@@ -472,7 +472,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                 
             changedCell.Value = placeholder
             changedCell.NumberFormat = "General"
-            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheet(hash), placeholder, setNewEbsEstimates)
+            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheetArea(hash), placeholder, setNewEbsEstimates)
         End Select
     End If
 End Function
@@ -491,7 +491,7 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     
     'Set the value to the task sheet
     Dim sheet As Worksheet
-    Set sheet = TaskUtils.GetTaskSheet(hash)
+    Set sheet = TaskUtils.GetTaskSheetArea(hash)
     
     Call TaskUtils.SetKanbanList(sheet, changedCell.Value)
                 
@@ -562,7 +562,7 @@ Function ManageCommentChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Call TaskUtils.SetComment(TaskUtils.GetTaskSheet(hash), changedCell.Value)
+        Call TaskUtils.SetComment(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
     End If
 End Function
 
@@ -577,7 +577,7 @@ Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boo
         Dim serializedTags As String
         Dim serializedTagHeaders As String
         serializedTags = PlanningUtils.GetSerializedTags(hash, serializedTagHeaders)
-        Call TaskUtils.SetTags(TaskUtils.GetTaskSheet(hash), serializedTagHeaders, serializedTags)
+        Call TaskUtils.SetTags(TaskUtils.GetTaskSheetArea(hash), serializedTagHeaders, serializedTags)
     End If
     
     'If no errors are expected update the data validation list
@@ -614,7 +614,7 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     hash = PlanningUtils.GetTaskHash(changedCell)
     If Not SanityUtils.CheckHash(hash) Then Exit Function
     
-    Call TaskUtils.SetContributor(TaskUtils.GetTaskSheet(hash), changedCell.Value)
+    Call TaskUtils.SetContributor(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
     
     Dim contributorCells As Range
     Set contributorCells = PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData)
@@ -630,7 +630,7 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     If setNewEbsEstimates Then
         'If the contributor changes the database for estimates changes as well. Recalculate
         Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheet(hash)
+        Set sheet = TaskUtils.GetTaskSheetArea(hash)
         Call TaskUtils.SetEbsEstimates(sheet, TaskUtils.GetEstimate(sheet))
     End If
 End Function
@@ -642,7 +642,7 @@ Function ManageDueDateChange(changedCell As Range)
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
         Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheet(hash)
+        Set sheet = TaskUtils.GetTaskSheetArea(hash)
         
         If IsDate(changedCell.Value) Then
             Call TaskUtils.SetDueDate(sheet, CDate(changedCell.Value))
@@ -667,7 +667,7 @@ Function ManageFinishedOnDateChange(changedCell As Range)
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
         Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheet(hash)
+        Set sheet = TaskUtils.GetTaskSheetArea(hash)
         
         If IsDate(changedCell.Value) Then
             Call TaskUtils.SetFinishedOnDate(sheet, CDate(changedCell.Value))

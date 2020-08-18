@@ -44,7 +44,7 @@ Function ExportVisibleTasks()
         Dim cll As Range
         
         For Each cll In visibleTasks
-            Set sheet = TaskUtils.GetTaskSheet(cll.Value)
+            Set sheet = TaskUtils.GetTaskSheetArea(cll.Value)
             'Store the sheet in a special virtual sheet with EXIMPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
             'be available inside this script
             Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, EXIMPORT_SHEET_PREFIX, False)
