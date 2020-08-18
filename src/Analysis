@@ -84,7 +84,7 @@ Function BuildStl()
     'Debug.Print "Visible tasks are: " & visibleTasks.Address
     
     Dim taskCell As Range
-    Dim taskSheet As Worksheet
+    Dim taskSheetArea As Range
     
     Dim analysisSheet As Worksheet
     Set analysisSheet = Analysis.GetAnalysisSheet
@@ -120,7 +120,7 @@ Function BuildStl()
     Set summedDeltaCol = Analysis.GetStlColumn(TIME_SPENT_HEADER, ceData)
     
     For Each taskCell In visibleTasks
-        Set taskSheet = TaskUtils.GetTaskSheetArea(taskCell.Value)
+        Set taskSheetArea = TaskUtils.GetTaskSheetArea(taskCell.Value)
         
         'Prepare the task time columns and value arrays
         Dim tStartCol As Range
@@ -134,10 +134,10 @@ Function BuildStl()
         'Get time columns and filter out all entries that:
         ' 1 either have a start date after the span end
         ' 2 or have an end date before the span start
-        Set tStartCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.START_TIME_HEADER, ceData)
+        Set tStartCol = TaskUtils.GetTimeListColumn(taskSheetArea, Constants.START_TIME_HEADER, ceData)
         Set tStartCol = Base.FindAll(tStartCol, spanEnd, , ceDoubleLess)
         
-        Set tEndCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.END_TIME_HEADER, ceData)
+        Set tEndCol = TaskUtils.GetTimeListColumn(taskSheetArea, Constants.END_TIME_HEADER, ceData)
         Set tEndCol = Base.FindAll(tEndCol, spanStart, , ceDoubleBigger)
         
         If tStartCol Is Nothing Or tEndCol Is Nothing Then GoTo z7g_skipTask
@@ -145,7 +145,7 @@ Function BuildStl()
         If tStartCol Is Nothing Then GoTo z7g_skipTask
         Set tEndCol = Base.IntersectN(tEndCol, tStartCol.EntireRow)
         
-        Set tDeltaCol = TaskUtils.GetTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, ceData)
+        Set tDeltaCol = TaskUtils.GetTimeListColumn(taskSheetArea, Constants.TIME_DELTA_HEADER, ceData)
         Set tDeltaCol = Base.IntersectN(tDeltaCol, tStartCol.EntireRow)
         If tStartCol Is Nothing Or tEndCol Is Nothing Or tDeltaCol Is Nothing Then GoTo z7g_skipTask
         

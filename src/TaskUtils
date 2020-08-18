@@ -74,7 +74,7 @@ Function LoadTaskSheet(hash As String) As Worksheet
     
     'Getting a task sheet may load it from a virtual sheet storage. Many open sheets inside a workbook have been found to consume
     'a lot of ram memory. Virtualize them to prevent memory problems
-    If TaskUtils.GetAllTaskSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
+    If TaskUtils.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
         Call TaskUtils.VirtualizeTaskSheets
         Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
                                         ceVerbose, FN)
@@ -161,7 +161,7 @@ Function GetTaskSheetArea(hash As String) As Range
     End If
 End Function
 
-Function GetAllTaskSheets() As Collection
+Function GetAllNonVirtualSheets() As Collection
     'Get all workbook sheets matching the hash pattern
     
     Dim taskSheets As New Collection
@@ -174,15 +174,15 @@ Function GetAllTaskSheets() As Collection
         End If
     Next sheet
 
-    Set GetAllTaskSheets = taskSheets
+    Set GetAllNonVirtualSheets = taskSheets
 End Function
 
-Function GetTimeListColumn(sheetArea As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetTimeListColumn(sheetArea As Variant, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
     Set GetTimeListColumn = Utils.GetListColumn(sheetArea, TASK_SHEET_TIME_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
 
-Function GetEbsListColumn(sheetArea As Worksheet, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetEbsListColumn(sheetArea As Variant, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
     'Wrapper to read column of a task list
     Set GetEbsListColumn = Utils.GetListColumn(sheetArea, Constants.TASK_SHEET_EBS_LIST_IDX, colIdentifier, rowIdentifier)
 End Function
@@ -199,6 +199,9 @@ End Function
 
 Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolatedEstimate As Double)
     'Adds ebs entry (propability, estimate time) pair to the tasks sheet ebs list
+    'Do only add with loaded sheet (Worksheet) and do not pass a range to param 'sheet' like in GetEbsListColumn
+    'as added data will result in increased sheet size.
+    'This is not handled properly if a virtual sheet range is passed.
     '
     'Input args:
     '  sheet:                  The task sheet you want to add the estimate for
@@ -233,7 +236,10 @@ End Function
 
 Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Double = -1) As Boolean
     'Adds a new line to the time list of the task sheet tracking the elapsed time of tasks. Additionally sets an indicator showing that the entry is
-    'currently tracked
+    'currently tracked.
+    'Do only add with loaded sheet (Worksheet) and do not pass a range to param 'sheet' like in GetEbsListColumn
+    'as added data will result in increased sheet size.
+    'This is not handled properly if a virtual sheet range is passed.
     '
     'Input args:
     '  sheet:  The task sheet
@@ -296,24 +302,24 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     End If
 End Function
 
-Function SetEndTimeToSheetTracking(sheet As Worksheet, Optional time As Date = 0)
+Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date = 0)
     'Ends a current tracking entry by setting 'Now'as end time and reset the indicator '<current'tag
     '
     'Input args:
-    '  sheet:  The task sheet
+    '  sheetArea:  The task sheet range / Worksheet
     '  time:   An optional time value to specify a fixed time. If time is 0 then 'Now'will be set
         
     Dim trackingEntry As Range
     Dim endTimeCell As Range
     
-    Set trackingEntry = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
+    Set trackingEntry = TaskUtils.GetTimeListColumn(sheetArea, Constants.INDICATOR_HEADER, ceData)
     Set trackingEntry = Base.FindAll(trackingEntry, Constants.INDICATOR)
     
     If trackingEntry Is Nothing Then
         Exit Function
     End If
     
-    Set endTimeCell = Utils.IntersectListColAndCells(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, Constants.END_TIME_HEADER, trackingEntry)
+    Set endTimeCell = Utils.IntersectListColAndCells(sheetArea, Constants.TASK_SHEET_TIME_LIST_IDX, Constants.END_TIME_HEADER, trackingEntry)
     If time = 0 Then
         'If no time value was given take the current time
         endTimeCell.Value = Now
@@ -326,18 +332,22 @@ Function SetEndTimeToSheetTracking(sheet As Worksheet, Optional time As Date = 0
     trackingEntry.Value = ""
     
     'Add special functions to the currently ended tracking entry which let you control delta time calculation (see also 'TaskUtils.HandleFollowHyperlink')
-    Call TaskUtils.AddSpecialActionsToTimeListRow(sheet, trackingEntry)
+    Call TaskUtils.AddSpecialActionsToTimeListRow(sheetArea, trackingEntry)
 End Function
 
-Function SetTaskName(sheet As Worksheet, name As String)
+Function SetTaskName(sheetArea As Variant, name As String)
     'Wrapper to set the task name
-    Call Utils.SetSingleDataCell(sheet, TASK_NAME_HEADER, name)
+    Call Utils.SetSingleDataCell(sheetArea, TASK_NAME_HEADER, name)
 End Function
 
 Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
     Const FN As String = "SetEstimate"
     'Wrapper to set the user estimate to the task sheet
     'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheet for consistency reasons.
+    '
+    'Do only add set loaded sheet (Worksheet) and do not pass a range to param 'sheet' as added estimates will result in increased sheet size.
+    'This is not handled properly if a virtual sheet range is passed.
+    '
     '
     'Input args:
     '   sheet:              The task sheet you want to set an estimate to
@@ -479,20 +489,20 @@ Function SetHash(sheet As Worksheet, hash As String)
     Call Utils.SetSingleDataCell(sheet, T_HASH_HEADER, hash)
 End Function
 
-Function SetKanbanList(sheet As Worksheet, list As String)
-    Call Utils.SetSingleDataCell(sheet, KANBAN_LIST_HEADER, list)
+Function SetKanbanList(sheetArea As Variant, list As String)
+    Call Utils.SetSingleDataCell(sheetArea, KANBAN_LIST_HEADER, list)
 End Function
 
-Function SetContributor(sheet As Worksheet, contributor As String)
-    Call Utils.SetSingleDataCell(sheet, CONTRIBUTOR_HEADER, contributor)
+Function SetContributor(sheetArea As Variant, contributor As String)
+    Call Utils.SetSingleDataCell(sheetArea, CONTRIBUTOR_HEADER, contributor)
 End Function
 
-Function SetDueDate(sheet As Worksheet, datee As Date)
-    Call Utils.SetSingleDataCell(sheet, Constants.DUE_DATE_HEADER, datee)
+Function SetDueDate(sheetArea As Worksheet, datee As Date)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, datee)
 End Function
 
-Function UnsetDueDate(sheet As Worksheet)
-    Call Utils.SetSingleDataCell(sheet, Constants.DUE_DATE_HEADER, Constants.N_A)
+Function UnsetDueDate(sheetArea As Worksheet)
+    Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, Constants.N_A)
 End Function
 
 Function SetFinishedOnDate(sheet As Worksheet, datee As Date)
@@ -512,11 +522,11 @@ Function SetTags(sheet As Worksheet, serializedTagHeaders As String, serializedT
     Call Utils.SetSingleDataCell(sheet, Constants.SERIALIZED_TAGS_VALUES_HEADER, serializedTagValues)
 End Function
 
-Function GetLastEndTimestamp(sheet As Worksheet) As Date
+Function GetLastEndTimestamp(sheetArea As Variant) As Date
     'Returns the timestamp of the last row of tracked time entries
     '
     'Input args:
-    '  sheet:  The task sheet to retrieve the val from
+    '  sheetArea:  The task sheet to retrieve the val from
     
     'Init output
     GetLastEndTimestamp = CDate(0)
@@ -524,7 +534,7 @@ Function GetLastEndTimestamp(sheet As Worksheet) As Date
     Dim endStamps As Range
     Dim val As String
        
-    Set endStamps = TaskUtils.GetTimeListColumn(sheet, Constants.END_TIME_HEADER, ceData)
+    Set endStamps = TaskUtils.GetTimeListColumn(sheetArea, Constants.END_TIME_HEADER, ceData)
     If Not endStamps Is Nothing Then
         'Read the last value from the list
         val = Utils.GetBottomRightCell(endStamps).Value
@@ -537,16 +547,16 @@ Function GetLastEndTimestamp(sheet As Worksheet) As Date
     'Debug.Print endStamps.Address
 End Function
 
-Function GetVelocity(sheet As Worksheet) As Double
+Function GetVelocity(sheetArea As Variant) As Double
     'Wrapper to get the current veloctiy of the task (user estimated time over elapsed time)
     '2h user estimate over 1h elapsed time = 200% velocity
     'Set to -1 if invalid value was read
     '
     'Input args:
-    '  sheet:  The task sheet to retrieve the val from
+    '  sheetArea:  The task sheetArea to retrieve the val from
     
     Dim val As String
-    val = Utils.GetSingleDataCellVal(sheet, Constants.VELOCITY_HEADER)
+    val = Utils.GetSingleDataCellVal(sheetArea, Constants.VELOCITY_HEADER)
     If IsNumeric(val) Then
         GetVelocity = CDbl(val)
     Else
@@ -554,14 +564,14 @@ Function GetVelocity(sheet As Worksheet) As Double
     End If
 End Function
 
-Function GetEstimate(sheet As Worksheet) As Double
-    'Wrapper to get the user estimate from the sheet (the time the user thought the task would take)
+Function GetEstimate(sheetArea As Variant) As Double
+    'Wrapper to get the user estimate from the sheetArea (the time the user thought the task would take)
     '
     'Input args:
-    '  sheet:  The task shete to retrieve the val from
+    '  sheetArea:  The task shete to retrieve the val from
     
     Dim val As String
-    val = Utils.GetSingleDataCellVal(sheet, Constants.TASK_ESTIMATE_HEADER)
+    val = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_ESTIMATE_HEADER)
     If IsNumeric(val) Then
         GetEstimate = CDbl(val)
     Else
@@ -569,32 +579,32 @@ Function GetEstimate(sheet As Worksheet) As Double
     End If
 End Function
 
-Function GetName(sheet As Worksheet) As String
+Function GetName(sheetArea As Variant) As String
     'Wrapper to get the name from the sheet. "" if name is invalid
     '
     'Input args:
-    '  sheet:  The task shete to retrieve the val from
+    '  sheetArea:  The range to retrieve the val from
     
-    GetName = Utils.GetSingleDataCellVal(sheet, Constants.TASK_NAME_HEADER)
+    GetName = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_NAME_HEADER)
 End Function
 
-Function GetContributor(sheet As Worksheet) As String
+Function GetContributor(sheetArea As Variant) As String
     'Wrapper to get the contributor name from the sheet. "" if contributor name does not exist
     '
     'Input args:
-    '  sheet:  The task shete to retrieve the val from
+    '  sheet:  The task sheet range / Worksheet to retrieve the val from
     '
     'Output args:
     '   GetContributor: The contributor name
     
-    GetContributor = Utils.GetSingleDataCellVal(sheet, Constants.CONTRIBUTOR_HEADER)
+    GetContributor = Utils.GetSingleDataCellVal(sheetArea, Constants.CONTRIBUTOR_HEADER)
 End Function
 
-Function GetTaskTotalTime(sheet As Worksheet) As Double
+Function GetTaskTotalTime(sheetArea As Variant) As Double
     'Wrapper to return the time that was spent on the task
     '
     'Input args:
-    '  sheet: The task sheet
+    '  sheetArea: The task sheet range / Worksheet
     'Output args:
     '  GetTaskTotalTime: The total time spent on the task (-1 if value could not be read)
     
@@ -602,11 +612,10 @@ Function GetTaskTotalTime(sheet As Worksheet) As Double
     GetTaskTotalTime = -1
     
     'Check args
-    If sheet Is Nothing Then Exit Function
-    If Not SanityUtils.CheckHash(sheet.name) Then Exit Function
+    If sheetArea Is Nothing Then Exit Function
     
     Dim val As String
-    val = Utils.GetSingleDataCellVal(sheet, Constants.TASK_TOTAL_TIME_HEADER)
+    val = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_TOTAL_TIME_HEADER)
     
     If IsNumeric(val) Then
         If CDbl(val) >= 0 Then
@@ -747,7 +756,7 @@ Function VirtualizeTaskSheets()
     'Store all task sheets to a virtual storage sheet to prevent excessive memory (ram) consumption
     
     Dim sheet As Worksheet
-    For Each sheet In TaskUtils.GetAllTaskSheets()
+    For Each sheet In TaskUtils.GetAllNonVirtualSheets()
         Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, Constants.STORAGE_SHEET_PREFIX)
     Next sheet
     

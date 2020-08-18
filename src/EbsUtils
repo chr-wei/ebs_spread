@@ -511,13 +511,13 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     End If
     
     Dim velocity As Double
-    Dim hashSheet As Worksheet
+    Dim taskSheetArea As Range
     
     For hashIdx = 0 To upperLimit
-        Set hashSheet = TaskUtils.GetTaskSheetArea(CStr(hashes(hashIdx)))
+        Set taskSheetArea = TaskUtils.GetTaskSheetArea(CStr(hashes(hashIdx)))
         
         'Read the velocity from the sheet's cell
-        velocity = TaskUtils.GetVelocity(hashSheet)
+        velocity = TaskUtils.GetVelocity(taskSheetArea)
         
         'Check velocity val - cannot be negative
         If velocity <> -1 Then
