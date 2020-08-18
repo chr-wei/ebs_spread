@@ -454,7 +454,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
         'Adjust formatting of the planning sheet cell to display the enterd value correctly
         Select Case ues
         Case UserEstimateStatus.ceValidHours, UserEstimateStatus.ceValidDate
-            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheetArea(hash), CDbl(outputVal), setNewEbsEstimates)
+            Call TaskUtils.SetEstimate(TaskUtils.LoadTaskSheet(hash), CDbl(outputVal), setNewEbsEstimates)
             changedCell.Value = outputVal
             changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
                 
@@ -472,7 +472,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                 
             changedCell.Value = placeholder
             changedCell.NumberFormat = "General"
-            Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheetArea(hash), placeholder, setNewEbsEstimates)
+            Call TaskUtils.SetEstimate(TaskUtils.LoadTaskSheet(hash), placeholder, setNewEbsEstimates)
         End Select
     End If
 End Function
@@ -490,10 +490,10 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
     If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     'Set the value to the task sheet
-    Dim sheet As Worksheet
-    Set sheet = TaskUtils.GetTaskSheetArea(hash)
+    Dim sheetArea As Range
+    Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
     
-    Call TaskUtils.SetKanbanList(sheet, changedCell.Value)
+    Call TaskUtils.SetKanbanList(sheetArea, changedCell.Value)
                 
     Dim finishedOnCell As Range
     Set finishedOnCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
@@ -521,12 +521,12 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
         Select Case (changedCell.Value)
         Case Constants.KANBAN_LIST_DONE
             
-            'When the task is changed to 'done' the end time stamp in the sheet can be set. It is set to the last
+            'When the task is changed to 'done' the end time stamp in the sheetArea can be set. It is set to the last
             'time the user tracked time for this task. If no time was tracked the time stamp is set to 'Now'
             'The handling of finished on time can be turned of
                 
             Dim lastStamp As Double
-            lastStamp = CDbl(TaskUtils.GetLastEndTimestamp(sheet))
+            lastStamp = CDbl(TaskUtils.GetLastEndTimestamp(sheetArea))
                 
             Dim datee As Date
                     
@@ -543,7 +543,7 @@ Function ManageKanbanListChange(changedCell As Range, Optional changeFinishedOnD
             finishedOnCell.Value = Constants.N_A
         End Select
         
-        'Manage finished on date change for planning and task sheet manually
+        'Manage finished on date change for planning and task sheetArea manually
         Call Planning.ManageFinishedOnDateChange(finishedOnCell)
     End If
   
