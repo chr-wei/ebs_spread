@@ -40,14 +40,16 @@ Function ExportVisibleTasks()
     If Not visibleTasks Is Nothing Then
         'In case there are visible hashes store them to a special virtual storage sheet.
         
-        Dim sheet As Worksheet
+        Dim sheetArea As Range
         Dim cll As Range
         
         For Each cll In visibleTasks
-            Set sheet = TaskUtils.GetTaskSheetArea(cll.Value)
+            'Todo: Improve: Use virtual storage and omit loading task sheet if virtual sheet exist. Pass virtual range directly.
+            Set sheetArea = TaskUtils.LoadTaskSheet(cll.Value)
             'Store the sheet in a special virtual sheet with EXIMPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
             'be available inside this script
-            Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, EXIMPORT_SHEET_PREFIX, False)
+            
+            Call VirtualSheetUtils.StoreAsVirtualSheet(sheetArea, EXIMPORT_SHEET_PREFIX, False)
         Next cll
     End If
 End Function

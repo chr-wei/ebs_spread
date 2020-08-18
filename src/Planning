@@ -614,7 +614,10 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     hash = PlanningUtils.GetTaskHash(changedCell)
     If Not SanityUtils.CheckHash(hash) Then Exit Function
     
-    Call TaskUtils.SetContributor(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
+    Dim sheet As Worksheet
+    Set sheet = TaskUtils.LoadTaskSheet(hash)
+    
+    Call TaskUtils.SetContributor(sheet, changedCell.Value)
     
     Dim contributorCells As Range
     Set contributorCells = PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData)
@@ -629,23 +632,21 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     
     If setNewEbsEstimates Then
         'If the contributor changes the database for estimates changes as well. Recalculate
-        Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheetArea(hash)
         Call TaskUtils.SetEbsEstimates(sheet, TaskUtils.GetEstimate(sheet))
     End If
 End Function
 
 Function ManageDueDateChange(changedCell As Range)
-    'Copy the due date to the task sheet
+    'Copy the due date to the task sheetArea
     
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheetArea(hash)
+        Dim sheetArea As Variant
+        Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
         
         If IsDate(changedCell.Value) Then
-            Call TaskUtils.SetDueDate(sheet, CDate(changedCell.Value))
+            Call TaskUtils.SetDueDate(sheetArea, CDate(changedCell.Value))
         Else
             Select Case changedCell.Value
             Case "", Constants.N_A
@@ -655,7 +656,7 @@ Function ManageDueDateChange(changedCell As Range)
                 changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
-            Call TaskUtils.UnsetDueDate(sheet)
+            Call TaskUtils.UnsetDueDate(sheetArea)
         End If
     End If
 End Function
@@ -666,11 +667,11 @@ Function ManageFinishedOnDateChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Dim sheet As Worksheet
-        Set sheet = TaskUtils.GetTaskSheetArea(hash)
+        Dim sheetArea As Variant
+        Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
         
         If IsDate(changedCell.Value) Then
-            Call TaskUtils.SetFinishedOnDate(sheet, CDate(changedCell.Value))
+            Call TaskUtils.SetFinishedOnDate(sheetArea, CDate(changedCell.Value))
         Else
             Select Case changedCell.Value
             Case "", Constants.N_A
@@ -680,7 +681,7 @@ Function ManageFinishedOnDateChange(changedCell As Range)
                 changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
-            Call TaskUtils.UnsetFinishedOnDate(sheet)
+            Call TaskUtils.UnsetFinishedOnDate(sheetArea)
         End If
     End If
 End Function

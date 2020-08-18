@@ -93,7 +93,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     
     If entryAdded Then
         'Create a new task sheet
-        Call TaskUtils.GetTaskSheetArea(newHash)
+        Call TaskUtils.AddTaskSheet(newHash)
         
         'Select the title of the created task
         Dim title As Range
@@ -298,17 +298,17 @@ Function EndAllTasks()
     
     'Ends the tracking of all tasks: Add finish timestamp, delete indicators
     
-    Dim sheetArea As Variant
+    Dim item As Variant
 
     'Set end times in all task sheets. Multiple started task should never exist. As precaution we always stop all tasks
     'in order to maintain a healthy state
-    For Each sheetArea In TaskUtils.GetAllNonVirtualSheets()
-        Call TaskUtils.SetEndTimeToSheetTracking(sheetArea)
-    Next sheetArea
+    For Each item In TaskUtils.GetAllNonVirtualSheets()
+        Call TaskUtils.SetEndTimeToSheetTracking(item)
+    Next item
     
-    For Each sheetArea In VirtualSheetUtils.GetAllVirtualSheets(Constants.STORAGE_SHEET_PREFIX)
-        Call TaskUtils.SetEndTimeToSheetTracking(sheetArea)
-    Next sheetArea
+    For Each item In VirtualSheetUtils.GetAllVirtualSheets(Constants.STORAGE_SHEET_PREFIX)
+        Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(CStr(item)))
+    Next item
 
     'After setting end times to all task sheets we delete the '<current'tracker in the main sheet as well
     Dim indicatorCells As Range
@@ -335,7 +335,7 @@ Function DeleteSelectedTask()
     If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
-        Call Utils.DeleteWorksheetSilently(TaskUtils.GetTaskSheetArea(hash))
+        Call Utils.DeleteWorksheetSilently(TaskUtils.LoadTaskSheet(hash))
         Call Utils.DeleteFilteredListObjectRow(entryCell)
     End If
 End Function
@@ -605,7 +605,9 @@ Function CopyTask(newHash As String, sourceListHash As String)
     
     'Save the data sheet of the source task to a special virtual sheet
     Dim sourceSheet As Worksheet
-    Set sourceSheet = TaskUtils.GetTaskSheetArea(sourceListHash)
+    
+    'Todo: Improve speed: Read task sheet range directly and omit loading task sheet
+    Set sourceSheet = TaskUtils.LoadTaskSheet(sourceListHash)
     Call VirtualSheetUtils.StoreAsVirtualSheet(sourceSheet, Constants.COPY_STORAGE_SHEET_PREFIX, False)
     
     'Change the tHash of the stored task
@@ -1118,7 +1120,7 @@ Function CollectTotalTimesSpent()
     Const FN As String = "PlanningUtils.CollectTotalTimesSpent"
     Call MessageUtils.InvokeFnMsg(FN)
             
-    'For every task on planning sheet that is currently visible collect the total time the user has spent on it
+    'For every task on planning sheetArea that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
     Set timeCells = Base.IntersectN( _
                     PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
@@ -1128,16 +1130,16 @@ Function CollectTotalTimesSpent()
     
     Dim cell As Range
     Dim hash As String
-    Dim sheet As Worksheet
+    Dim sheetArea As Range
     Dim totalTime
     
     For Each cell In timeCells
-        'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheet
+        'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
         hash = PlanningUtils.GetTaskHash(cell)
         
         If SanityUtils.CheckHash(hash) Then
-            Set sheet = TaskUtils.GetTaskSheetArea(hash)
-            totalTime = TaskUtils.GetTaskTotalTime(sheet)
+            Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
+            totalTime = TaskUtils.GetTaskTotalTime(sheetArea)
             cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
             cell.Value = totalTime
         End If
