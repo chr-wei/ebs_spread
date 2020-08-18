@@ -120,7 +120,7 @@ Function BuildStl()
     Set summedDeltaCol = Analysis.GetStlColumn(TIME_SPENT_HEADER, ceData)
     
     For Each taskCell In visibleTasks
-        Set taskSheet = TaskUtils.GetTaskSheet(taskCell.Value)
+        Set taskSheet = TaskUtils.GetTaskSheetArea(taskCell.Value)
         
         'Prepare the task time columns and value arrays
         Dim tStartCol As Range

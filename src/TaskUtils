@@ -65,9 +65,9 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
     End If
 End Function
 
-Function GetTaskSheet(hash As String) As Worksheet
-    Const FN As String = "GetTaskSheet"
-    'Return the task sheet to a given hash. Has a safety mechanism to always create a task sheet if no sheet could be found.
+Function LoadTaskSheet(hash As String) As Worksheet
+    Const FN As String = "LoadTaskSheet"
+    'Loads the task sheet from virtual storage (if sheet is virtual) and puts content to a separate Worksheet.
     '
     'Input args:
     '   hash:       The hash of the task
@@ -81,7 +81,7 @@ Function GetTaskSheet(hash As String) As Worksheet
     End If
     
     If Utils.SheetExists(hash) Then
-        Set GetTaskSheet = ThisWorkbook.Worksheets(hash)
+        Set LoadTaskSheet = ThisWorkbook.Worksheets(hash)
         
     ElseIf VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
         
@@ -108,13 +108,30 @@ Function GetTaskSheet(hash As String) As Worksheet
             ThisWorkbook.Worksheets(PLANNING_SHEET_NAME).Activate
         End If
         
-        Set GetTaskSheet = loadedSheet
+        Set LoadTaskSheet = loadedSheet
     
     Else
+        Call MessageUtils.HandleMessage("Cannot find task sheet '" & hash & "'.", _
+                                        ceError, FN)
+    End If
+End Function
+
+Function AddTaskSheet(hash As String) As Worksheet
+    Const FN As String = "AddTaskSheet"
+    'Adds a sheet for the new task and returns it as reference
+    '
+    'Input args:
+    '   hash:       The hash of the task
+        
+    If Utils.SheetExists(hash) Or _
+        VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
+        
+        Call MessageUtils.HandleMessage("Task sheet '" & hash & "' already exists.", _
+                                        ceError, FN)
+        Set AddTaskSheet = Nothing
+        
+    Else
         'Add a new worksheet with HASH as name if no sheet exists
-        Call MessageUtils.HandleMessage("Cannot find task sheet '" & hash & "'. Create new sheet as fallback.", _
-                                        ceInfo, FN)
-                
         Call ThisWorkbook.Worksheets(TASK_SHEET_TEMPLATE_NAME).Copy(after:=ThisWorkbook.Worksheets(Constants.PLANNING_SHEET_NAME))
 
         'Go back to overview worksheet as copying jumps to the new sheet
@@ -125,7 +142,22 @@ Function GetTaskSheet(hash As String) As Worksheet
         sheet.name = hash
 
         Call TaskUtils.SetHash(sheet, hash)
-        Set GetTaskSheet = sheet
+        Set AddTaskSheet = sheet
+    End If
+End Function
+
+Function GetTaskSheetArea(hash As String) As Range
+    Const FN As String = "GetTaskSheetArea"
+     
+    If Utils.SheetExists(hash) Then
+        Set GetTaskSheetArea = ThisWorkbook.Worksheets(hash).UsedRange
+        
+    ElseIf VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
+        Set GetTaskSheetArea = VirtualSheetUtils.GetVirtualStorageDataRange(hash, Constants.STORAGE_SHEET_PREFIX)
+    
+    Else
+        Call MessageUtils.HandleMessage("Cannot find task sheet '" & hash & "'.", _
+                                        ceError, FN)
     End If
 End Function
 
