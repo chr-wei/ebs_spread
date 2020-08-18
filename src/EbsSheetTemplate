@@ -13,5 +13,5 @@ Private Sub Worksheet_Change(ByVal Target As Range)
         Exit Sub
     End If
     
-    Call Utils.RunTryCatchedCall("EbsUtils.HandleEbsSheetChanges", , Target, screenUpdating:=False)
+    Call Utils.RunTryCatchedCall(f:="HandleEbsSheetChanges", obj:=EbsUtils, arg1:=Target, screenUpdating:=False)
 End Sub
