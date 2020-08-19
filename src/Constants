@@ -20,7 +20,7 @@ Attribute VB_Name = "Constants"
 Option Explicit
 
 'Debugging flag: Disables error catching and changes message handling
-Public Const DEBUGGING_MODE As Boolean = True
+Public Const DEBUGGING_MODE As Boolean = False
 Public Const VERBOSE_OUTPUT As Boolean = False
 
 'Planning sheet constants

@@ -349,33 +349,39 @@ Function SetTaskName(sheetArea As Variant, name As String)
     Call Utils.SetSingleDataCell(sheetArea, TASK_NAME_HEADER, name)
 End Function
 
-Function SetEstimate(sheet As Worksheet, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
+Function SetEstimate(sheetArea As Variant, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
     Const FN As String = "SetEstimate"
-    'Wrapper to set the user estimate to the task sheet
-    'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheet for consistency reasons.
+    'Wrapper to set the user estimate to the task sheetArea
+    'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheetArea for consistency reasons.
     '
-    'Do only add set loaded sheet (Worksheet) and do not pass a range to param 'sheet' as added estimates will result in increased sheet size.
-    'This is not handled properly if a virtual sheet range is passed.
+    'Do only add set loaded sheetArea (Worksheet) and do not pass a range to param 'sheetArea' as added estimates will result in increased sheetArea size.
+    'This is not handled properly if a virtual sheetArea range is passed.
     '
     '
     'Input args:
-    '   sheet:              The task sheet you want to set an estimate to
+    '   sheetArea:          The task sheet (range) you want to set an estimate to
     '   userEstimate:       The estimate value
     '   setNewEbsEstimates: Flag stating whether new EBS estimates based on the current velocity pool of the contributor shall be calculated.
     '                       These estimates can be used to check the EBS estimate mechanism
     
     'Check args:
-    If sheet Is Nothing Then Exit Function
-
-    Call Utils.SetSingleDataCell(sheet, TASK_ESTIMATE_HEADER, userEstimate)
+    If sheetArea Is Nothing Then Exit Function
+    
+    If TypeName(sheetArea) = "Range" And setNewEbsEstimates Then
+        Call MessageUtils.HandleMessage("Recalculating ebs estimates of tasks sheet cannot be done with sheet range. Pass a worksheet param instead.", _
+                                            ceError, FN)
+        Exit Function
+    End If
+    
+    Call Utils.SetSingleDataCell(sheetArea, TASK_ESTIMATE_HEADER, userEstimate)
     
     If setNewEbsEstimates Then
         If IsNumeric(userEstimate) Then
-            Call TaskUtils.SetEbsEstimates(sheet, CDbl(userEstimate))
+            Call TaskUtils.SetEbsEstimates(sheetArea, CDbl(userEstimate))
         Else
             'Clear the ebs list entries if invalid data was passed
             Dim br As Range
-            Set br = TaskUtils.GetEbsListBodyRange(sheet)
+            Set br = TaskUtils.GetEbsListBodyRange(sheetArea)
             
             If Not br Is Nothing Then br.Delete
         End If
@@ -494,8 +500,8 @@ Function GetTimeListBodyRange(sheet As Worksheet) As Range
     End If
 End Function
 
-Function SetHash(sheet As Worksheet, hash As String)
-    Call Utils.SetSingleDataCell(sheet, T_HASH_HEADER, hash)
+Function SetHash(sheetArea As Variant, hash As String)
+    Call Utils.SetSingleDataCell(sheetArea, T_HASH_HEADER, hash)
 End Function
 
 Function SetKanbanList(sheetArea As Variant, list As String)
@@ -506,11 +512,11 @@ Function SetContributor(sheetArea As Variant, contributor As String)
     Call Utils.SetSingleDataCell(sheetArea, CONTRIBUTOR_HEADER, contributor)
 End Function
 
-Function SetDueDate(sheetArea As Worksheet, datee As Date)
+Function SetDueDate(sheetArea As Variant, datee As Date)
     Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, datee)
 End Function
 
-Function UnsetDueDate(sheetArea As Worksheet)
+Function UnsetDueDate(sheetArea As Variant)
     Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, Constants.N_A)
 End Function
 
@@ -595,6 +601,18 @@ Function GetName(sheetArea As Variant) As String
     '  sheetArea:  The range to retrieve the val from
     
     GetName = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_NAME_HEADER)
+End Function
+
+Function GetHash(sheetArea As Variant) As String
+    'Wrapper to get the hash from the sheet. "" if hash is invalid
+    '
+    'Input args:
+    '  sheetArea:  The range to retrieve the val from
+    Dim hash As String: hash = Utils.GetSingleDataCellVal(sheetArea, Constants.T_HASH_HEADER)
+    
+    If SanityUtils.CheckHash(hash) Then
+        GetHash = hash
+    End If
 End Function
 
 Function GetContributor(sheetArea As Variant) As String
@@ -766,7 +784,7 @@ Function VirtualizeTaskSheets()
     
     Dim sheet As Worksheet
     For Each sheet In TaskUtils.GetAllNonVirtualSheets()
-        Call VirtualSheetUtils.StoreAsVirtualSheet(sheet, Constants.STORAGE_SHEET_PREFIX)
+        Call VirtualSheetUtils.StoreAsVirtualSheet(sheet.name, sheet, Constants.STORAGE_SHEET_PREFIX)
     Next sheet
     
     'We do not want to see the storage sheet(s). Hide it / them.
