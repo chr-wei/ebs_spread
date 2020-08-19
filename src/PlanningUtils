@@ -93,7 +93,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     
     If entryAdded Then
         'Create a new task sheet
-        Call TaskUtils.GetTaskSheet(newHash)
+        Call TaskUtils.AddTaskSheet(newHash)
         
         'Select the title of the created task
         Dim title As Range
@@ -123,11 +123,11 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     'Init output
     AddNewTaskLine = False
     
-    Dim hashExists As Boolean
-    hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
+    Dim HashExists As Boolean
+    HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
     
     'Check args
-    If StrComp(hash, "") = 0 Or hashExists Then
+    If StrComp(hash, "") = 0 Or HashExists Then
         'Do not add a new entry if the hash already exists or if the hash is empty
         Exit Function
     End If
@@ -194,7 +194,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Call PlanningUtils.OrganizePrioColumn
     
     'Search for the hash here as tasks can get reordered with priority sorting
-    Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet, hash)
+    Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
     
     AddNewTaskLine = True
 End Function
@@ -298,17 +298,21 @@ Function EndAllTasks()
     
     'Ends the tracking of all tasks: Add finish timestamp, delete indicators
     
-    Dim sheet As Worksheet
+    Dim item As Variant
 
     'Set end times in all task sheets. Multiple started task should never exist. As precaution we always stop all tasks
-    'in order to maintain a healthy document
-    For Each sheet In TaskUtils.GetAllTaskSheets()
-        Call TaskUtils.SetEndTimeToSheetTracking(sheet)
-    Next sheet
+    'in order to maintain a healthy state
+    For Each item In TaskUtils.GetAllNonVirtualSheets()
+        Call TaskUtils.SetEndTimeToSheetTracking(item)
+    Next item
+    
+    For Each item In VirtualSheetUtils.GetAllVirtualSheets(Constants.STORAGE_SHEET_PREFIX)
+        Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(CStr(item)))
+    Next item
 
     'After setting end times to all task sheets we delete the '<current'tracker in the main sheet as well
     Dim indicatorCells As Range
-    Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, Constants.INDICATOR)
+    Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.INDICATOR)
     
     If Not indicatorCells Is Nothing Then
         indicatorCells.Value = ""
@@ -331,7 +335,7 @@ Function DeleteSelectedTask()
     If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
-        Call Utils.DeleteWorksheetSilently(TaskUtils.GetTaskSheet(hash))
+        Call Utils.DeleteWorksheetSilently(TaskUtils.LoadTaskSheet(hash))
         Call Utils.DeleteFilteredListObjectRow(entryCell)
     End If
 End Function
@@ -358,8 +362,8 @@ Function StartSelectedTask()
     If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
-        'Fetch the sheets
-        Set taskSheet = TaskUtils.GetTaskSheet(hash)
+        'Fetch the sheets. Load a real task sheet as table entry will be added.
+        Set taskSheet = TaskUtils.LoadTaskSheet(hash)
         Set planningSheet = PlanningUtils.GetPlanningSheet
         
         'Add a new time entry for the selected task. Check if this was successful
@@ -601,7 +605,9 @@ Function CopyTask(newHash As String, sourceListHash As String)
     
     'Save the data sheet of the source task to a special virtual sheet
     Dim sourceSheet As Worksheet
-    Set sourceSheet = TaskUtils.GetTaskSheet(sourceListHash)
+    
+    'Todo: Improve speed: Read task sheet range directly and omit loading task sheet
+    Set sourceSheet = TaskUtils.LoadTaskSheet(sourceListHash)
     Call VirtualSheetUtils.StoreAsVirtualSheet(sourceSheet, Constants.COPY_STORAGE_SHEET_PREFIX, False)
     
     'Change the tHash of the stored task
@@ -877,7 +883,7 @@ Function CollectEbsColData(headerCell As Range)
     
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.test(header) Then
+    If regex.Test(header) Then
         'If the header text of the cell is an ebs col header: read the col propability of the estimates to be displayed
         Dim matches As MatchCollection
         Set matches = regex.Execute(header)
@@ -1034,12 +1040,12 @@ r2yNextCell:
                 hash = PlanningUtils.GetTaskHash(cell)
                     
                 'Read the task sheet
-                Dim taskSheet As Worksheet
-                Set taskSheet = TaskUtils.GetTaskSheet(hash)
+                Dim taskSheetArea As Range
+                Set taskSheetArea = TaskUtils.GetTaskSheetArea(hash)
                     
                 'Actually multiple cells are read here and converted to an array afterwards
-                Set supportPointsCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
-                Set estimateCell = TaskUtils.GetEbsListColumn(taskSheet, Constants.EBS_SELF_TIME_HEADER, ceData)
+                Set supportPointsCell = TaskUtils.GetEbsListColumn(taskSheetArea, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
+                Set estimateCell = TaskUtils.GetEbsListColumn(taskSheetArea, Constants.EBS_SELF_TIME_HEADER, ceData)
                     
                 If supportPointsCell Is Nothing Or estimateCell Is Nothing Then
                     GoTo g5hNextCell
@@ -1114,7 +1120,7 @@ Function CollectTotalTimesSpent()
     Const FN As String = "PlanningUtils.CollectTotalTimesSpent"
     Call MessageUtils.InvokeFnMsg(FN)
             
-    'For every task on planning sheet that is currently visible collect the total time the user has spent on it
+    'For every task on planning sheetArea that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
     Set timeCells = Base.IntersectN( _
                     PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
@@ -1124,16 +1130,16 @@ Function CollectTotalTimesSpent()
     
     Dim cell As Range
     Dim hash As String
-    Dim sheet As Worksheet
+    Dim sheetArea As Range
     Dim totalTime
     
     For Each cell In timeCells
-        'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheet
+        'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
         hash = PlanningUtils.GetTaskHash(cell)
         
         If SanityUtils.CheckHash(hash) Then
-            Set sheet = TaskUtils.GetTaskSheet(hash)
-            totalTime = TaskUtils.GetTaskTotalTime(sheet)
+            Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
+            totalTime = TaskUtils.GetTaskTotalTime(sheetArea)
             cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
             cell.Value = totalTime
         End If
@@ -1147,7 +1153,7 @@ Function UpdateAllEbsCols()
     'Find all ebs cols on planning sheet and call the update function for them
     
     Dim colHeaderCells As Range
-    Set colHeaderCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet, Constants.EBS_COLUMN_REGEX, ceRegex)
+    Set colHeaderCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.EBS_COLUMN_REGEX, ceRegex)
     Dim headerCell As Range
     
     For Each headerCell In colHeaderCells
@@ -1181,7 +1187,7 @@ Function FollowTaskSheetLink(Target As hyperlink)
     
     If StrComp(Target.subAddress, Constants.TASK_SHEET_STD_LINK) = 0 Then
         Dim taskSheet As Worksheet
-        Set taskSheet = TaskUtils.GetTaskSheet(PlanningUtils.GetTaskHash(Target.Parent))
+        Set taskSheet = TaskUtils.LoadTaskSheet(PlanningUtils.GetTaskHash(Target.Parent))
         
         If Not taskSheet Is Nothing Then
             taskSheet.Visible = XlSheetVisibility.xlSheetVisible
@@ -1198,7 +1204,7 @@ Function GetTagHeaderCells() As Range
     Call MessageUtils.InvokeFnMsg(FN)
         
     'Returns all headers for tags
-    Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
+    Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet.UsedRange, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
 End Function
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
@@ -1277,8 +1283,8 @@ Function GetVisibleTasks() As Range
     Set GetVisibleTasks = visibleHashes
 End Function
 
-Function hashExists(hash As String) As Boolean
-    hashExists = Not Utils.FindSheetCell(GetPlanningSheet, hash) Is Nothing
+Function HashExists(hash As String) As Boolean
+    HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
 End Function
 
 Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String = "")
@@ -1292,9 +1298,9 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     '   taskNamePostfix:      The postfix appended to the processed task name
     
     'Do not call this method with enabled events as it may have problematic consequences
-        
+    
     'Check args
-    If TaskUtils.GetTaskSheet(syncedHash) Is Nothing Then Exit Function
+    If TaskUtils.GetTaskSheetArea(syncedHash) Is Nothing Then Exit Function
     
     If Application.EnableEvents = True Then
         Call MessageUtils.HandleMessage("Do not run this function with enabled events. Trouble ahead - exiting function.", _
@@ -1305,7 +1311,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     
     'First add a new task and return the cell of the entry to have a reference for further copying
     Dim doBacksync As Boolean
-    doBacksync = PlanningUtils.hashExists(syncedHash)
+    doBacksync = PlanningUtils.HashExists(syncedHash)
     
     If doBacksync Then
         'Task could be found in planning sheet. Backsync the task
@@ -1350,6 +1356,10 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     End If
     
     'Copy fields and handle changes if needed
+    
+    Dim taskSheetArea As Range
+    Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
+    
     For Each header In copiedFields
         Dim unifiedHeader As String
         unifiedHeader = Planning.UnifyTagName(CStr(header))
@@ -1363,8 +1373,8 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                         
             Dim readSerTagHeaders As String
             Dim readSerTagValues As String
-            readSerTagHeaders = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_HEADERS_HEADER)
-            readSerTagValues = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), Constants.SERIALIZED_TAGS_VALUES_HEADER)
+            readSerTagHeaders = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+            readSerTagValues = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER)
                         
             Dim readTagHeaders() As String
             Dim readTagValues() As String
@@ -1392,7 +1402,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                     
         Case Else
             'Just pass the header here to retrieve the value of the sheet
-            existingVal = Utils.GetSingleDataCellVal(TaskUtils.GetTaskSheet(syncedHash), CStr(header))
+            existingVal = Utils.GetSingleDataCellVal(taskSheetArea, CStr(header))
         End Select
         
         'Now save the value to the new task and run handlers
@@ -1493,5 +1503,5 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
         PlanningUtils.EndAllTasks
     End If
     
-    Call TaskUtils.AddNewTrackingEntry(TaskUtils.GetTaskSheet(CStr(hash)), CDbl(deltaT))
+    Call TaskUtils.AddNewTrackingEntry(TaskUtils.LoadTaskSheet(CStr(hash)), CDbl(deltaT))
 End Function
