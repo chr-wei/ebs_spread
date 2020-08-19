@@ -306,6 +306,10 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
             Call SetEndTimeToSheetTracking(sheet, Now)
         End If
         
+           
+        'Add special functions to the currently ended tracking entry which let you control delta time calculation (see also 'TaskUtils.HandleFollowHyperlink')
+        Call TaskUtils.AddSpecialActionsToTimeListRow(sheet, startTimeCell)
+    
         AddNewTrackingEntry = True
     End If
 End Function
@@ -338,9 +342,6 @@ Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date =
     
     'Reset the indicator cell
     trackingEntry.Value = ""
-    
-    'Add special functions to the currently ended tracking entry which let you control delta time calculation (see also 'TaskUtils.HandleFollowHyperlink')
-    'Call TaskUtils.AddSpecialActionsToTimeListRow(sheetArea, trackingEntry) ToDo: Feature disabled as it will be moved and called with Worksheet param
 End Function
 
 Function SetTaskName(sheetArea As Variant, name As String)
