@@ -604,26 +604,20 @@ Function CopyTask(newHash As String, sourceListHash As String)
     Call MessageUtils.InvokeFnMsg(FN)
     
     'Save the data sheet of the source task to a special virtual sheet
-    Dim sourceSheet As Worksheet
+    Dim sourceSheetArea As Range
     
     'Todo: Improve speed: Read task sheet range directly and omit loading task sheet
-    Set sourceSheet = TaskUtils.LoadTaskSheet(sourceListHash)
-    Call VirtualSheetUtils.StoreAsVirtualSheet(sourceSheet, Constants.COPY_STORAGE_SHEET_PREFIX, False)
-    
-    'Change the tHash of the stored task
-    Call PlanningUtils.RewriteCopiedSheetHash(newHash)
+    Set sourceSheetArea = TaskUtils.GetTaskSheetArea(sourceListHash)
 
-    'Reload the virtual sheet and backsync the task to the planning sheet
-    If VirtualSheetUtils.VirtualSheetExists(newHash, Constants.COPY_STORAGE_SHEET_PREFIX) Then
-        Dim loadedSheet As Worksheet
-        Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(newHash, Constants.COPY_STORAGE_SHEET_PREFIX, _
-                                                             ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
-        If Not loadedSheet Is Nothing Then
-            Call TaskUtils.SetHash(loadedSheet, newHash)
-            
-            Call PlanningUtils.BacksyncTask(syncedHash:=newHash, _
-                                            taskNamePostfix:=" (copy)")
-        End If
+    Dim targetSheetArea As Range
+    Set targetSheetArea = VirtualSheetUtils.StoreAsVirtualSheet(newHash, sourceSheetArea, Constants.STORAGE_SHEET_PREFIX, False)
+    
+    If Not targetSheetArea Is Nothing Then
+        'Change the tHash of the stored task
+        Call TaskUtils.SetHash(targetSheetArea, newHash)
+        
+        'Backsync the task to the planning sheet to make it appear in the list
+        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, taskNamePostfix:=" (copy)")
     End If
 End Function
 
@@ -1310,11 +1304,11 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     End If
     
     'First add a new task and return the cell of the entry to have a reference for further copying
-    Dim doBacksync As Boolean
-    doBacksync = PlanningUtils.HashExists(syncedHash)
+    Dim doRepairingBacksync As Boolean
+    doRepairingBacksync = PlanningUtils.HashExists(syncedHash)
     
-    If doBacksync Then
-        'Task could be found in planning sheet. Backsync the task
+    If doRepairingBacksync Then
+        'Task could be found in planning sheet. Backsync the task in repairng mode (no new ebs estimats will be generated for the task)
         Call MessageUtils.HandleMessage("Backsynced task '" & syncedHash & "'", _
                                         ceInfo, FN)
     Else
@@ -1356,9 +1350,14 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     End If
     
     'Copy fields and handle changes if needed
+            
+    Dim taskSheetArea As Variant
     
-    Dim taskSheetArea As Range
-    Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
+    If doRepairingBacksync Then
+        Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
+    Else
+        Set taskSheetArea = TaskUtils.LoadTaskSheet(syncedHash)
+    End If
     
     For Each header In copiedFields
         Dim unifiedHeader As String
@@ -1444,7 +1443,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                 'Handle contributor change without cell validation update. This causes cell validation to fail
                 'Also do not update the EBS estimates of the copied task
                 cell.Value = existingVal
-                Call Planning.ManageContributorChange(cell, False, False)
+                Call Planning.ManageContributorChange(cell, False, Not doRepairingBacksync)
                 
             Case DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
                 If IsDate(existingVal) Then
@@ -1470,13 +1469,6 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
         'At the end sort the tasks with their priorities
         PlanningUtils.OrganizePrioColumn
     End Function
-
-Function RewriteCopiedSheetHash(newHash As String)
-    Dim nameCell As Range
-    'There should only be one virtual sheet inside the storage sheet. Load it.
-    Set nameCell = VirtualSheetUtils.GetAllVirtualSheets(Constants.COPY_STORAGE_SHEET_PREFIX).Items(0)
-    nameCell.Value = newHash
-End Function
 
 Function GetPlanningSelection() As Range
     'Activate planning sheet to get valid selection

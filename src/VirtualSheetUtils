@@ -33,9 +33,9 @@ Const VIRTUAL_SHEET_STOR_COLS_HEADER As String = "VIRTUAL_SHEET_RANGE_COLS"
 Const VIRTUAL_SHEET_OFFSET As Integer = 2
 
 Sub Test_StoreAsVirtualSheet()
-    Call StoreAsVirtualSheet(Worksheets("test_sheet"), Constants.STORAGE_SHEET_PREFIX)
-    Call StoreAsVirtualSheet(Worksheets("full_sheet"), Constants.STORAGE_SHEET_PREFIX)
-    Call StoreAsVirtualSheet(Worksheets("too_much"), Constants.STORAGE_SHEET_PREFIX)
+    Call StoreAsVirtualSheet("test_sheet", Worksheets("test_sheet"), Constants.STORAGE_SHEET_PREFIX)
+    Call StoreAsVirtualSheet("full_sheet", Worksheets("full_sheet"), Constants.STORAGE_SHEET_PREFIX)
+    Call StoreAsVirtualSheet("too_much", Worksheets("too_much"), Constants.STORAGE_SHEET_PREFIX)
 End Sub
 
 Sub Test_LoadVirtualSheet()
@@ -44,56 +44,73 @@ Sub Test_LoadVirtualSheet()
     Call LoadVirtualSheet("too_much", Constants.STORAGE_SHEET_PREFIX)
 End Sub
 
-Function StoreAsVirtualSheet(inSheet As Worksheet, storagePrefix As String, Optional deleteNonVirtualSheet As Boolean = True)
+Function StoreAsVirtualSheet(name As String, inSheetArea As Variant, storagePrefix As String, Optional deleteNonVirtualSheet As Boolean = True) As Range
     Const FN As String = "StoreAsVirtualSheet"
     Call MessageUtils.InvokeFnMsg(FN)
     
     'This function stores a real worksheet inside a storage sheet. The range in which the source sheet is stored is called a 'virtual' sheet
     '
     'Input args:
-    '   inSheet:                The real worksheet that shall be stored
+    '   inSheetArea:            The worksheet (range) that shall be stored
     '   storagePrefix:          A prefix to identify the virtual storage sheets
     '   deleteNonVirtualSheet:  Bool stating whether the stored sheet should be removed.
     '                           Duplicate data could be generated if this is set to true - be careful
+    '
+    'Output args:
+    '   StoreAsVirtualSheet:    The range of the stored virtual sheet
     
     'Check args
-    If inSheet Is Nothing Then Exit Function
+    If name = "" Or inSheetArea Is Nothing Or storagePrefix = "" Then Exit Function
     
-    'Get data of the real sheet
+    'Get data range of sheet
     Dim rSheetRng As Range
-    Set rSheetRng = inSheet.UsedRange
+    Select Case TypeName(inSheetArea)
+    Case "Worksheet"
+        Set rSheetRng = inSheetArea.UsedRange
+    Case "Range"
+        Set rSheetRng = inSheetArea
+    Case Else
+        Call MessageUtils.HandleMessage("Variable of type '" & TypeName(inSheetArea) & "' is not a valid input type.'", ceError, FN)
+        Exit Function
+    End Select
     
-    If VirtualSheetUtils.VirtualSheetExists(inSheet.name, storagePrefix) Then
+    'Check if sheet is already present
+    Dim inHash As String
+    inHash = TaskUtils.GetHash(inSheetArea)
+    
+    If VirtualSheetUtils.VirtualSheetExists(inHash, storagePrefix) Then
         'Only store if sheet is not already virtual (check by sheet name)
-        Call MessageUtils.HandleMessage("Cannot store sheet '" & inSheet.name & "' as virtual sheet. Sheet already exists.'", ceError, FN)
+        Call MessageUtils.HandleMessage("Cannot store sheet '" & inHash & "' as virtual sheet. Sheet already exists.'", ceError, FN)
         Exit Function
     End If
     
     'Prepare or get an existing virtual storage sheet
     Dim vSheetStorageRng As Range
-    Set vSheetStorageRng = VirtualSheetUtils.GetNewSheetStorage(inSheet, storagePrefix)
+    Set vSheetStorageRng = VirtualSheetUtils.GetNewSheetStorage(name, inSheetArea, storagePrefix)
        
-    'Copy and paste the whole cell content of inSheet into the virtual storage range
+    'Copy and paste the whole cell content of inSheetArea into the virtual storage range
     rSheetRng.Copy
     Call vSheetStorageRng.PasteSpecial(xlPasteAll)
     
     'Reset copy range to prevent accidentally pasting content to other sheets
     Excel.Application.CutCopyMode = False
     
-    'Delete the inSheet after it has been stored inside the virtual inSheet
-    If deleteNonVirtualSheet Then
-        Call Utils.DeleteWorksheetSilently(inSheet)
+    'Delete the inSheet after it has been stored as virtual sheet
+    If TypeName(inSheetArea) = "Worksheet" And deleteNonVirtualSheet Then
+        Call Utils.DeleteWorksheetSilently(inSheetArea)
     End If
+    
+    Set StoreAsVirtualSheet = vSheetStorageRng
 End Function
 
-Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As Worksheet
+Function GetFreeStorageSheet(inSheetArea As Range, storagePrefix As String) As Worksheet
     Const FN As String = "GetFreeStorageSheet"
     Call MessageUtils.InvokeFnMsg(FN)
     
     'This function manages the virtual storage sheet(s) to store sheets in
     
     'Input args:
-    '   inSheet:                The sheet that will be stored later. Test if enough storage exists.
+    '   inSheetArea:            The sheet that will be stored later. Test if enough storage exists.
     '   storagePrefix:          Prefix used to identify the storage sheet
     '
     'Output args:
@@ -103,14 +120,14 @@ Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As W
     Set GetFreeStorageSheet = Nothing
     
     'Check args
-    If inSheet Is Nothing Then Exit Function
+    If inSheetArea Is Nothing Then Exit Function
 
     Dim item As Variant
     Dim storageSheet As Worksheet
     For Each item In VirtualSheetUtils.GetAllStorageSheets(storagePrefix).Items
         Set storageSheet = item
         'Cycle through all available storage sheets
-        If Not VirtualSheetUtils.StorageIsFull(storageSheet, inSheet) Then
+        If Not VirtualSheetUtils.StorageIsFull(storageSheet, inSheetArea) Then
             'Found a storage sheet with enough space
             Set GetFreeStorageSheet = storageSheet
             Exit Function
@@ -124,7 +141,7 @@ Function GetFreeStorageSheet(inSheet As Worksheet, storagePrefix As String) As W
     Set GetFreeStorageSheet = newStorage
 End Function
 
-Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boolean
+Function StorageIsFull(storageSheet As Worksheet, inSheetArea As Range) As Boolean
     Const FN As String = "StorageIsFull"
     Call MessageUtils.InvokeFnMsg(FN)
     
@@ -132,7 +149,7 @@ Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boole
     '
     'Input args:
     '   storageSheet:   The storage sheet to test
-    '   inSheet:        The sheet (data) that shall be made virtual. Defines the space to reserve
+    '   inSheetArea:    The sheet (data) that shall be made virtual. Defines the space to reserve
     '
     'Output args:
     '   StorageIsFull:  Boolean
@@ -141,13 +158,13 @@ Function StorageIsFull(storageSheet As Worksheet, inSheet As Worksheet) As Boole
     StorageIsFull = False
     
     'Check args
-    If storageSheet Is Nothing Or inSheet Is Nothing Then Exit Function
+    If storageSheet Is Nothing Or inSheetArea Is Nothing Then Exit Function
     
     'Maximum rows that are available in the sheet (const)
     Dim maxRows As Long
     maxRows = storageSheet.Rows.Count
     
-    If Utils.GetBottomLeftCell(storageSheet.UsedRange).Row + VIRTUAL_SHEET_OFFSET + inSheet.UsedRange.Rows.Count <= maxRows Then
+    If Utils.GetBottomLeftCell(storageSheet.UsedRange).Row + VIRTUAL_SHEET_OFFSET + inSheetArea.Rows.Count <= maxRows Then
         'Last row of used storage + offset + rows to store -> too many rows to store / not enough space available
         StorageIsFull = False
     Else
@@ -314,7 +331,7 @@ Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String
     End If
 End Function
 
-Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Range
+Function GetNewSheetStorage(name As String, inSheetArea As Range, storagePrefix As String) As Range
     Const FN As String = "GetNewSheetStorage"
     Call MessageUtils.InvokeFnMsg(FN)
     
@@ -327,14 +344,15 @@ Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Ra
     ' <VSHEET_N>
     '
     'Input args:
-    '   inSheet:        The sheet you want to store and for which storage is reserved
+    '   name:           Name of the storage area
+    '   inSheetArea:    The sheet you want to store and for which storage is reserved
     '   storagePrefix:  Prefix used to identify the storage sheet
     '
     'Output args:   The range the sheet can be stored in (<DATA_AREA>)
     
-    'Get a storage sheet which has enough space to store the data of 'inSheet'
+    'Get a storage sheet which has enough space to store the data of 'inSheetArea'
     Dim freeStorageSheet As Worksheet
-    Set freeStorageSheet = VirtualSheetUtils.GetFreeStorageSheet(inSheet, storagePrefix)
+    Set freeStorageSheet = VirtualSheetUtils.GetFreeStorageSheet(inSheetArea, storagePrefix)
     
     Dim usedRng As Range
     Set usedRng = freeStorageSheet.UsedRange
@@ -352,15 +370,15 @@ Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Ra
     
     'Save name
     vSheetNameHeaderCell.Value = VIRTUAL_SHEET_NAME_HEADER
-    vSheetNameHeaderCell.Offset(0, 1).Value = inSheet.name
+    vSheetNameHeaderCell.Offset(0, 1).Value = name
     
     'Save row count
     vSheetNameHeaderCell.Offset(0, 2).Value = VIRTUAL_SHEET_STOR_ROWS_HEADER
-    vSheetNameHeaderCell.Offset(0, 3).Value = inSheet.UsedRange.Rows.Count
+    vSheetNameHeaderCell.Offset(0, 3).Value = inSheetArea.Rows.Count
     
     'Save col count
     vSheetNameHeaderCell.Offset(0, 4).Value = VIRTUAL_SHEET_STOR_COLS_HEADER
-    vSheetNameHeaderCell.Offset(0, 5).Value = inSheet.UsedRange.Columns.Count
+    vSheetNameHeaderCell.Offset(0, 5).Value = inSheetArea.Columns.Count
     
     'Get the data storage
     Dim tlc As Range                             'tlc = top left cell
@@ -368,7 +386,7 @@ Function GetNewSheetStorage(inSheet As Worksheet, storagePrefix As String) As Ra
     
     'Span a range between top left and bottom right
     Set tlc = Utils.GetBottomNeighbour(vSheetNameHeaderCell)
-    Set brc = tlc.Offset(inSheet.UsedRange.Rows.Count - 1, inSheet.UsedRange.Columns.Count - 1)
+    Set brc = tlc.Offset(inSheetArea.Rows.Count - 1, inSheetArea.Columns.Count - 1)
     
     Set GetNewSheetStorage = freeStorageSheet.Range(tlc, brc)
 End Function
