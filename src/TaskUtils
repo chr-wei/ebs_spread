@@ -132,7 +132,7 @@ Function AddTaskSheet(hash As String) As Worksheet
     End If
     
     If Utils.SheetExists(hash) Or _
-        VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
+                               VirtualSheetUtils.VirtualSheetExists(hash, Constants.STORAGE_SHEET_PREFIX) Then
         
         Call MessageUtils.HandleMessage("Task sheet '" & hash & "' already exists.", _
                                         ceError, FN)
@@ -349,7 +349,7 @@ Function SetTaskName(sheetArea As Variant, name As String)
     Call Utils.SetSingleDataCell(sheetArea, TASK_NAME_HEADER, name)
 End Function
 
-Function SetEstimate(sheetArea As Variant, userEstimate As Variant, Optional setNewEbsEstimates As Boolean = True)
+Function SetEstimate(sheetArea As Variant, userEstimate As Variant, setNewEbsEstimates As Boolean)
     Const FN As String = "SetEstimate"
     'Wrapper to set the user estimate to the task sheetArea
     'It can be non-numeric in case the user entered an invalid value. The value will still be set to the task sheetArea for consistency reasons.
@@ -369,15 +369,17 @@ Function SetEstimate(sheetArea As Variant, userEstimate As Variant, Optional set
     
     If TypeName(sheetArea) = "Range" And setNewEbsEstimates Then
         Call MessageUtils.HandleMessage("Recalculating ebs estimates of tasks sheet cannot be done with sheet range. Pass a worksheet param instead.", _
-                                            ceError, FN)
+                                        ceError, FN)
         Exit Function
+    Else
+    
     End If
     
     Call Utils.SetSingleDataCell(sheetArea, TASK_ESTIMATE_HEADER, userEstimate)
     
     If setNewEbsEstimates Then
         If IsNumeric(userEstimate) Then
-            Call TaskUtils.SetEbsEstimates(sheetArea, CDbl(userEstimate))
+            Call TaskUtils.SetEbsEstimates(Base.CWorksheet(sheetArea), CDbl(userEstimate))
         Else
             'Clear the ebs list entries if invalid data was passed
             Dim br As Range
@@ -793,4 +795,14 @@ Function VirtualizeTaskSheets()
         Set sheet = item
         sheet.Visible = xlSheetHidden
     Next item
+End Function
+
+Function ClearTimeList(sheetArea As Variant)
+    Dim br As Range: Set br = TaskUtils.GetTimeListBodyRange(sheetArea)
+    If Not br Is Nothing Then br.Delete
+End Function
+
+Function ClearEbsList(sheetArea As Variant)
+    Dim br As Range: Set br = TaskUtils.GetEbsListBodyRange(sheetArea)
+    If Not br Is Nothing Then br.Delete
 End Function
