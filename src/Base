@@ -699,3 +699,14 @@ End Function
 Function CRange(rng As Variant) As Range
     Set CRange = rng
 End Function
+
+Function CWorksheet(ws As Variant) As Worksheet
+    Set CWorksheet = ws
+End Function
+
+Function ShiftRight(ByVal value As Long, ByVal shift As Byte) As Long
+    ShiftRight = value
+    If shift > 0 Then
+        ShiftRight = Int(ShiftRight / (2 ^ shift))
+    End If
+End Function

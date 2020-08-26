@@ -605,10 +605,9 @@ Function CopyTask(newHash As String, sourceListHash As String)
     
     'Save the data sheet of the source task to a special virtual sheet
     Dim sourceSheetArea As Range
-    
-    'Todo: Improve speed: Read task sheet range directly and omit loading task sheet
     Set sourceSheetArea = TaskUtils.GetTaskSheetArea(sourceListHash)
 
+    'Pass the source area and store it as a new virtual sheet
     Dim targetSheetArea As Range
     Set targetSheetArea = VirtualSheetUtils.StoreAsVirtualSheet(newHash, sourceSheetArea, Constants.STORAGE_SHEET_PREFIX, False)
     
@@ -616,8 +615,14 @@ Function CopyTask(newHash As String, sourceListHash As String)
         'Change the tHash of the stored task
         Call TaskUtils.SetHash(targetSheetArea, newHash)
         
-        'Backsync the task to the planning sheet to make it appear in the list
-        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, taskNamePostfix:=" (copy)")
+        'Load the task sheet so that the ebs estimate table can be updated (triggered through 'taskWasCopied:=True', see next line)
+        Dim taskSheet As Worksheet
+        Set taskSheet = TaskUtils.LoadTaskSheet(newHash)
+        
+        'Backsync the task to the planning sheet to make it appear in the list. Also update ebs estimates
+        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, taskNamePostfix:=" (copy)", rewriteEbsEstimates:=True)
+        
+        Call TaskUtils.ClearTimeList(taskSheet)
     End If
 End Function
 
@@ -1281,15 +1286,23 @@ Function HashExists(hash As String) As Boolean
     HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
 End Function
 
-Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String = "")
+'set name
+'rewrite ebs estimates
+'set prio
+'handle prio
+'handle comment
+'handle name change
+'handle estimate (ebs estimates)
+'handle tag after last tag field copy
+
+Function BacksyncTask(syncedHash As String)
     Const FN As String = "BacksyncTask"
     Call MessageUtils.InvokeFnMsg(FN)
     
     'Backsync a task from a task sheet.
     '
     'Input args:
-    '   syncedHash:           The hash that the data is imported from. A task sheet with this hash has to exist to make reimport
-    '   taskNamePostfix:      The postfix appended to the processed task name
+    '   syncedHash:             The hash that the data is imported from. A task sheet with this hash has to exist to make reimport
     
     'Do not call this method with enabled events as it may have problematic consequences
     
@@ -1299,20 +1312,20 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     If Application.EnableEvents = True Then
         Call MessageUtils.HandleMessage("Do not run this function with enabled events. Trouble ahead - exiting function.", _
                                         ceError, FN)
-        Debug.Print
         Exit Function
     End If
     
     'First add a new task and return the cell of the entry to have a reference for further copying
-    Dim doRepairingBacksync As Boolean
-    doRepairingBacksync = PlanningUtils.HashExists(syncedHash)
+    Dim taskIsOnPlanningSheet As Boolean
+    taskIsOnPlanningSheet = PlanningUtils.HashExists(syncedHash)
     
-    If doRepairingBacksync Then
-        'Task could be found in planning sheet. Backsync the task in repairng mode (no new ebs estimats will be generated for the task)
-        Call MessageUtils.HandleMessage("Backsynced task '" & syncedHash & "'", _
+    If taskIsOnPlanningSheet Then
+        'Task could be found in planning sheet. Backsync the task in lean mode (no new ebs estimats will be generated for the task as this would
+        'update the ebs estimates based on the current data of all tasks - the task's data when the estimate was initially set would be overwritten)
+        Call MessageUtils.HandleMessage("Backsyncing existing task '" & syncedHash & "'", _
                                         ceInfo, FN)
     Else
-        'The task will be 'imported' as it is not existent in the planning sheet
+        'The task will be added again as it is not existent in the planning sheet
         Dim entryAdded As Boolean
         Dim entryCell As Range
         entryAdded = AddNewTaskLine(syncedHash, entryCell)
@@ -1352,12 +1365,7 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
     'Copy fields and handle changes if needed
             
     Dim taskSheetArea As Variant
-    
-    If doRepairingBacksync Then
-        Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
-    Else
-        Set taskSheetArea = TaskUtils.LoadTaskSheet(syncedHash)
-    End If
+    Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
     
     For Each header In copiedFields
         Dim unifiedHeader As String
@@ -1369,18 +1377,18 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
         Case TAG_REGEX
             'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
             'the current tag header
-                        
+                            
             Dim readSerTagHeaders As String
             Dim readSerTagValues As String
             readSerTagHeaders = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
             readSerTagValues = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER)
-                        
+                            
             Dim readTagHeaders() As String
             Dim readTagValues() As String
-                        
+                            
             readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
             readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
-                        
+                            
             If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
                 'Values were deserialized successfully
                 Dim headIdx As Integer
@@ -1388,87 +1396,190 @@ Function BacksyncTask(syncedHash As String, Optional taskNamePostfix As String =
                     If StrComp(readTagHeaders(headIdx), header) = 0 Then
                         'Tag for current header was found.
                         existingVal = readTagValues(headIdx)
-                                    
-                        'Break loop
-                        headIdx = UBound(readTagHeaders)
+                        Exit For
                     End If
                 Next headIdx
             End If
-                        
+                            
         Case Constants.TASK_PRIORITY_HEADER
             'Task sheet does not have a priority value stored. Set to initial priority
             existingVal = Constants.TASK_PRIO_INITIAL
-                    
         Case Else
             'Just pass the header here to retrieve the value of the sheet
             existingVal = Utils.GetSingleDataCellVal(taskSheetArea, CStr(header))
         End Select
         
-        'Now save the value to the new task and run handlers
-        
-        'Store the last tag cell as its handler is called last
-        Dim lastTagCell As Range
-                
+        'Now save the value to the task line
         Dim cell As Range
         Set cell = PlanningUtils.IntersectHashAndListColumn(syncedHash, CStr(header))
-        
+
         'Handle cell value changes here
         Select Case unifiedHeader
-        Case TASK_NAME_HEADER
-            'Copy name and handle name change to copy the name to the task sheet
-            existingVal = existingVal + taskNamePostfix
-            cell.Value = existingVal
-            Call Planning.HandleChanges(cell)
-            
+        
         Case TASK_ESTIMATE_HEADER
             If IsNumeric(existingVal) Then
                 cell.Value = CDbl(existingVal)
             Else
                 cell.Value = existingVal
             End If
-            Call Planning.ManageEstimateChange(cell, False)
-                
-        Case KANBAN_LIST_HEADER
-            'Copy the value and manage change: Do not update the finished on date. This happens individually
+        Case DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
+            If IsDate(existingVal) Then
+                'Convert to date to insert value correctly
+                cell.Value = CDate(existingVal)
+            Else
                 cell.Value = existingVal
-                Call Planning.ManageKanbanListChange(cell, False)
-                
-            Case Constants.TAG_REGEX
-                'Copy the tag and run handler without cell validation update. This causes cell validation to fail
-                cell.Value = existingVal
-                'Store the last tag cell to call handler after last tag backsync - otherwise tags will get lost
-                Set lastTagCell = cell
-                
-            Case Constants.CONTRIBUTOR_HEADER
-                'Handle contributor change without cell validation update. This causes cell validation to fail
-                'Also do not update the EBS estimates of the copied task
-                cell.Value = existingVal
-                Call Planning.ManageContributorChange(cell, False, Not doRepairingBacksync)
-                
-            Case DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
-                If IsDate(existingVal) Then
-                    'Convert to date to insert value correctly
-                    cell.Value = CDate(existingVal)
-                Else
-                    cell.Value = existingVal
-                End If
-                Call Planning.HandleChanges(cell)
-            
-            Case TASK_PRIORITY_HEADER, COMMENT_HEADER
-                'Copy values and handle change to copy values to task sheet
-                cell.Value = existingVal
-                Call Planning.HandleChanges(cell)
-            End Select
-        Next header
+            End If
+        Case Else
+            cell.Value = existingVal
+        End Select
+    Next header
+End Function
+
+Function InputTaskData(hash As String, _
+                       Optional name As Variant, _
+                       Optional handleName As Boolean = False, _
+                       Optional comment As Variant, _
+                       Optional handleComment As Boolean = False, _
+                       Optional tags As Variant, _
+                       Optional handleTags As Boolean = False, _
+                       Optional setTagValidation As Boolean = False, _
+                       Optional kanbanList As Variant, _
+                       Optional handleKanbanList As Boolean = False, _
+                       Optional estimate As Variant, _
+                       Optional handleEstimate As Boolean = False, _
+                       Optional recalcEbsEstimates As Boolean = False, _
+                       Optional finishedOnDate As Variant, _
+                       Optional handleFinishedOnDate As Boolean = False, _
+                       Optional dueDate As Variant, _
+                       Optional handleDueDate As Boolean = False, _
+                       Optional contributor As Variant, _
+                       Optional handleContributor As Boolean = False, _
+                       Optional priority As Variant, _
+                       Optional handlePriority As Boolean = False)
+    Const FN As String = "InputTaskData"
     
-        'Manage the changed tags
-        If Not lastTagCell Is Nothing Then
-            Call Planning.ManageTagChange(lastTagCell, False)
+    'Watch interference comments. For consistent data change values and handle change directly.
+    
+    'Check args
+    If Application.EnableEvents = True Then
+        Call MessageUtils.HandleMessage("Do not run this function with enabled events. Handlers are called manually in this function.", _
+                                        ceError, FN)
+        Exit Function
+    End If
+    
+    'Set data of task individually. Handle changes
+    Dim currentCell As Range
+    
+    'Name
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(name) And TypeName(name) = "String" Then
+            'Set value
+            currentCell.Value = name
         End If
+        If handleName Then Call Planning.ManageTaskNameChange(currentCell)
+    End If
     
-        'At the end sort the tasks with their priorities
-        PlanningUtils.OrganizePrioColumn
-    End Function
+    'Comment
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.COMMENT_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(comment) And TypeName(comment) = "String" Then
+            'Set value
+            currentCell.Value = comment
+        End If
+        If handleComment Then Call Planning.ManageCommentChange(currentCell)
+    End If
+
+    'Tags 1 to 5
+    Dim headers() As String
+    headers = Utils.ConvertRangeValsToArr(PlanningUtils.GetTagHeaderCells())
+    
+    If Base.IsArrayAllocated(headers) And Base.IsArrayAllocated(tags) Then
+        Dim header As Variant
+        Dim idx As Integer: idx = 0
+        
+        For Each header In headers
+            Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, CStr(header))
+            If Not currentCell Is Nothing Then
+                If idx > UBound(tags) Then
+                    Exit For
+                Else
+                    currentCell.Value = tags(idx)
+                End If
+            End If
+            idx = idx + 1
+        Next header
+    End If
+    
+    'Handle tags
+    If handleTags And Base.IsArrayAllocated(headers) Then
+        Dim anyTagCell As Range
+        Set anyTagCell = PlanningUtils.IntersectHashAndListColumn(hash, CStr(headers(0)))
+        Call Planning.ManageTagsChange(anyTagCell, setTagValidation)
+    End If
+    
+    'Kanban list
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(kanbanList) And TypeName(kanbanList) = "String" Then
+            'Set value
+            currentCell.Value = kanbanList
+        End If
+        If handleKanbanList Then Call Planning.ManageKanbanListChange(currentCell)
+    End If
+    
+    'Estimate
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(estimate) Then
+            'Set value
+            currentCell.Value = estimate
+        End If
+        'Intreferes with contributor change when recalc ebs estimates is enabled
+        If handleEstimate Then Call Planning.ManageEstimateChange(currentCell, recalcEbsEstimates)
+    End If
+    
+    'Finished on date
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(finishedOnDate) And TypeName(finishedOnDate) = "Date" Then
+            'Set value
+            currentCell.Value = finishedOnDate
+        End If
+        'Interferes with kanban list change
+        If handleFinishedOnDate Then Call Planning.ManageFinishedOnDateChange(currentCell)
+    End If
+    
+    'Due date
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.DUE_DATE_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(dueDate) And TypeName(dueDate) = "Date" Then
+            'Set value
+            currentCell.Value = dueDate
+        End If
+        If handleDueDate Then Call Planning.ManageDueDateChange(currentCell)
+    End If
+    
+    'Contributor
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(contributor) And TypeName(contributor) = "String" Then
+            'Set value
+            currentCell.Value = contributor
+        End If
+        If handleContributor Then Call Planning.ManageContributorChange(currentCell, recalcEbsEstimates)
+    End If
+    
+    'Priority
+    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
+    If Not currentCell Is Nothing Then
+        If Not IsMissing(priority) And TypeName(priority) = "Long" Then
+            'Set value
+            currentCell.Value = priority
+        End If
+        If handlePriority Then Call Planning.ManageTaskPriorityChange
+    End If
+End Function
 
 Function GetPlanningSelection() As Range
     'Activate planning sheet to get valid selection

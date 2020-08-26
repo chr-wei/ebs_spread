@@ -266,7 +266,7 @@ Function HandleChanges(Target As Range)
         Case COMMENT_HEADER:
             Call ManageCommentChange(Target)
         Case TAG_REGEX
-            Call ManageTagChange(Target)
+            Call ManageTagsChange(Target)
         Case EBS_COLUMN_REGEX
             Call ManageEbsColChange(Target)
         Case DUE_DATE_HEADER
@@ -274,7 +274,7 @@ Function HandleChanges(Target As Range)
         Case TASK_FINISHED_ON_HEADER
             Call ManageFinishedOnDateChange(Target)
         Case CONTRIBUTOR_HEADER
-            Call ManageContributorChange(Target)
+            Call ManageContributorChange(Target, True)
         Case T_HASH_HEADER:
             Call ManageHashChange(Target)
         End Select
@@ -576,7 +576,7 @@ Function ManageCommentChange(changedCell As Range)
     End If
 End Function
 
-Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boolean = True)
+Function ManageTagsChange(changedCell As Range, Optional setCellValidation As Boolean = True)
     'Store tags inside the task sheet and update the list validation if tag changes
     
     'Store all tags in the corresponding task sheet
@@ -592,11 +592,17 @@ Function ManageTagChange(changedCell As Range, Optional setCellValidation As Boo
     
     'If no errors are expected update the data validation list
     If setCellValidation Then
-        'If the user entered a new tag inside the tag column add the tag to the cell validation list (to make it selectable by dropdown).
+        'If the user entered a new tag update all tag columns and add entries to cell validation list (to make it selectable by dropdown).
         'Adding cell validation should prevent extensive creation of new tags - the user is informed if a 'new' tag is inserted which might be accidental
         Dim tagCol As Range
-        Set tagCol = Utils.GetListColumn(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, changedCell, ceData)
-        Call Utils.SetCellValuesForValidation(tagCol)
+        Dim headerCells As Range
+        Dim cell As Range
+        
+        Set headerCells = PlanningUtils.GetTagHeaderCells()
+        For Each cell In headerCells
+            Set tagCol = Utils.GetListColumn(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, cell, ceData)
+            Call Utils.SetCellValuesForValidation(tagCol)
+        Next cell
     End If
 End Function
 
@@ -611,13 +617,11 @@ Function ManageHighlightableSelChange(changedCell As Range) As Range
     Set ManageHighlightableSelChange = PlanningUtils.SetMultiCellHighlight(changedCell)
 End Function
 
-Function ManageContributorChange(changedCell As Range, Optional setCellValidation As Boolean = True, Optional setNewEbsEstimates As Boolean = True)
+Function ManageContributorChange(changedCell As Range, setNewEbsEstimates As Boolean)
     'Mange the contributor change
     '
     'Input args:
     '   changedCell:            The cell a contributor's name got changed in
-    '   setCellValueValidation: If true the data validation list will be updated. In some cases this leads to a fail of cell column validation. Therefore
-    '                           updating the list can be prevented.
     '   setNewEbsEstimates:     If true new estimates for the current task will be set based on the current velocity pool of the contributor.
     
     Dim hash As String
@@ -642,10 +646,8 @@ Function ManageContributorChange(changedCell As Range, Optional setCellValidatio
     'Debug info
     'Debug.Print contributorCells.Address
     
-    'If no errors are expected update the data validation list
-    If setCellValidation Then
-        Call Utils.SetCellValuesForValidation(contributorCells)
-    End If
+    'Update the data validation list
+    Call Utils.SetCellValuesForValidation(contributorCells)
     
     If setNewEbsEstimates Then
         'If the contributor changes the database for estimates changes as well. Recalculate

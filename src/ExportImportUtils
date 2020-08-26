@@ -70,7 +70,7 @@ Function ImportTasks()
             If Not loadedSheet Is Nothing Then
                 Call TaskUtils.SetHash(loadedSheet, cpHash)
                 Call PlanningUtils.BacksyncTask(syncedHash:=cpHash, _
-                                                taskNamePostfix:=SettingUtils.GetImportedTaskPostfixSetting)
+                                                taskNamePostfix:=SettingUtils.GetImportedTaskPostfixSetting, rewriteEbsEstimates:=False)
             End If
         End If
     Next key
