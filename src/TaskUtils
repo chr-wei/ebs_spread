@@ -56,9 +56,6 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
             Call TaskUtils.SetCalendarDelta(clickedCell)
         End Select
         
-        'Clear all the accent colors from the cells and highlight the clicked one
-        Call TaskUtils.SetClickActionHighlight(sheet, clickedCell)
-        
         'Overwrite action of the clicked link and select the clicked cell
         sheet.Activate
         clickedCell.Select
@@ -269,8 +266,10 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     Dim newFormattedNumber As String
     Dim entryReceived As Boolean
     
-    entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber) 'xx
+    entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber)
     If entryReceived Then
+        newEntryCell.Value = newFormattedNumber
+        
         Set startTimeCol = TaskUtils.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
         Set indicatorCol = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
         
@@ -280,6 +279,8 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         If indicatorCol Is Nothing Or _
            indicatorCell Is Nothing Or _
            startTimeCell Is Nothing Then
+           'Reset the entry value if columns cannot be resolved.
+           newEntryCell.Value = ""
             Exit Function
         End If
         
@@ -288,7 +289,6 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         indicatorCell.Value = INDICATOR
         
         'Add a new #00000n number to the list
-        newEntryCell.Value = newFormattedNumber
         
         Dim startTime As Date
         If durationHours = -1 Then
@@ -671,6 +671,9 @@ Function SetPlainDelta(clickedCell As Range)
     If deltaTCell Is Nothing Then Exit Function
     
     deltaTCell.Formula = PLAIN_DELTA_FORMULA     'Be careful here to use english formula format (German ';' become ',') otherwise setting formula will fail
+    
+    'Clear all the accent colors from the cells and highlight the clicked one
+    Call TaskUtils.SetClickActionHighlight(taskSheet, clickedCell)
 End Function
 
 Function SetCalendarDelta(clickedCell As Range)
@@ -721,6 +724,9 @@ Function SetCalendarDelta(clickedCell As Range)
     Else
         deltaTCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
     End If
+    
+    'Clear all the accent colors from the cells and highlight the clicked one
+    Call TaskUtils.SetClickActionHighlight(taskSheet, clickedCell)
 End Function
 
 Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
@@ -777,7 +783,7 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
         Call Utils.AddSubtileHyperlink(actionTwooCell, actionTwooCell.address)
         
         'Set color for first action cell: Plain delta calc
-        Call TaskUtils.SetClickActionHighlight(sheet, actionOneCell)
+        Call TaskUtils.SetPlainDelta(actionOneCell)
     End If
 End Function
 

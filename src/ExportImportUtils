@@ -61,6 +61,7 @@ Function ImportTasks()
     Dim vSheets As Scripting.Dictionary
     Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX)
     Dim key As Variant
+    Dim anyHash As String
     
     For Each key In vSheets.Keys
         Dim cpHash As String: cpHash = key
@@ -69,11 +70,30 @@ Function ImportTasks()
             Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
             If Not loadedSheet Is Nothing Then
                 Call TaskUtils.SetHash(loadedSheet, cpHash)
-                Call PlanningUtils.BacksyncTask(syncedHash:=cpHash, _
-                                                taskNamePostfix:=SettingUtils.GetImportedTaskPostfixSetting, rewriteEbsEstimates:=False)
+                
+                'Backsync the task to the planning sheet to make it appear in the list.
+                Call PlanningUtils.BacksyncTask(syncedHash:=cpHash)
+
+                Dim currentName As String
+                currentName = TaskUtils.GetName(loadedSheet)
+        
+                'Append postfix to task name.
+                Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
+                anyHash = cpHash
             End If
         End If
     Next key
+    
+    If anyHash <> "" Then
+        'Run handlers which are applied to all tasks (vertically) afterwards. Do not change 'Finished on date' of randomly selected 'any' task
+        '(1) Set cell validation for tags, contributor, kanban list.
+        '(2) Readjust task priority values
+        Call PlanningUtils.ApplyTaskData(hash:=anyHash, _
+                                         handleTags:=True, _
+                                         handleContributor:=True, _
+                                         handleKanbanList:=True, kanbanChangesFinishedOn:=False, _
+                                         handlePriority:=True)
+    End If
 End Function
 
 Function RewriteImportSheetHashes()

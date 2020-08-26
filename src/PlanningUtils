@@ -619,10 +619,18 @@ Function CopyTask(newHash As String, sourceListHash As String)
         Dim taskSheet As Worksheet
         Set taskSheet = TaskUtils.LoadTaskSheet(newHash)
         
-        'Backsync the task to the planning sheet to make it appear in the list. Also update ebs estimates
-        Call PlanningUtils.BacksyncTask(syncedHash:=newHash, taskNamePostfix:=" (copy)", rewriteEbsEstimates:=True)
+        'Backsync the task to the planning sheet to make it appear in the list.
+        Call PlanningUtils.BacksyncTask(syncedHash:=newHash)
+        
+        Dim currentName As String
+        currentName = TaskUtils.GetName(taskSheet)
         
         Call TaskUtils.ClearTimeList(taskSheet)
+        
+        'Append postfix to task name, set kanban list to todo and recalculate ebs estimates
+        Call PlanningUtils.ApplyTaskData(hash:=newHash, name:=currentName & " (copy)", handleName:=True, _
+            kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
+            handleEstimate:=True, recalcEbsEstimates:=True)
     End If
 End Function
 
@@ -1286,15 +1294,6 @@ Function HashExists(hash As String) As Boolean
     HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
 End Function
 
-'set name
-'rewrite ebs estimates
-'set prio
-'handle prio
-'handle comment
-'handle name change
-'handle estimate (ebs estimates)
-'handle tag after last tag field copy
-
 Function BacksyncTask(syncedHash As String)
     Const FN As String = "BacksyncTask"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1435,16 +1434,16 @@ Function BacksyncTask(syncedHash As String)
     Next header
 End Function
 
-Function InputTaskData(hash As String, _
+Function ApplyTaskData(hash As String, _
                        Optional name As Variant, _
                        Optional handleName As Boolean = False, _
                        Optional comment As Variant, _
                        Optional handleComment As Boolean = False, _
                        Optional tags As Variant, _
                        Optional handleTags As Boolean = False, _
-                       Optional setTagValidation As Boolean = False, _
                        Optional kanbanList As Variant, _
                        Optional handleKanbanList As Boolean = False, _
+                       Optional kanbanChangesFinishedOn As Boolean = False, _
                        Optional estimate As Variant, _
                        Optional handleEstimate As Boolean = False, _
                        Optional recalcEbsEstimates As Boolean = False, _
@@ -1456,7 +1455,7 @@ Function InputTaskData(hash As String, _
                        Optional handleContributor As Boolean = False, _
                        Optional priority As Variant, _
                        Optional handlePriority As Boolean = False)
-    Const FN As String = "InputTaskData"
+    Const FN As String = "ApplyTaskData"
     
     'Watch interference comments. For consistent data change values and handle change directly.
     
@@ -1515,7 +1514,7 @@ Function InputTaskData(hash As String, _
     If handleTags And Base.IsArrayAllocated(headers) Then
         Dim anyTagCell As Range
         Set anyTagCell = PlanningUtils.IntersectHashAndListColumn(hash, CStr(headers(0)))
-        Call Planning.ManageTagsChange(anyTagCell, setTagValidation)
+        Call Planning.ManageTagsChange(anyTagCell)
     End If
     
     'Kanban list
@@ -1525,7 +1524,8 @@ Function InputTaskData(hash As String, _
             'Set value
             currentCell.Value = kanbanList
         End If
-        If handleKanbanList Then Call Planning.ManageKanbanListChange(currentCell)
+        'Interferes with finished on date
+        If handleKanbanList Then Call Planning.ManageKanbanListChange(currentCell, kanbanChangesFinishedOn)
     End If
     
     'Estimate
