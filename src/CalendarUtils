@@ -743,7 +743,7 @@ Function GetNextAppointmentBlock( _
     Set appointment = appointmentList.Find("[End] >= '" & Format(startTime, dFormatString) & "'")
     
     If appointment Is Nothing Then Exit Function
-    startTime = appointment.start - appointmentOnsetHours / 24
+    startTime = appointment.Start - appointmentOnsetHours / 24
     blockStart = startTime
     
     Dim oneStart As Date
@@ -754,12 +754,12 @@ Function GetNextAppointmentBlock( _
     Dim apptsAreOverlapping As Boolean: apptsAreOverlapping = True
     Do Until Not apptsAreOverlapping
         'Loop while events are overlapping. Call 'FindNext' to get the next event in the row
-        oneStart = appointment.start
+        oneStart = appointment.Start
         oneEnd = appointment.End
         Set appointment = appointmentList.FindNext ''GetNext' won't work here
         
         If Not appointment Is Nothing Then
-            twoStart = appointment.start
+            twoStart = appointment.Start
             twoEnd = appointment.End
             apptsAreOverlapping = _
                                 CalendarUtils.AppointmentsAreOverlapping(oneStart, oneEnd, twoStart, twoEnd, appointmentOnsetHours + appointmentOffsetHours)

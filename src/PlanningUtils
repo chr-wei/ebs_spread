@@ -300,22 +300,15 @@ Function EndAllTasks()
     
     Dim item As Variant
 
-    'Set end times in all task sheets. Multiple started task should never exist. As precaution we always stop all tasks
-    'in order to maintain a healthy state
-    For Each item In TaskUtils.GetAllNonVirtualSheets()
-        Call TaskUtils.SetEndTimeToSheetTracking(item)
-    Next item
-    
-    For Each item In VirtualSheetUtils.GetAllVirtualSheets(Constants.STORAGE_SHEET_PREFIX)
-        Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(CStr(item)))
-    Next item
-
     'After setting end times to all task sheets we delete the '<current'tracker in the main sheet as well
     Dim indicatorCells As Range
     Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.INDICATOR)
     
     If Not indicatorCells Is Nothing Then
         indicatorCells.value = ""
+        For Each item In indicatorCells
+        Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(PlanningUtils.GetTaskHash(item.value)))
+    Next item
     End If
 End Function
 
@@ -1603,7 +1596,7 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
     
     If PlanningUtils.IsTaskTracking(hash) Then
         'If the selected task is currently tracking, finish it to get a clean state
-        PlanningUtils.EndAllTasks
+        PlanningUtils.lasks
     End If
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.LoadTaskSheet(CStr(hash)), CDbl(deltaT))
