@@ -47,15 +47,18 @@ Function CreateHashString(Optional prefix As String = "") As String
                                     ceVerbose, FN)
 End Function
 
-Function GetListColumn(sheetArea As Variant, listId As Variant, colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
+Function GetListColumn(sheetArea As Variant, Optional listId As Variant, _
+                       Optional colIdentifier As Variant = 1, _
+                       Optional rowIdentifier As ListRowSelect = ceData) As Range
+    
     Const FN As String = "GetListColumn"
     MessageUtils.InvokeFnMsg (FN)
     
-    'Get the data of a column of a list / table.
+    'Get the data of a column of a list / table. Returns first column with data range rows if no row/col identifiers are passed
     '
     'Input args:
-    '  sheetArea:       The sheet area one wants to retrieve a list with a specific column for. Can be of type range or Worksheet
-    '  listId:          The id (name or index) of the list you want to retrieve
+    '  sheetArea:       The sheet area one wants to retrieve a list with a specific column for. Can be of type Range, Worksheet or ListObject
+    '  listId:          The id (name or index) of the list you want to retrieve. Not necessary if a list object is passed as 'sheetArea'
     '  colIdentifier:   The cell of a column or its header name
     '  rowIdentifier:   A selector which returns either the header section, the data body range section or header and body section of the selected column.
     '
@@ -71,7 +74,14 @@ Function GetListColumn(sheetArea As Variant, listId As Variant, colIdentifier As
     End If
     
     Dim lo As ListObject
-    Set lo = Utils.GetListObjectById(sheetArea, listId)
+    
+    Select Case TypeName(sheetArea)
+    Case "Worksheet", "Range"
+        Set lo = Utils.GetListObjectById(sheetArea, listId)
+    Case "ListObject"
+        Set lo = sheetArea
+    End Select
+
     If lo Is Nothing Then Exit Function
         
     'First find the list column
@@ -99,7 +109,13 @@ Function GetListColumn(sheetArea As Variant, listId As Variant, colIdentifier As
         'Intersect the header row and the column range
         Set GetListColumn = Base.IntersectN(lo.HeaderRowRange, lc.Range)
     Case ListRowSelect.ceData
-        Set GetListColumn = lc.DataBodyRange
+        If Not lc.DataBodyRange Is Nothing Then
+            Set GetListColumn = lc.DataBodyRange
+        Else
+            'If no data exists return the first cell of the data column (even if it is empty)
+            Set GetListColumn = lc.Range(2)
+        End If
+            
     Case ListRowSelect.ceAll
         Set GetListColumn = lc.Range
     End Select
@@ -417,38 +433,110 @@ Function IntersectListColAndCells(sheetArea As Variant, listId As Variant, colId
     'Debug info
 End Function
 
-Function SetCellValuesForValidation(cellRange As Range)
-    'This function updates all tag fields. It scans a range of cells for their string values and puts all unique strings into a data validation
-    'filter to filter the fields themself. As a result new values can be set via drop down menu.
+Function SetCellValuesForValidation(colRange As Range)
+    'This function specifies the unique values of a certain range as dropdown list values of the same range.
+    'This is needed for auto updated drop down list
+    'Entries of the dropdown list are managed on a seperate worksheet and referenced by a named range
     
     'Input args:
     '   cellRange:  The range of cells you want to set the validation for
     
+    'Check args
+    If colRange.ListObject Is Nothing Then Exit Function
+    
+    colRange.Validation.Delete
+    
+    Dim colHeader As String
+    colHeader = Utils.GetListColumnHeader(colRange)
+                
     Dim cell As Range
     
     'All strings in the passed cells. These are filtered to get unique values.
     Dim stringDict As New Scripting.Dictionary
-    Set stringDict = Utils.ConvertRngToDict(cellRange)
+    Set stringDict = Utils.ConvertRngToDict(colRange)
     
     If stringDict.Count > 0 Then
-        'Build the list string
-        Dim listString As String
-        listString = Join(Base.DictToArray(stringDict), ",")
-        'Debug.Print "ls: " & listString
+        Dim lvw As Worksheet
+        Set lvw = Worksheets(Constants.VALIDATION_LIST_NAME)
         
-        Dim currArea As Variant
-        Dim currCell As Variant
+        If Not lvw Is Nothing Then
+            Dim lo As ListObject
+            Set lo = lvw.ListObjects(Constants.VALIDATION_LIST_NAME)
+            
+            If Not lo Is Nothing Then
+                Dim loc As Range
+                Set loc = Utils.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
+                
+                If loc Is Nothing Then
+                    lo.ListColumns.Add (1)
+                    lo.HeaderRowRange(1) = colHeader
+                    Set loc = Utils.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
+                Else
+                    loc.value = ""
+                End If
+                
+                Dim list() As Variant
+                list = Base.DictToArray(stringDict)
         
-        'Set up the range validation (title, error msg etc.)
-        With cellRange.Validation
-            Call .Delete
-            Call .Add(xlValidateList, xlValidAlertInformation, xlBetween, listString, "")
-            .InputTitle = "List value"
-            .ErrorTitle = "List value"
-            .InputMessage = "Select or enter a new item"
-            .ErrorMessage = "Enter a new entry inside this column?"
-        End With
+                Dim item As Variant
+                Dim rowIdx As Long: rowIdx = 0
+                For Each item In list
+                    'Here even cells out of the 'loc' range can be accessed to add new rows if necessary
+                    rowIdx = rowIdx + 1
+                    loc.item(rowIdx) = list(rowIdx - 1)
+                Next item
+                
+                'Clear data validation table
+                Call Utils.ClearBlankRowsInTable(lo)
+                Call Utils.ClearBlankColsInTable(lo)
+                 
+                'Set data name for the area
+                Dim namedRngname As String
+                namedRngname = Utils.SetNamedRange(colHeader & Constants.V_DATA_POSTFIX, loc.Parent.Range(loc.item(1), loc.item(rowIdx)))
+                If namedRngname <> "" Then
+                    'Set up the range validation (title, error msg etc.)
+                    With colRange.Validation
+                        Call .Add(Type:=xlValidateList, AlertStyle:=xlValidAlertInformation, Formula1:="=" & namedRngname)
+                        .InputTitle = "List value"
+                        .ErrorTitle = "List value"
+                        .InputMessage = "Select or enter a new item"
+                        .ErrorMessage = "Enter a new entry inside this column?"
+                    End With
+                End If
+            End If
+        End If
+    'Else
+        'There might be 'dead' data if the list does not contain any data - will be cleaned up if new data is set for the same header
     End If
+End Function
+
+Function SetNamedRange(name As String, rng As Range) As String
+    'Add a names range to the workbook
+    
+    'Init output
+    SetNamedRange = ""
+    
+    'Check args
+    If name = "" Or rng Is Nothing Then Exit Function
+    
+    Dim regex As New RegExp
+    
+    regex.Global = True
+    regex.Pattern = "[^a-zA-Z0-9]"
+    
+    Dim validName As String
+    validName = regex.Replace(name, "_")
+    On Error Resume Next
+    Call ThisWorkbook.names.Add(name:=validName, RefersTo:=rng)
+    On Error GoTo 0
+    
+    If Err.Number = 0 Then
+        SetNamedRange = validName
+    End If
+    
+    'Debug info
+    'Debug.Print validName
+    'Debug.Print rng.address
 End Function
 
 Function RunTryCatchedCall(f As String, Optional obj As Object, _
@@ -1296,4 +1384,55 @@ Function GetWindmillRanges(rng As Range, sectionRange As Range, _
     '    Debug.Print windmillWingThree.Address
     '    Debug.Print windmillWingFour.Address
     '    On Error GoTo 0
+End Function
+
+Function ClearBlankRowsInTable(lo As ListObject)
+    Dim rngBlanks As Range
+    Dim rowIdx As Long
+    
+    'Check args
+    If lo Is Nothing Then Exit Function
+    
+    'All rows/cols are empty
+    If lo.DataBodyRange Is Nothing Then Exit Function
+    
+    For rowIdx = lo.DataBodyRange.Rows.Count To 1 Step -1
+        'SpecialCells call will return error if no result was found
+        On Error Resume Next
+        Set rngBlanks = lo.ListRows(rowIdx).Range.SpecialCells(xlCellTypeBlanks)
+        On Error GoTo 0
+        
+        If Not rngBlanks Is Nothing Then
+            If rngBlanks.Count = lo.DataBodyRange.Columns.Count Then
+                Call rngBlanks.Delete(xlShiftUp)
+            End If
+        End If
+    Next rowIdx
+End Function
+
+Function ClearBlankColsInTable(lo As ListObject)
+    
+    'Check args
+    If lo Is Nothing Then Exit Function
+    
+    'All rows/cols are empty
+    If lo.DataBodyRange Is Nothing Then Exit Function
+    
+    Dim rngBlanks As Range
+    Dim colIdx As Long
+    
+    For colIdx = lo.DataBodyRange.Columns.Count To 1 Step -1
+        'SpecialCells call will return error if no result was found
+        On Error Resume Next
+        Set rngBlanks = lo.ListColumns(colIdx).Range.SpecialCells(xlCellTypeBlanks)
+        On Error GoTo 0
+        
+        If Not rngBlanks Is Nothing Then
+            If rngBlanks.Count = lo.DataBodyRange.Rows.Count _
+               And lo.DataBodyRange.Columns.Count > 1 Then
+                'Do only delete the column if more than one column is left - otherwise the whole table is deleted
+                Call rngBlanks.Delete(xlShiftToLeft)
+            End If
+        End If
+    Next colIdx
 End Function
