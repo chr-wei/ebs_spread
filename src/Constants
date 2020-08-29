@@ -29,7 +29,7 @@ Public Const TASK_LIST_NAME As String = "TaskOverviewList"
 
 Public Const TASK_ENTRY_HEADER As String = "Task no."
 Public Const TASK_NAME_HEADER As String = "Task name"
-Public Const INDICATOR_HEADER As String = "Indicator"
+Public Const INDICATOR_HEADER As String = "Now?"
 Public Const TASK_PRIORITY_HEADER As String = "Priority"
 Public Const DUE_DATE_HEADER As String = "Due date"
 Public Const TASK_FINISHED_ON_HEADER As String = "Finished on"
@@ -146,7 +146,7 @@ Public Const BUSY_AT_OPTIONAL_APPOINTMENTS As Boolean = False
 
 
 'Shared constants
-Public Const INDICATOR As String = "<current"
+Public Const INDICATOR As String = "<now>"
 Public Const CONTRIBUTOR_HEADER As String = "Contributor"
 Public Const TASK_TOTAL_TIME_HEADER As String = "Total time spent in h"
 Public Const TASK_ESTIMATE_HEADER As String = "User time estimate"
@@ -191,6 +191,11 @@ Public Const STORE_ID_TEMP_HEADER As String = "Store ID temp"
 Public Const CAL_ID_HEADER As String = "Calendar ID"
 Public Const STORE_ID_HEADER As String = "Store ID"
 Public Const CAL_PATH_TEMP_HEADER As String = "Calendar path temp"
+
+
+'List validation constants
+Public Const VALIDATION_LIST_NAME As String = "ListValidationData"
+Public Const V_DATA_POSTFIX As String = "Vdata"
 
 'Virtual sheet constants
 Public Const STORAGE_SHEET_PREFIX As String = "VSHEET_STOR_"

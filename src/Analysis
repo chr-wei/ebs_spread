@@ -120,7 +120,7 @@ Function BuildStl()
     Set summedDeltaCol = Analysis.GetStlColumn(TIME_SPENT_HEADER, ceData)
     
     For Each taskCell In visibleTasks
-        Set taskSheetArea = TaskUtils.GetTaskSheetArea(taskCell.Value)
+        Set taskSheetArea = TaskUtils.GetTaskSheetArea(taskCell.value)
         
         'Prepare the task time columns and value arrays
         Dim tStartCol As Range
@@ -229,8 +229,8 @@ Function BuildStl()
                         inSplitDeltaH = (splitStartVals(entryStartIdx + 1) - splitStartVals(entryStartIdx)) * 24 * timeRatio
                     End If
                         
-                    currentDelta = summedDeltaCol(RowIndex:=chainIdx + 1).Value
-                    summedDeltaCol(RowIndex:=chainIdx + 1).Value = currentDelta + inSplitDeltaH
+                    currentDelta = summedDeltaCol(RowIndex:=chainIdx + 1).value
+                    summedDeltaCol(RowIndex:=chainIdx + 1).value = currentDelta + inSplitDeltaH
                 Next chainIdx
             Next mappableTaskIdx
 r3h_skipEntry:
@@ -265,8 +265,8 @@ Function PreprocessStlRows() As Boolean
     splitInt = Analysis.GetSplitInterval
     
     If Not _
-       (IsDate(spanStartCell.Value) And _
-        IsDate(spanEndCell.Value) And _
+       (IsDate(spanStartCell.value) And _
+        IsDate(spanEndCell.value) And _
         splitInt <> SplitInterval.ceInvalid) Then Exit Function
     
     Dim spanStart As Date: spanStart = CDate(spanStartCell.Value2)
@@ -477,10 +477,10 @@ Function AddNewStlEntry(splitStart As Date, splitEnd As Date)
         Set splitTotalTimeCell = Analysis.IntersectStlColumn(TIME_SPENT_HEADER, newEntryCell)
         
         If Not splitStartCell Is Nothing And Not splitEndCell Is Nothing And Not splitTotalTimeCell Is Nothing Then
-            newEntryCell.Value = newFormattedNumber
-            splitStartCell.Value = splitStart
-            splitEndCell.Value = splitEnd
-            splitTotalTimeCell.Value = 0
+            newEntryCell.value = newFormattedNumber
+            splitStartCell.value = splitStart
+            splitEndCell.value = splitEnd
+            splitTotalTimeCell.value = 0
         End If
     End If
 End Function

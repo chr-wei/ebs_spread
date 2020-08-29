@@ -147,15 +147,15 @@ Function PostListMessage(message As String, severity As MessageSeverity, Optiona
         Set severityCell = MessageUtils.IntersectMessageListColumn(MESSAGE_SEVERITY_HEADER, newEntryCell)
         
         If Not messageCell Is Nothing And Not timestampCell Is Nothing And Not callerCell Is Nothing And Not severityCell Is Nothing Then
-            newEntryCell.Value = newFormattedNumber
-            messageCell.Value = message
-            timestampCell.Value = Now()
-            severityCell.Value = MessageUtils.GetSeverityString(severity)
+            newEntryCell.value = newFormattedNumber
+            messageCell.value = message
+            timestampCell.value = Now()
+            severityCell.value = MessageUtils.GetSeverityString(severity)
             
             If StrComp(caller, vbNullString) = 0 Then
-                callerCell.Value = Constants.N_A
+                callerCell.value = Constants.N_A
             Else
-                callerCell.Value = caller
+                callerCell.value = caller
             End If
         End If
     End If
