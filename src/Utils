@@ -457,7 +457,7 @@ Function SetCellValuesForValidation(colRange As Range)
     
     If stringDict.Count > 0 Then
         Dim lvw As Worksheet
-        Set lvw = Worksheets(Constants.VALIDATION_LIST_NAME)
+        Set lvw = Worksheets(Constants.VALIDATION_SHEET_NAME)
         
         If Not lvw Is Nothing Then
             Dim lo As ListObject

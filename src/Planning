@@ -353,7 +353,7 @@ Function ManageTaskNameChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheetArea(hash), changedCell.value)
+        Call TaskUtils.SetName(TaskUtils.GetTaskSheetArea(hash), changedCell.value)
     End If
 End Function
 
