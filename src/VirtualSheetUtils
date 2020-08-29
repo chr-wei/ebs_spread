@@ -86,7 +86,7 @@ Function StoreAsVirtualSheet(name As String, inSheetArea As Variant, storagePref
     
     'Prepare or get an existing virtual storage sheet
     Dim vSheetStorageRng As Range
-    Set vSheetStorageRng = VirtualSheetUtils.GetNewSheetStorage(name, inSheetArea, storagePrefix)
+    Set vSheetStorageRng = VirtualSheetUtils.GetNewSheetStorage(name, rSheetRng, storagePrefix)
        
     'Copy and paste the whole cell content of inSheetArea into the virtual storage range
     rSheetRng.Copy
