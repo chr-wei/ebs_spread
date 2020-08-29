@@ -159,7 +159,7 @@ Public Const TWO_DECIMALS_FORMAT = "0.00"
 Public Const SERIALIZED_ARRAY_REGEX As String = "{*}"
 Public Const INVALID_ENTRY_PLACEHOLDER As String = "<INVALID_ENTRY>"
 
-Public Const HASH_REGEXP As String = "[a-zA-Z0-9]{18}"
+Public Const HASH_REGEXP As String = "[a-z]{1}[A-Z0-9]{17}"
 
 
 
@@ -195,6 +195,7 @@ Public Const CAL_PATH_TEMP_HEADER As String = "Calendar path temp"
 
 'List validation constants
 Public Const VALIDATION_LIST_NAME As String = "ListValidationData"
+Public Const VALIDATION_SHEET_NAME As String = "List validation data"
 Public Const V_DATA_POSTFIX As String = "Vdata"
 
 'Virtual sheet constants

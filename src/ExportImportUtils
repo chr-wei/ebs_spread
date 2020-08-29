@@ -56,7 +56,8 @@ End Function
 Function ImportTasks()
     'This function imports all tasks of a special export worksheet
      
-    ExportImportUtils.RewriteImportSheetHashes
+    'Rewriting import sheet hashes can cause duplicate imports and is deactivated. Use copy task function instead.
+    'ExportImportUtils.RewriteImportSheetHashes
         
     Dim vSheets As Scripting.Dictionary
     Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX)
@@ -69,16 +70,27 @@ Function ImportTasks()
         
         Dim cpHash As String: cpHash = key
         If SanityUtils.CheckHash(cpHash) Then
-            Dim loadedSheet As Worksheet
-            Set loadedSheet = VirtualSheetUtils.LoadVirtualSheet(cpHash, Constants.EXIMPORT_SHEET_PREFIX, ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME))
-            If Not loadedSheet Is Nothing Then
-                Call TaskUtils.SetHash(loadedSheet, cpHash)
+        
+            'Add new task sheet here. Copy data selectively
+            Dim importSheetArea As Range
+            If VirtualSheetUtils.VirtualSheetExists(cpHash, Constants.EXIMPORT_SHEET_PREFIX) Then
+                Set importSheetArea = VirtualSheetUtils.GetVirtualStorageDataRange(cpHash, Constants.EXIMPORT_SHEET_PREFIX)
+            End If
+            
+            If Not importSheetArea Is Nothing Then
+                Dim newSheet As Worksheet
+                Set newSheet = TaskUtils.AddTaskSheet(cpHash)
+                
+                If Not newSheet Is Nothing Then
+                    Call SyncSheetData(importSheetArea, newSheet)
+                End If
+                'Call TaskUtils.SetHash(importSheetArea, cpHash)
                 
                 'Backsync the task to the planning sheet to make it appear in the list.
                 Call PlanningUtils.BacksyncTask(syncedHash:=cpHash)
 
                 Dim currentName As String
-                currentName = TaskUtils.GetName(loadedSheet)
+                currentName = TaskUtils.GetName(importSheetArea)
         
                 'Append postfix to task name.
                 Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
@@ -110,4 +122,111 @@ Function RewriteImportSheetHashes()
         Set nameCell = item
         nameCell.value = Utils.CreateHashString("t")
     Next item
+End Function
+
+Function SyncSheetData(inSheetArea As Range, outSheet As Worksheet)
+    'Synchronizes the data of two task sheets. Because entries are added to time list and ebs list of outSheet
+    'the sheet needs to be loaded / present. Copying work for the follow task sheet versions:
+    '
+    ' (1)   <no_version>    -> <v02>
+    ' (2)   <v02>           -> <v02>
+    '
+    'Input args
+    '   inSheetArea:    The task sheet (area) source
+    '   outSheet:       The task sheet destination
+    
+    'Check args
+    If inSheetArea Is Nothing Or outSheet Is Nothing Then Exit Function
+    
+    Call TaskUtils.SetName(outSheet, TaskUtils.GetName(inSheetArea))
+    
+    'Do not recalculate ebs list entries as they will be copied later
+    Call TaskUtils.SetEstimate(outSheet, TaskUtils.GetEstimate(inSheetArea), False)
+    
+    Call TaskUtils.SetKanbanList(outSheet, TaskUtils.GetKanbanList(inSheetArea))
+    Call TaskUtils.SetContributor(outSheet, TaskUtils.GetContributor(inSheetArea))
+    Call TaskUtils.SetDueDate(outSheet, TaskUtils.GetDueDate(inSheetArea))
+    Call TaskUtils.SetFinishedOnDate(outSheet, TaskUtils.GetFinishedOnDate(inSheetArea))
+    Call TaskUtils.SetComment(outSheet, TaskUtils.GetComment(inSheetArea))
+    
+    'Copy tags
+    Dim tagHeaders As String
+    Dim tagValues As String
+    Call TaskUtils.GetTags(inSheetArea, tagHeaders, tagValues)
+    Call TaskUtils.SetTags(outSheet, tagHeaders, tagValues)
+    
+    'Now copy list entries
+    
+    Dim inRng As Range
+    Dim outRng As Range
+    
+    'Time list
+    '
+    '
+    
+    'Copy counter
+    Set inRng = TaskUtils.GetTimeListColumn(inSheetArea, 1, ceData)
+    Set outRng = TaskUtils.GetTimeListColumn(outSheet, 1, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
+    
+    'Copy start dates
+    Set inRng = TaskUtils.GetTimeListColumn(inSheetArea, Constants.START_TIME_HEADER, ceData)
+    Set outRng = TaskUtils.GetTimeListColumn(outSheet, Constants.START_TIME_HEADER, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
+    
+    'Copy end dates
+    Set inRng = TaskUtils.GetTimeListColumn(inSheetArea, Constants.END_TIME_HEADER, ceData)
+    Set outRng = TaskUtils.GetTimeListColumn(outSheet, Constants.END_TIME_HEADER, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
+       
+    'Copy plain or calendar delta setting and add calendar delta
+    Set inRng = TaskUtils.GetTimeListColumn(inSheetArea, Constants.TIME_DELTA_HEADER, ceData)
+    Set outRng = TaskUtils.GetTimeListColumn(outSheet, Constants.TIME_DELTA_HEADER, ceData)
+    
+    Dim rowIdx As Integer
+    For rowIdx = 1 To outRng.Rows.Count
+        Dim calDelta As Double: calDelta = -1
+        Call TaskUtils.AddSpecialActionsToTimeListRow(outSheet, outRng(rowIdx))
+        If Not inRng(rowIdx).HasFormula Then
+            calDelta = CDbl(inRng(rowIdx).value)
+            Call TaskUtils.SetCalendarDelta(outRng(rowIdx), calDelta)
+        End If
+    Next rowIdx
+
+    'Ebs list
+    '
+    '
+    
+    'Copy counter
+    Set inRng = TaskUtils.GetEbsListColumn(inSheetArea, 1, ceData)
+    Set outRng = TaskUtils.GetEbsListColumn(outSheet, 1, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
+    
+    'Copy support points
+    Set inRng = TaskUtils.GetEbsListColumn(inSheetArea, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
+    Set outRng = TaskUtils.GetEbsListColumn(outSheet, Constants.SINGLE_SUPPORT_POINT_HEADER, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
+    
+    'Copy self time
+    Set inRng = TaskUtils.GetEbsListColumn(inSheetArea, Constants.EBS_SELF_TIME_HEADER, ceData)
+    Set outRng = TaskUtils.GetEbsListColumn(outSheet, Constants.EBS_SELF_TIME_HEADER, ceData)
+    
+    If Not inRng Is Nothing And Not outRng Is Nothing Then
+        Call inRng.Copy(outRng)
+    End If
 End Function

@@ -344,7 +344,7 @@ Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date =
     trackingEntry.value = ""
 End Function
 
-Function SetTaskName(sheetArea As Variant, name As String)
+Function SetName(sheetArea As Variant, name As String)
     'Wrapper to set the task name
     Call Utils.SetSingleDataCell(sheetArea, TASK_NAME_HEADER, name)
 End Function
@@ -375,12 +375,14 @@ Function SetEstimate(sheetArea As Variant, userEstimate As Variant, setNewEbsEst
     
     End If
     
-    Call Utils.SetSingleDataCell(sheetArea, TASK_ESTIMATE_HEADER, userEstimate)
-    
-    If setNewEbsEstimates Then
-        If IsNumeric(userEstimate) Then
-            Call TaskUtils.SetEbsEstimates(Base.CWorksheet(sheetArea), CDbl(userEstimate))
-        Else
+    If IsNumeric(userEstimate) And userEstimate > 0 Then
+        Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_ESTIMATE_HEADER, userEstimate)
+        
+        If setNewEbsEstimates Then Call TaskUtils.SetEbsEstimates(Base.CWorksheet(sheetArea), CDbl(userEstimate))
+    Else
+        Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_ESTIMATE_HEADER, Constants.N_A)
+        
+        If setNewEbsEstimates Then
             'Clear the ebs list entries if invalid data was passed
             Dim br As Range
             Set br = TaskUtils.GetEbsListBodyRange(sheetArea)
@@ -515,7 +517,11 @@ Function SetContributor(sheetArea As Variant, contributor As String)
 End Function
 
 Function SetDueDate(sheetArea As Variant, datee As Date)
-    Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, datee)
+    If IsDate(datee) And datee <> CDate(0) Then
+        Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, datee)
+    Else
+        Call UnsetDueDate(sheetArea)
+    End If
 End Function
 
 Function UnsetDueDate(sheetArea As Variant)
@@ -523,7 +529,11 @@ Function UnsetDueDate(sheetArea As Variant)
 End Function
 
 Function SetFinishedOnDate(sheetArea As Variant, datee As Date)
-    Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_FINISHED_ON_HEADER, datee)
+    If IsDate(datee) And datee <> CDate(0) Then
+        Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_FINISHED_ON_HEADER, datee)
+    Else
+        Call UnsetFinishedOnDate(sheetArea)
+    End If
 End Function
 
 Function UnsetFinishedOnDate(sheetArea As Variant)
@@ -581,6 +591,36 @@ Function GetVelocity(sheetArea As Variant) As Double
     End If
 End Function
 
+Function GetDueDate(sheetArea As Variant) As Date
+    'Wrapper to get the due date of the task
+    '
+    'Input args:
+    '  sheetArea:  The task sheetArea to retrieve the val from
+    
+    Dim val As String
+    val = Utils.GetSingleDataCellVal(sheetArea, Constants.DUE_DATE_HEADER)
+    If IsDate(val) Then
+        GetDueDate = CDate(val)
+    Else
+        GetDueDate = CDate(0)
+    End If
+End Function
+
+Function GetFinishedOnDate(sheetArea As Variant) As Date
+    'Wrapper to get the finish date of the task
+    '
+    'Input args:
+    '  sheetArea:  The task sheetArea to retrieve the val from
+    
+    Dim val As String
+    val = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_FINISHED_ON_HEADER)
+    If IsDate(val) Then
+        GetFinishedOnDate = CDate(val)
+    Else
+        GetFinishedOnDate = CDate(0)
+    End If
+End Function
+
 Function GetEstimate(sheetArea As Variant) As Double
     'Wrapper to get the user estimate from the sheetArea (the time the user thought the task would take)
     '
@@ -605,6 +645,15 @@ Function GetName(sheetArea As Variant) As String
     GetName = Utils.GetSingleDataCellVal(sheetArea, Constants.TASK_NAME_HEADER)
 End Function
 
+Function GetKanbanList(sheetArea As Variant) As String
+    'Wrapper to get the kanban list from the sheet. "" if list is invalid
+    '
+    'Input args:
+    '  sheetArea:  The range to retrieve the val from
+    
+    GetKanbanList = Utils.GetSingleDataCellVal(sheetArea, Constants.KANBAN_LIST_HEADER)
+End Function
+
 Function GetHash(sheetArea As Variant) As String
     'Wrapper to get the hash from the sheet. "" if hash is invalid
     '
@@ -621,12 +670,38 @@ Function GetContributor(sheetArea As Variant) As String
     'Wrapper to get the contributor name from the sheet. "" if contributor name does not exist
     '
     'Input args:
-    '  sheet:  The task sheet range / Worksheet to retrieve the val from
+    '  sheetArea:  The task sheet range / Worksheet to retrieve the val from
     '
     'Output args:
     '   GetContributor: The contributor name
     
     GetContributor = Utils.GetSingleDataCellVal(sheetArea, Constants.CONTRIBUTOR_HEADER)
+End Function
+
+Function GetComment(sheetArea As Variant) As String
+    'Wrapper to get the comment from the sheet. "" If comment does not exist
+    '
+    'Input args:
+    '  sheetArea:  The task sheet range / Worksheet to retrieve the val from
+    '
+    'Output args:
+    '   Getcomment: The comment
+    
+    GetComment = Utils.GetSingleDataCellVal(sheetArea, Constants.COMMENT_HEADER)
+End Function
+
+Function GetTags(sheetArea As Variant, ByRef serializedTagHeaders As String, ByRef serializedTagValues As String)
+    'Wrapper to get the serialized tags from the sheet. "" If task is not tagged
+    '
+    'Input args:
+    '  sheetArea:               The task sheet range / Worksheet to retrieve the val from
+    '
+    'Output args:
+    '  serializedTagHeaders:    The serialized headers of a tag {header1; header2; header3}
+    '  serializedTagValues:     The serialized tags {tag1; abc; tag3}
+
+    serializedTagHeaders = Utils.GetSingleDataCellVal(sheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+    serializedTagValues = Utils.GetSingleDataCellVal(sheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER)
 End Function
 
 Function GetTaskTotalTime(sheetArea As Variant) As Double
@@ -654,52 +729,62 @@ Function GetTaskTotalTime(sheetArea As Variant) As Double
     End If
 End Function
 
-Function SetPlainDelta(clickedCell As Range)
+Function SetPlainDelta(rowIdentifier As Range)
     'Restore the 'standard' method to calculate the delta: Plain subtraction of two dates. Formula only works inside a list object
     '
     'Input args:
-    '   clickedCell:    The cell a user clicked a hyperlink in. See TaskUtils.HandleFollowHyperlink
+    '   rowIdentifier:    The cell a user clicked a hyperlink in. See TaskUtils.HandleFollowHyperlink or any cell of the time list row
     
     Const PLAIN_DELTA_FORMULA As String = "=MAX(([@[" & Constants.END_TIME_HEADER & "]]-[@[" & Constants.START_TIME_HEADER & "]])*24,0)"
     Dim taskSheet As Worksheet
-    Set taskSheet = clickedCell.Parent
+    Set taskSheet = rowIdentifier.Parent
     
     'Get the cell to add the formula to
     Dim deltaTCell As Range
-    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, clickedCell)
+    Dim actionCell As Range
+    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
+    Set actionCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, rowIdentifier)
     
-    If deltaTCell Is Nothing Then Exit Function
+    
+    If deltaTCell Is Nothing Or actionCell Is Nothing Then Exit Function
     
     deltaTCell.Formula = PLAIN_DELTA_FORMULA     'Be careful here to use english formula format (German ';' become ',') otherwise setting formula will fail
     
     'Clear all the accent colors from the cells and highlight the clicked one
-    Call TaskUtils.SetClickActionHighlight(taskSheet, clickedCell)
+    Call TaskUtils.SetClickActionHighlight(taskSheet, actionCell)
 End Function
 
-Function SetCalendarDelta(clickedCell As Range)
+Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double = -1)
     'Function calculates the calendar appointment based time delta between two given dates of a time tracking row
     '
     'Input args:
-    '   clickedCell:    The cell a user clicked a hyperlink in (see TaskUtils.HandleFollowHyperlink)
+    '   rowIdentifier:    The cell a user clicked a hyperlink in (see TaskUtils.HandleFollowHyperlink) or any other cell of the time list row
     
     Dim taskSheet As Worksheet
-    Set taskSheet = clickedCell.Parent
-    Dim contributor As String
+    Set taskSheet = rowIdentifier.Parent
     
+    Dim lo As ListObject
+    Set lo = rowIdentifier.ListObject
+    
+    Dim contributor As String
     contributor = TaskUtils.GetContributor(taskSheet)
     
     'if delta
     Dim startTimeCell As Range
     Dim endTimeCell As Range
     Dim deltaTCell As Range
-    
+    Dim actionCell As Range
+        
     'Get cells of the time list to calculate delta from
-    Set startTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.START_TIME_HEADER, clickedCell)
-    Set endTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.END_TIME_HEADER, clickedCell)
-    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, clickedCell)
+    Set startTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.START_TIME_HEADER, rowIdentifier)
+    Set endTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.END_TIME_HEADER, rowIdentifier)
+    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
+    Set actionCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, rowIdentifier)
     
     'Check cells and entries
-    If startTimeCell Is Nothing Or endTimeCell Is Nothing Or deltaTCell Is Nothing Or StrComp(contributor, "") = 0 Then Exit Function
+    If startTimeCell Is Nothing Or endTimeCell Is Nothing Or deltaTCell Is Nothing Or actionCell Is Nothing Or _
+        StrComp(contributor, "") = 0 Then Exit Function
+        
     If Not IsDate(startTimeCell.value) Or Not IsDate(endTimeCell.value) Then Exit Function
     
     Dim startTime As Date
@@ -708,25 +793,31 @@ Function SetCalendarDelta(clickedCell As Range)
     startTime = CDate(startTimeCell.value)
     endTime = CDate(endTimeCell.value)
     
-    'Read the outlook appointments
-    Dim oItems As Outlook.Items
-    Set oItems = CalendarUtils.GetCalItems(contributor, Constants.BUSY_AT_OPTIONAL_APPOINTMENTS)
-    
-    'Calculate delta time
-    Dim deltaT As Double
-    Dim appointment
-    deltaT = CalendarUtils.MapDateToHours(contributor, oItems, endTime, startTime, _
-                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
-                                          SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+    If fakeDeltaT < 0 Then
+        'No valid fake delta time was passed - go and set real calendar delta
         
-    If deltaT <> -1 Then
-        deltaTCell.value = deltaT
+        'Read the outlook appointments
+        Dim oItems As Outlook.Items
+        Set oItems = CalendarUtils.GetCalItems(contributor, Constants.BUSY_AT_OPTIONAL_APPOINTMENTS)
+    
+        'Calculate delta time
+        Dim deltaT As Double
+        Dim appointment
+        deltaT = CalendarUtils.MapDateToHours(contributor, oItems, endTime, startTime, _
+                                              SettingUtils.GetContributorApptOnOffset(contributor, ceOnset), _
+                                              SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
+        
+        If deltaT <> -1 Then
+            deltaTCell.value = deltaT
+        Else
+            deltaTCell.value = Constants.INVALID_ENTRY_PLACEHOLDER
+        End If
     Else
-        deltaTCell.value = Constants.INVALID_ENTRY_PLACEHOLDER
+        deltaTCell.value = fakeDeltaT
     End If
     
     'Clear all the accent colors from the cells and highlight the clicked one
-    Call TaskUtils.SetClickActionHighlight(taskSheet, clickedCell)
+    Call TaskUtils.SetClickActionHighlight(taskSheet, actionCell)
 End Function
 
 Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
