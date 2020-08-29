@@ -49,7 +49,7 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
         Dim accentColor As Long
         accentColor = SettingUtils.GetColors(ceAccentColor)
     
-        Select Case clickedCell.Value
+        Select Case clickedCell.value
         Case Constants.TASK_SHEET_ACTION_ONE_NAME
             Call TaskUtils.SetPlainDelta(clickedCell)
         Case Constants.TASK_SHEET_ACTION_TWOO_NAME
@@ -232,9 +232,9 @@ Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolated
         Set interpolatedEstCell = TaskUtils.IntersectEbsListColumn(sheet, Constants.EBS_SELF_TIME_HEADER, newEntryCell)
         
         If Not supportPointCell Is Nothing And Not interpolatedEstCell Is Nothing Then
-            newEntryCell.Value = newFormattedNumber
-            supportPointCell.Value = supportPoint
-            interpolatedEstCell.Value = interpolatedEstimate
+            newEntryCell.value = newFormattedNumber
+            supportPointCell.value = supportPoint
+            interpolatedEstCell.value = interpolatedEstimate
         End If
     End If
 End Function
@@ -268,7 +268,7 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     
     entryReceived = Utils.GetNewEntry(sheet, Constants.TASK_SHEET_TIME_LIST_IDX, newEntryCell, newFormattedNumber)
     If entryReceived Then
-        newEntryCell.Value = newFormattedNumber
+        newEntryCell.value = newFormattedNumber
         
         Set startTimeCol = TaskUtils.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
         Set indicatorCol = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
@@ -279,14 +279,14 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         If indicatorCol Is Nothing Or _
            indicatorCell Is Nothing Or _
            startTimeCell Is Nothing Then
-           'Reset the entry value if columns cannot be resolved.
-           newEntryCell.Value = ""
+            'Reset the entry value if columns cannot be resolved.
+            newEntryCell.value = ""
             Exit Function
         End If
         
         'Set the '<current tracker' indicator
-        indicatorCol.Value = ""
-        indicatorCell.Value = INDICATOR
+        indicatorCol.value = ""
+        indicatorCell.value = INDICATOR
         
         'Add a new #00000n number to the list
         
@@ -299,7 +299,7 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
             startTime = Now - durationHours / 24
         End If
         
-        startTimeCell.Value = startTime
+        startTimeCell.value = startTime
         
         If durationHours <> -1 Then
             'Set end time to 'Now' since start time has been set to a time-backshifted value already
@@ -334,14 +334,14 @@ Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date =
     Set endTimeCell = Utils.IntersectListColAndCells(sheetArea, Constants.TASK_SHEET_TIME_LIST_IDX, Constants.END_TIME_HEADER, trackingEntry)
     If time = 0 Then
         'If no time value was given take the current time
-        endTimeCell.Value = Now
+        endTimeCell.value = Now
     Else
         'If time value was given take it
-        endTimeCell.Value = time
+        endTimeCell.value = time
     End If
     
     'Reset the indicator cell
-    trackingEntry.Value = ""
+    trackingEntry.value = ""
 End Function
 
 Function SetTaskName(sheetArea As Variant, name As String)
@@ -435,7 +435,7 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
     If veloPoolCell Is Nothing Then Exit Function
         
     Dim contribPool() As Double
-    contribPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(veloPoolCell.Value))
+    contribPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(veloPoolCell.value))
         
     If Not Base.IsArrayAllocated(contribPool) Then Exit Function
         
@@ -554,9 +554,9 @@ Function GetLastEndTimestamp(sheetArea As Variant) As Date
     Set endStamps = TaskUtils.GetTimeListColumn(sheetArea, Constants.END_TIME_HEADER, ceData)
     If Not endStamps Is Nothing Then
         'Read the last value from the list
-        val = Utils.GetBottomRightCell(endStamps).Value
+        val = Utils.GetBottomRightCell(endStamps).value
         If IsDate(val) Then
-            GetLastEndTimestamp = CDate(Utils.GetBottomRightCell(endStamps).Value)
+            GetLastEndTimestamp = CDate(Utils.GetBottomRightCell(endStamps).value)
         End If
     End If
     
@@ -700,13 +700,13 @@ Function SetCalendarDelta(clickedCell As Range)
     
     'Check cells and entries
     If startTimeCell Is Nothing Or endTimeCell Is Nothing Or deltaTCell Is Nothing Or StrComp(contributor, "") = 0 Then Exit Function
-    If Not IsDate(startTimeCell.Value) Or Not IsDate(endTimeCell.Value) Then Exit Function
+    If Not IsDate(startTimeCell.value) Or Not IsDate(endTimeCell.value) Then Exit Function
     
     Dim startTime As Date
     Dim endTime As Date
     
-    startTime = CDate(startTimeCell.Value)
-    endTime = CDate(endTimeCell.Value)
+    startTime = CDate(startTimeCell.value)
+    endTime = CDate(endTimeCell.value)
     
     'Read the outlook appointments
     Dim oItems As Outlook.Items
@@ -720,9 +720,9 @@ Function SetCalendarDelta(clickedCell As Range)
                                           SettingUtils.GetContributorApptOnOffset(contributor, ceOffset))
         
     If deltaT <> -1 Then
-        deltaTCell.Value = deltaT
+        deltaTCell.value = deltaT
     Else
-        deltaTCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+        deltaTCell.value = Constants.INVALID_ENTRY_PLACEHOLDER
     End If
     
     'Clear all the accent colors from the cells and highlight the clicked one
@@ -775,8 +775,8 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
     If Not actionOneCell Is Nothing And Not actionTwooCell Is Nothing Then
         'Add special action links to the list row to manage delta time calculation of task sheet row (by plain delta or with calendar data)
         'Add the function names
-        actionOneCell.Value = Constants.TASK_SHEET_ACTION_ONE_NAME
-        actionTwooCell.Value = Constants.TASK_SHEET_ACTION_TWOO_NAME
+        actionOneCell.value = Constants.TASK_SHEET_ACTION_ONE_NAME
+        actionTwooCell.value = Constants.TASK_SHEET_ACTION_TWOO_NAME
         
         'Add the hyperlinks which will be catched by an 'TaskUtils.HandleFollowHyperlink'
         Call Utils.AddSubtileHyperlink(actionOneCell, actionOneCell.address)

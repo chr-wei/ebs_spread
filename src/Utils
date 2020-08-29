@@ -132,7 +132,7 @@ Function GetListColumnHeader(cells As Range) As String
     Set headerCell = Base.IntersectN(cells.ListObject.HeaderRowRange, cells.EntireColumn)
     
     If Not headerCell Is Nothing Then
-        GetListColumnHeader = headerCell.Value
+        GetListColumnHeader = headerCell.value
     End If
     
     'Debug info
@@ -269,7 +269,7 @@ Function GetNumberedEntries(sheetArea As Variant, listId As Variant) As Range
         Exit Function
     End If
     
-    If entries.Rows.Count = 1 And StrComp(entries(1).Value, "") = 0 Then
+    If entries.Rows.Count = 1 And StrComp(entries(1).value, "") = 0 Then
         'The list always has one body row even if it is empty. If no entry is in the first row (empty string) then set the body range to nothing.
         Set GetNumberedEntries = Nothing
     Else
@@ -317,7 +317,7 @@ Function GetNextEntryNumber(numberedEntries As Range) As Long
         Dim currentNumberedString As String
         Dim croppedString As String
         Dim currentNumber As Long
-        currentNumberedString = cell.Value
+        currentNumberedString = cell.value
 
         Dim regex As New RegExp
 
@@ -619,10 +619,10 @@ Function ConvertRngToDict(rng As Range) As Scripting.Dictionary
     Dim cell As Range
     Dim key As String
     For Each cell In rng
-        key = CStr(cell.Value)
+        key = CStr(cell.value)
         'Add items
         If key <> vbNullString And Not dict.Exists(key) Then
-            Call dict.Add(key:=key, item:=cell.Value)
+            Call dict.Add(key:=key, item:=cell.value)
         End If
     Next cell
 
@@ -907,8 +907,8 @@ Function GetSingleDataCellVal(sheetArea As Variant, headerText As String, Option
         Set headerCell = Utils.GetTopLeftCell(headerCell)
         Set dataCell = Utils.GetRightNeighbour(headerCell)
         
-        If Not IsError(dataCell.Value) Then
-            GetSingleDataCellVal = dataCell.Value
+        If Not IsError(dataCell.value) Then
+            GetSingleDataCellVal = dataCell.value
         End If
     End If
 End Function
@@ -942,7 +942,7 @@ Function SetSingleDataCell(sheetArea As Variant, headerText As String, data As V
     Set headerCell = Utils.FindSheetCell(area, headerText)
     If Not headerCell Is Nothing Then
         Set dataCell = Utils.GetRightNeighbour(headerCell)
-        dataCell.Value = data
+        dataCell.value = data
     Else
         'Debug info
         Call MessageUtils.HandleMessage("Header cell '" & headerText & " 'could not be found on worksheet '" & sheetArea.name & "'.", ceError, FN)

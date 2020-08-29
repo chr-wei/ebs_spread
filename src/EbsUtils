@@ -44,7 +44,7 @@ Function HandleEbsSheetChanges(Target As Range)
     If StrComp(header, "") = 0 Then
         'Use a fallback for special cells that shall be managed but are not located in the table area (e.g. setting switches for charts).
         'Read the 'headers'of the changed cell which are left to the changed cell.
-        header = Utils.GetLeftNeighbour(Target).Value
+        header = Utils.GetLeftNeighbour(Target).value
     End If
     
     'If changed cell is a part of one of the following columns manage change
@@ -103,7 +103,7 @@ Function ManagePoolVisibilityChange(changedCell As Range)
         
         'Retrieve the bare pool velocities
         Dim poolVals() As Double
-        poolVals = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(poolCell.Value))
+        poolVals = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(poolCell.value))
         
         If Base.IsArrayAllocated(poolVals) Then
             Dim histoX() As Double
@@ -116,7 +116,7 @@ Function ManagePoolVisibilityChange(changedCell As Range)
             Call EbsUtils.CalcVelocityHistogram(poolVals, histoX, histoVal)
             
             'Print out the values
-            Call EbsUtils.PrintVelocityHistogramDataRow(changedCell.Parent, ebsDate.Value, histoX, histoVal, transparencyVals(poolIdx - 1))
+            Call EbsUtils.PrintVelocityHistogramDataRow(changedCell.Parent, ebsDate.value, histoX, histoVal, transparencyVals(poolIdx - 1))
             poolIdx = poolIdx + 1
         End If
     Next poolCell
@@ -233,7 +233,7 @@ Function RunEbs()
         
         If Not createNewEntry Then
             'Read the velocity pool from cell
-            velocityPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(velocityCell.Value))
+            velocityPool = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(velocityCell.value))
             
             'If the velocity entry could not be read from the cell use a fallback to create a new one
             If Not Base.IsArrayAllocated(velocityPool) Then fallback = True
@@ -271,18 +271,18 @@ Function RunEbs()
         
         If createNewEntry Or fallback Then
             'Write data to the main table
-            ebsEntryCell.Value = newFormattedNumber
+            ebsEntryCell.value = newFormattedNumber
             
             'Generate a hash for each contributor for every ebs run
-            eHashCell.Value = eHash
-            dateCell.Value = runDate
+            eHashCell.value = eHash
+            dateCell.value = runDate
             
             If Base.IsArrayAllocated(velocityPool) Then
-                velocityCell.Value = Utils.SerializeArray(velocityPool)
-                showPoolCell.Value = Constants.EBS_SHOW_POOL_TRUE
+                velocityCell.value = Utils.SerializeArray(velocityPool)
+                showPoolCell.value = Constants.EBS_SHOW_POOL_TRUE
             Else
-                velocityCell.Value = "<NO_POOLDATA_AVAILABLE>"
-                showPoolCell.Value = Constants.EBS_SHOW_POOL_FALSE
+                velocityCell.value = "<NO_POOLDATA_AVAILABLE>"
+                showPoolCell.value = Constants.EBS_SHOW_POOL_FALSE
             End If
         End If
             
@@ -291,21 +291,21 @@ Function RunEbs()
 
             'Write interpolated vals to sheet
             If Base.IsArrayAllocated(interpolatedHourEstimates) Then
-                supportPointsCell.Value = Utils.SerializeArray(supportPoints)
+                supportPointsCell.value = Utils.SerializeArray(supportPoints)
             Else
-                supportPointsCell.Value = Constants.N_A
+                supportPointsCell.value = Constants.N_A
             End If
             
             If Base.IsArrayAllocated(interpolatedHourEstimates) Then
-                hourEstimatesCell.Value = Utils.SerializeArray(interpolatedHourEstimates)
+                hourEstimatesCell.value = Utils.SerializeArray(interpolatedHourEstimates)
             Else
-                hourEstimatesCell.Value = Constants.N_A
+                hourEstimatesCell.value = Constants.N_A
             End If
             
             If Base.IsArrayAllocated(interpolatedDateEstimates) Then
-                dateEstimatesCell.Value = Utils.SerializeArray(interpolatedDateEstimates)
+                dateEstimatesCell.value = Utils.SerializeArray(interpolatedDateEstimates)
             Else
-                dateEstimatesCell.Value = Constants.N_A
+                dateEstimatesCell.value = Constants.N_A
             End If
         End If
                 
@@ -986,26 +986,26 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
         End If
         
         'Set values to cells. If values are not available write 'N/A':
-        newEntryCell.Value = newFormattedEntry
+        newEntryCell.value = newFormattedEntry
         
-        If IsNumeric(prios(hashIdx)) Then prioEntryCell.Value = prios(hashIdx) Else prioEntryCell.Value = Constants.N_A
-        If SanityUtils.CheckHash(currentHash) Then hashEntryCell.Value = currentHash Else hashEntryCell.Value = Constants.N_A
-        If IsNumeric(spentTime) Then spentTimeEntryCell.Value = spentTime Else spentTimeEntryCell.Value = Constants.N_A
-        If userEstimate <> -1 Then userEstimateCell.Value = userEstimate Else userEstimateCell.Value = Constants.N_A
-        If Base.IsArrayAllocated(monteCarloTimeEstimates) Then monteCarloEstimateCell.Value = Utils.SerializeArray(monteCarloTimeEstimates) Else _
-                                                                                                                                            monteCarloEstimateCell.Value = Constants.N_A
-        If Base.IsArrayAllocated(remainingTimeEstimates) Then remainingTimeEstimateCell.Value = Utils.SerializeArray(remainingTimeEstimates) Else _
-                                                                                                                                             remainingTimeEstimateCell.Value = Constants.N_A
-        If Base.IsArrayAllocated(accumulatedTimeEstimates) Then accumulatedEstimatesCell.Value = Utils.SerializeArray(accumulatedTimeEstimates) Else _
-                                                                                                                                                accumulatedEstimatesCell.Value = Constants.N_A
+        If IsNumeric(prios(hashIdx)) Then prioEntryCell.value = prios(hashIdx) Else prioEntryCell.value = Constants.N_A
+        If SanityUtils.CheckHash(currentHash) Then hashEntryCell.value = currentHash Else hashEntryCell.value = Constants.N_A
+        If IsNumeric(spentTime) Then spentTimeEntryCell.value = spentTime Else spentTimeEntryCell.value = Constants.N_A
+        If userEstimate <> -1 Then userEstimateCell.value = userEstimate Else userEstimateCell.value = Constants.N_A
+        If Base.IsArrayAllocated(monteCarloTimeEstimates) Then monteCarloEstimateCell.value = Utils.SerializeArray(monteCarloTimeEstimates) Else _
+                                                                                                                                            monteCarloEstimateCell.value = Constants.N_A
+        If Base.IsArrayAllocated(remainingTimeEstimates) Then remainingTimeEstimateCell.value = Utils.SerializeArray(remainingTimeEstimates) Else _
+                                                                                                                                             remainingTimeEstimateCell.value = Constants.N_A
+        If Base.IsArrayAllocated(accumulatedTimeEstimates) Then accumulatedEstimatesCell.value = Utils.SerializeArray(accumulatedTimeEstimates) Else _
+                                                                                                                                                accumulatedEstimatesCell.value = Constants.N_A
         
         'Write the interpolated estimates
-        If Base.IsArrayAllocated(supportPoints) Then supportPointsCell.Value = Utils.SerializeArray(supportPoints) Else _
-                                                                                                                   supportPointsCell.Value = Constants.N_A
-        If Base.IsArrayAllocated(interpolatedHourEstimates) Then interpolatedEstimatesCell.Value = Utils.SerializeArray(interpolatedHourEstimates) Else _
-                                                                                                                                                   interpolatedEstimatesCell.Value = Constants.N_A
-        If Base.IsArrayAllocated(interpolatedDateEstimates) Then interpolatedDatesEstimatesCell.Value = Utils.SerializeArray(interpolatedDateEstimates) Else _
-                                                                                                                                                        interpolatedDatesEstimatesCell.Value = Constants.N_A
+        If Base.IsArrayAllocated(supportPoints) Then supportPointsCell.value = Utils.SerializeArray(supportPoints) Else _
+                                                                                                                   supportPointsCell.value = Constants.N_A
+        If Base.IsArrayAllocated(interpolatedHourEstimates) Then interpolatedEstimatesCell.value = Utils.SerializeArray(interpolatedHourEstimates) Else _
+                                                                                                                                                   interpolatedEstimatesCell.value = Constants.N_A
+        If Base.IsArrayAllocated(interpolatedDateEstimates) Then interpolatedDatesEstimatesCell.value = Utils.SerializeArray(interpolatedDateEstimates) Else _
+                                                                                                                                                        interpolatedDatesEstimatesCell.value = Constants.N_A
         
         entriesWritten = entriesWritten + 1
 nextHash0a1:
@@ -1453,10 +1453,10 @@ Function GetDataForLongtimeGraph(sheet As Worksheet, mode As PropabilityChartMod
         
     For Each datasetCell In filteredCells
         'Cycle through all the filteredCell: Points of time at which ebs was run and add datapoints
-        curTimeEstsVal = Base.IntersectN(datasetCell.EntireRow, estRange).Value
+        curTimeEstsVal = Base.IntersectN(datasetCell.EntireRow, estRange).value
         
         'Chart support points may vary over time. Read the support points here from the data
-        curSupPointsVal = Base.IntersectN(datasetCell.EntireRow, supPointsRange).Value
+        curSupPointsVal = Base.IntersectN(datasetCell.EntireRow, supPointsRange).value
         supPoints = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(curSupPointsVal))
         
         Select Case sca
@@ -1472,7 +1472,7 @@ Function GetDataForLongtimeGraph(sheet As Worksheet, mode As PropabilityChartMod
         chartTimeEsts = Utils.CopyVarArrToDoubleArr(Utils.InterpolateArray(supPoints, estimates, chartSupPoints))
                 
         'Write data to axis
-        x(datasetIdx) = CDbl(datasetCell.Value)
+        x(datasetIdx) = CDbl(datasetCell.value)
         y1(datasetIdx) = chartTimeEsts(0)
         y2(datasetIdx) = chartTimeEsts(1)
         y3(datasetIdx) = chartTimeEsts(2)
@@ -1517,7 +1517,7 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         If x1Cells Is Nothing Then Exit Function
         
         Set x1Cells = Utils.GetBottomRightCell(x1Cells)
-        x1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x1Cells.Value))
+        x1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x1Cells.value))
                
         If Not Base.IsArrayAllocated(x1) Then Exit Function
         
@@ -1532,14 +1532,14 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         'Second x-axis: interpolated accumulated time
         Set x2Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER, ceData)
         Set x2Cells = Utils.GetBottomRightCell(x2Cells)
-        x2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x2Cells.Value))
+        x2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x2Cells.value))
         
         If Not Base.IsArrayAllocated(x2) Then Exit Function
                     
         'Second y-axis: propabilities for interpolated accumulated time
         Set y2Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
         Set y2Cells = Utils.GetBottomRightCell(y2Cells)
-        y2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y2Cells.Value))
+        y2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y2Cells.value))
         
         If Not Base.IsArrayAllocated(y2) Then Exit Function
                     
@@ -1551,13 +1551,13 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         
         If x1Cells Is Nothing Then Exit Function
         
-        x1 = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(x1Cells.Value)))
+        x1 = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(x1Cells.value)))
         
         If Not Base.IsArrayAllocated(x1) Then Exit Function
         
         Set y1Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
         Set y1Cells = Utils.GetBottomRightCell(y1Cells)
-        y1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y1Cells.Value))
+        y1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y1Cells.value))
         
     End If
 End Function
@@ -1632,8 +1632,8 @@ Function GetLatestEbsRun(sheet As Worksheet, Optional ByRef runDate As Date) As 
             'Get hash cells and dates
             For dIdx = 0 To runCount - 1
 
-                dates(dIdx) = CDate(dateCells(dIdx + 1).Value)
-                hashes(dIdx) = eHashCells(dIdx + 1).Value
+                dates(dIdx) = CDate(dateCells(dIdx + 1).value)
+                hashes(dIdx) = eHashCells(dIdx + 1).value
             Next dIdx
             
             'Sort dates descending and order hashCells accordingly

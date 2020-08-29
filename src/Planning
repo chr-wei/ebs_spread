@@ -241,9 +241,9 @@ Function HandleChanges(Target As Range)
         
             'Test if the bottom neighbour of the selected cell is an ebs column.
             'Set the header so that the handler for the ebs column is called
-            If regex.Test(bn.Value) Then
+            If regex.Test(bn.value) Then
                 Set Target = bn
-                header = bn.Value
+                header = bn.value
             Else
                 Exit Function
             End If
@@ -353,7 +353,7 @@ Function ManageTaskNameChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
+        Call TaskUtils.SetTaskName(TaskUtils.GetTaskSheetArea(hash), changedCell.value)
     End If
 End Function
 
@@ -370,7 +370,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
         Dim enteredVal As Variant
-        enteredVal = changedCell.Value
+        enteredVal = changedCell.value
         
         Dim ues As UserEstimateStatus
         
@@ -425,7 +425,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                     
             Dim contributor As String
             If Not contributorCell Is Nothing Then
-                contributor = contributorCell.Value
+                contributor = contributorCell.value
             Else
                 contributor = ""
             End If
@@ -460,7 +460,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                 Call TaskUtils.SetEstimate(TaskUtils.GetTaskSheetArea(hash), CDbl(outputVal), False)
             End If
             
-            changedCell.Value = outputVal
+            changedCell.value = outputVal
             changedCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
                 
         Case UserEstimateStatus.ceInvalid
@@ -475,7 +475,7 @@ Function ManageEstimateChange(changedCell As Range, Optional setNewEbsEstimates 
                 placeholder = Constants.INVALID_ENTRY_PLACEHOLDER & ": " & Left(CStr(enteredVal), 5) & " [...]"
             End Select
                 
-            changedCell.Value = placeholder
+            changedCell.value = placeholder
             changedCell.NumberFormat = "General"
             
             If setNewEbsEstimates Then
@@ -503,7 +503,7 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
     Dim sheetArea As Range
     Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
     
-    Call TaskUtils.SetKanbanList(sheetArea, changedCell.Value)
+    Call TaskUtils.SetKanbanList(sheetArea, changedCell.value)
                 
     Dim finishedOnCell As Range
     Set finishedOnCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
@@ -511,24 +511,24 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
     Dim prioCell As Range
     Set prioCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
     
-    Select Case (changedCell.Value)
+    Select Case (changedCell.value)
     Case Constants.KANBAN_LIST_DONE
         If PlanningUtils.IsTaskTracking(changedCell) Then
             Call PlanningUtils.EndAllTasks
         End If
                       
-        prioCell.Value = Constants.N_A
+        prioCell.value = Constants.N_A
                 
     Case Else
         'Set a priority if no proper value is set
-        If Not IsNumeric(prioCell.Value) Then
-            prioCell.Value = Constants.TASK_PRIO_INITIAL
+        If Not IsNumeric(prioCell.value) Then
+            prioCell.value = Constants.TASK_PRIO_INITIAL
         End If
     End Select
     
     'Change the finished on date depending on the kanban list value
     If changeFinishedOnDate Then
-        Select Case (changedCell.Value)
+        Select Case (changedCell.value)
         Case Constants.KANBAN_LIST_DONE
             
             'When the task is changed to 'done' the end time stamp in the sheetArea can be set. It is set to the last
@@ -546,11 +546,11 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
                 datee = CDate(Now)
             End If
                 
-            finishedOnCell.Value = datee
+            finishedOnCell.value = datee
             
         Case Else
             'The task is active again: Delete finished on date
-            finishedOnCell.Value = Constants.N_A
+            finishedOnCell.value = Constants.N_A
         End Select
         
         'Manage finished on date change for planning and task sheetArea manually
@@ -572,7 +572,7 @@ Function ManageCommentChange(changedCell As Range)
     Dim hash As String
     hash = PlanningUtils.GetTaskHash(changedCell)
     If SanityUtils.CheckHash(hash) Then
-        Call TaskUtils.SetComment(TaskUtils.GetTaskSheetArea(hash), changedCell.Value)
+        Call TaskUtils.SetComment(TaskUtils.GetTaskSheetArea(hash), changedCell.value)
     End If
 End Function
 
@@ -635,7 +635,7 @@ Function ManageContributorChange(changedCell As Range, setNewEbsEstimates As Boo
         Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
     End If
     
-    Call TaskUtils.SetContributor(sheetArea, changedCell.Value)
+    Call TaskUtils.SetContributor(sheetArea, changedCell.value)
     
     Dim contributorCells As Range
     Set contributorCells = PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData)
@@ -662,15 +662,15 @@ Function ManageDueDateChange(changedCell As Range)
         Dim sheetArea As Variant
         Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
         
-        If IsDate(changedCell.Value) Then
-            Call TaskUtils.SetDueDate(sheetArea, CDate(changedCell.Value))
+        If IsDate(changedCell.value) Then
+            Call TaskUtils.SetDueDate(sheetArea, CDate(changedCell.value))
         Else
-            Select Case changedCell.Value
+            Select Case changedCell.value
             Case "", Constants.N_A
-                changedCell.Value = Constants.N_A
+                changedCell.value = Constants.N_A
             Case Else
                 'The cell content was set neither to a date nor to N/A
-                changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+                changedCell.value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
             Call TaskUtils.UnsetDueDate(sheetArea)
@@ -687,15 +687,15 @@ Function ManageFinishedOnDateChange(changedCell As Range)
         Dim sheetArea As Variant
         Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
         
-        If IsDate(changedCell.Value) Then
-            Call TaskUtils.SetFinishedOnDate(sheetArea, CDate(changedCell.Value))
+        If IsDate(changedCell.value) Then
+            Call TaskUtils.SetFinishedOnDate(sheetArea, CDate(changedCell.value))
         Else
-            Select Case changedCell.Value
+            Select Case changedCell.value
             Case "", Constants.N_A
-                changedCell.Value = Constants.N_A
+                changedCell.value = Constants.N_A
             Case Else
                 'The cell content was set neither to a date nor to N/A
-                changedCell.Value = Constants.INVALID_ENTRY_PLACEHOLDER
+                changedCell.value = Constants.INVALID_ENTRY_PLACEHOLDER
             End Select
             
             Call TaskUtils.UnsetFinishedOnDate(sheetArea)
