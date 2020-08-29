@@ -127,7 +127,7 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
         'Fallback to constants if contributor is not in the list of settings
         fallback = True
     Else
-        If StrComp(hourCell.Value, "") = 0 Then
+        If StrComp(hourCell.value, "") = 0 Then
             'Fallback to constants if setting is empty
             fallback = True
         Else
@@ -150,7 +150,7 @@ Function GetContribWorkTimeSetting(contributor As String, timeSelector As Workin
         End Select
     Else
         'Read the setting from the cell
-        contributorWorkingTime = CDate(hourCell.Value)
+        contributorWorkingTime = CDate(hourCell.value)
     End If
     
     GetContribWorkTimeSetting = contributorWorkingTime
@@ -175,7 +175,7 @@ Function GetContributorMailSetting(contributor As String) As String
     If mailCell Is Nothing Then
         Exit Function
     Else
-        GetContributorMailSetting = mailCell.Value
+        GetContributorMailSetting = mailCell.value
     End If
 End Function
 
@@ -217,11 +217,11 @@ Function GetContributorCalIdSetting(contributor As String, Optional ByRef storId
     Set storeIdCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, Constants.STORE_ID_HEADER)
     
     If Not idCell Is Nothing Then
-        GetContributorCalIdSetting = Trim(idCell.Value)
+        GetContributorCalIdSetting = Trim(idCell.value)
     End If
     
     If Not storeIdCell Is Nothing Then
-        storId = Trim(storeIdCell.Value)
+        storId = Trim(storeIdCell.value)
     End If
 End Function
 
@@ -250,7 +250,7 @@ Function GetContributorGetWorkDoneCat(contributor As String) As String
         'Fallback to standard value
         GetContributorGetWorkDoneCat = Constants.STANDARD_GETTING_WORK_DONE_CATEGORY
     Else
-        GetContributorGetWorkDoneCat = catCell.Value
+        GetContributorGetWorkDoneCat = catCell.value
     End If
 End Function
 
@@ -310,7 +310,7 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
     If cell Is Nothing Then
         fallback = True
     Else
-        If StrComp(cell.Value, "") = 0 Or Not IsNumeric(cell.Value) Then
+        If StrComp(cell.value, "") = 0 Or Not IsNumeric(cell.value) Then
             'No entry found in cell - fallback to constants
             fallback = True
         Else
@@ -326,7 +326,7 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
             onOffset = Constants.APPOINTMENT_OFFSET_HOURS
         End Select
     Else
-        onOffset = CDbl(cell.Value)
+        onOffset = CDbl(cell.value)
     End If
     
     GetContributorApptOnOffset = onOffset
@@ -356,7 +356,7 @@ Function GetContributorWorkingDays(contributor As String) As Double()
         GetContributorWorkingDays = Utils.CopyVarArrToDoubleArr(Constants.STANDARD_WORKING_DAYS)
     Else
         Dim wdSerialized As String
-        wdSerialized = wdsCell.Value
+        wdSerialized = wdsCell.value
         
         If StrComp(wdSerialized, "") <> 0 Then
             Dim workingDaysSet() As String

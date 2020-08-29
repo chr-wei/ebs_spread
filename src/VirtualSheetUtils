@@ -315,8 +315,8 @@ Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String
         'Read row and col count
         Dim rowCount As Long
         Dim colCount As Long
-        rowCount = nameCell.Offset(0, 2).Value
-        colCount = nameCell.Offset(0, 4).Value
+        rowCount = nameCell.Offset(0, 2).value
+        colCount = nameCell.Offset(0, 4).value
         
         'Span the range
         Dim startRng As Range
@@ -369,16 +369,16 @@ Function GetNewSheetStorage(name As String, inSheetArea As Range, storagePrefix 
     'Set header and retrieve cell ranges
     
     'Save name
-    vSheetNameHeaderCell.Value = VIRTUAL_SHEET_NAME_HEADER
-    vSheetNameHeaderCell.Offset(0, 1).Value = name
+    vSheetNameHeaderCell.value = VIRTUAL_SHEET_NAME_HEADER
+    vSheetNameHeaderCell.Offset(0, 1).value = name
     
     'Save row count
-    vSheetNameHeaderCell.Offset(0, 2).Value = VIRTUAL_SHEET_STOR_ROWS_HEADER
-    vSheetNameHeaderCell.Offset(0, 3).Value = inSheetArea.Rows.Count
+    vSheetNameHeaderCell.Offset(0, 2).value = VIRTUAL_SHEET_STOR_ROWS_HEADER
+    vSheetNameHeaderCell.Offset(0, 3).value = inSheetArea.Rows.Count
     
     'Save col count
-    vSheetNameHeaderCell.Offset(0, 4).Value = VIRTUAL_SHEET_STOR_COLS_HEADER
-    vSheetNameHeaderCell.Offset(0, 5).Value = inSheetArea.Columns.Count
+    vSheetNameHeaderCell.Offset(0, 4).value = VIRTUAL_SHEET_STOR_COLS_HEADER
+    vSheetNameHeaderCell.Offset(0, 5).value = inSheetArea.Columns.Count
     
     'Get the data storage
     Dim tlc As Range                             'tlc = top left cell
@@ -457,7 +457,7 @@ Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
                 For Each cll In foundInSheet
                     Dim nameCell As Range
                     Set nameCell = cll.Offset(0, 1) 'Get offset from name header (name val is stored right beside the header)
-                    key = CStr(nameCell.Value)
+                    key = CStr(nameCell.value)
                     
                     If Not vSheets.Exists(key) Then
                         'Store name cell with key
@@ -522,7 +522,7 @@ Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
         
         Set result = Base.UnionN(result, rngLastMatch)
         'Do not search inside the data range of the virtual sheets (set row offset)
-        rowOffset = rngLastMatch.Offset(0, 3).Value
+        rowOffset = rngLastMatch.Offset(0, 3).value
         Set strt = rngLastMatch.Offset(rowOffset, 0)
         
         Set rngLastMatch = rng.FindNext(strt)

@@ -44,11 +44,11 @@ Function ExportVisibleTasks()
         Dim cll As Range
         
         For Each cll In visibleTasks
-            Set sheetArea = TaskUtils.GetTaskSheetArea(cll.Value)
+            Set sheetArea = TaskUtils.GetTaskSheetArea(cll.value)
             'Store the sheet in a special virtual sheet with EXIMPORT_SHEET_PREFIX. Do not delete the original sheet as it still has to
             'be available inside this script
             
-            Call VirtualSheetUtils.StoreAsVirtualSheet(cll.Value, sheetArea, EXIMPORT_SHEET_PREFIX, False)
+            Call VirtualSheetUtils.StoreAsVirtualSheet(cll.value, sheetArea, EXIMPORT_SHEET_PREFIX, False)
         Next cll
     End If
 End Function
@@ -108,6 +108,6 @@ Function RewriteImportSheetHashes()
     
     For Each item In VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX).Items
         Set nameCell = item
-        nameCell.Value = Utils.CreateHashString("t")
+        nameCell.value = Utils.CreateHashString("t")
     Next item
 End Function

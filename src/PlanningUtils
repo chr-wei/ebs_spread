@@ -168,17 +168,17 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     End If
     
     'Add the generated hash to identify the task
-    taskHashCell.Value = hash
+    taskHashCell.value = hash
     
     'Add number for new entry
-    newEntryCell.Value = newFormattedNumber
+    newEntryCell.value = newFormattedNumber
     
     'Add placeholders for fields or initial values or const values
-    taskNameCell.Value = Constants.TASK_NAME_INITIAL
-    taskEstimateCell.Value = Constants.TASK_ESTIMATE_INITIAL
-    taskKanbanListCell.Value = Constants.KANBAN_LIST_TODO
-    taskContributorCell.Value = Constants.CONTRIBUTOR_INITIAL
-    taskFinishedOnCell.Value = Constants.N_A
+    taskNameCell.value = Constants.TASK_NAME_INITIAL
+    taskEstimateCell.value = Constants.TASK_ESTIMATE_INITIAL
+    taskKanbanListCell.value = Constants.KANBAN_LIST_TODO
+    taskContributorCell.value = Constants.CONTRIBUTOR_INITIAL
+    taskFinishedOnCell.value = Constants.N_A
     
     'Add a hyperlink to the sheet which will be generated in the next step
     Dim subAddress As String
@@ -188,7 +188,7 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     Call Utils.AddSubtileHyperlink(taskNameCell, subAddress)
     
     'Do this as last step because priorities are resorting the table
-    taskPrioCell.Value = Constants.TASK_PRIO_INITIAL
+    taskPrioCell.value = Constants.TASK_PRIO_INITIAL
     
     'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskLine'
     Call PlanningUtils.OrganizePrioColumn
@@ -244,7 +244,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     'Find the hash cell in task sheet - we need the column of this finding
     Set foundHashCell = Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet(), Constants.TASK_LIST_NAME, Constants.T_HASH_HEADER, rng)
     If Not foundHashCell Is Nothing Then
-        GetTaskHash = foundHashCell.Value
+        GetTaskHash = foundHashCell.value
     Else
         GetTaskHash = ""
     End If
@@ -288,7 +288,7 @@ Function IsTaskTracking(entry As Variant) As Boolean
         Dim indicatorCell As Range
         Set indicatorCell = PlanningUtils.IntersectHashAndListColumn(taskHash, Constants.INDICATOR_HEADER)
 
-        IsTaskTracking = StrComp(indicatorCell.Value, Constants.INDICATOR) = 0
+        IsTaskTracking = StrComp(indicatorCell.value, Constants.INDICATOR) = 0
     End If
 End Function
 
@@ -315,7 +315,7 @@ Function EndAllTasks()
     Set indicatorCells = Utils.FindSheetCell(PlanningUtils.GetPlanningSheet.UsedRange, Constants.INDICATOR)
     
     If Not indicatorCells Is Nothing Then
-        indicatorCells.Value = ""
+        indicatorCells.value = ""
     End If
 End Function
 
@@ -372,15 +372,15 @@ Function StartSelectedTask()
             'Add a marker in the planning sheet
             Dim indicatorCell As Range
             Set indicatorCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.INDICATOR_HEADER)
-            indicatorCell.Value = Constants.INDICATOR
+            indicatorCell.value = Constants.INDICATOR
             
             'If task is still marked as in backlog or done, mark it as in progress
             Dim kanbanListCell As Range
             Set kanbanListCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
             
-            If StrComp(kanbanListCell.Value, Constants.KANBAN_LIST_TODO) = 0 Or _
-                                                                           StrComp(kanbanListCell.Value, Constants.KANBAN_LIST_DONE) = 0 Then
-                kanbanListCell.Value = Constants.KANBAN_LIST_IN_PROGRESS
+            If StrComp(kanbanListCell.value, Constants.KANBAN_LIST_TODO) = 0 Or _
+                                                                           StrComp(kanbanListCell.value, Constants.KANBAN_LIST_DONE) = 0 Then
+                kanbanListCell.value = Constants.KANBAN_LIST_IN_PROGRESS
                 Call TaskUtils.SetKanbanList(taskSheet, Constants.KANBAN_LIST_IN_PROGRESS)
             End If
         End If
@@ -473,13 +473,13 @@ Function ReinitPriorities()
     'Collect all array values
     prioIdx = 0
     For Each cell In priorities
-        prioNumbers(prioIdx) = CDbl(cell.Value)
+        prioNumbers(prioIdx) = CDbl(cell.value)
         prioIdx = prioIdx + 1
     Next cell
     
     prioIdx = 0
     For Each cell In hashes
-        hashStrings(prioIdx) = cell.Value
+        hashStrings(prioIdx) = cell.value
         prioIdx = prioIdx + 1
     Next cell
     
@@ -496,7 +496,7 @@ Function ReinitPriorities()
         Dim prioCell As Range
         Set prioCell = IntersectHashAndListColumn(currentHash, Constants.TASK_PRIORITY_HEADER)
         If Not prioCell Is Nothing Then
-            prioCell.Value = CDbl(newPrio + 1)
+            prioCell.value = CDbl(newPrio + 1)
         End If
     Next newPrio
 End Function
@@ -523,7 +523,7 @@ Function SetMultiCellHighlight(Optional sel As Range) As Range
     End If
     
     Dim val As String
-    val = sel.Value
+    val = sel.value
     
     Dim multiSel As Range
     Dim bdRange As Range
@@ -590,7 +590,7 @@ Function GetAllListValidatedCols() As Range
     If Not tagHeaderCells Is Nothing Then
         Dim tagCell As Range
         For Each tagCell In tagHeaderCells
-            Set listValidatedCol = PlanningUtils.GetTaskListColumn(tagCell.Value, ceData)
+            Set listValidatedCol = PlanningUtils.GetTaskListColumn(tagCell.value, ceData)
             Set allListValidatedCols = Base.UnionN(allListValidatedCols, listValidatedCol)
         Next tagCell
     End If
@@ -629,8 +629,8 @@ Function CopyTask(newHash As String, sourceListHash As String)
         
         'Append postfix to task name, set kanban list to todo and recalculate ebs estimates
         Call PlanningUtils.ApplyTaskData(hash:=newHash, name:=currentName & " (copy)", handleName:=True, _
-            kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
-            handleEstimate:=True, recalcEbsEstimates:=True)
+                                         kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
+                                         handleEstimate:=True, recalcEbsEstimates:=True)
     End If
 End Function
 
@@ -688,12 +688,12 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
             Dim topNeighbour As Range
             Set topNeighbour = Utils.GetTopNeighbour(area)
                               
-            If IsNumeric(topNeighbour.Value) Then
+            If IsNumeric(topNeighbour.value) Then
                 cellAreaCount = area.cells.Count
                 
                 For idx = 1 To cellAreaCount
                     'Calculate a value slightly higher than the top neighbour priority and maintain the original order of the tasks
-                    newVal = topNeighbour.Value + (cellAreaCount - idx + 1) * 0.001
+                    newVal = topNeighbour.value + (cellAreaCount - idx + 1) * 0.001
                     area.cells(idx) = newVal
                 Next idx
             End If
@@ -704,12 +704,12 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
             Dim bottomNeighbour As Range
             Set bottomNeighbour = Utils.GetBottomNeighbour(area)
                               
-            If IsNumeric(bottomNeighbour.Value) Then
+            If IsNumeric(bottomNeighbour.value) Then
                 cellAreaCount = area.cells.Count
                 
                 For idx = 1 To cellAreaCount
                     'Calculate a value slightly lower than the top neighbour priority and maintain the original order of the tasks
-                    newVal = bottomNeighbour.Value - (idx + 1) * 0.001
+                    newVal = bottomNeighbour.value - (idx + 1) * 0.001
                     area.cells(idx) = newVal
                 Next idx
             End If
@@ -779,13 +779,13 @@ Function GatherTasks(Optional rng As Range)
     Dim gatherCell As Range
     Set gatherCell = PlanningUtils.IntersectHashAndListColumn(startHash, Constants.TASK_PRIORITY_HEADER)
     
-    gatherVal = gatherCell.Value
+    gatherVal = gatherCell.value
     
     idx = 0
     For Each cell In rng
         'Calculate a value slightly lower than the priority the tasks shall be gathered around. Maintain the original order of the tasks
         newVal = gatherVal - idx * 0.001
-        cell.Value = newVal
+        cell.value = newVal
         idx = idx + 1
     Next cell
         
@@ -861,7 +861,7 @@ Function GetCumulativeMode(ebsColCell As Range) As CumulativeMode
     Set headerCell = PlanningUtils.GetTaskListColumn(ebsColCell, ceHeader)
     Set cumulativeSetCell = Utils.GetTopNeighbour(headerCell)
     
-    Select Case cumulativeSetCell.Value
+    Select Case cumulativeSetCell.value
     Case "single"
         GetCumulativeMode = CumulativeMode.ceSingle
     Case "cumulative"
@@ -880,10 +880,10 @@ Function CollectEbsColData(headerCell As Range)
     If headerCell Is Nothing Then Exit Function
     
     'Reset the column values to N/A
-    PlanningUtils.GetTaskListColumn(headerCell, ceData).Value = Constants.N_A
+    PlanningUtils.GetTaskListColumn(headerCell, ceData).value = Constants.N_A
     
     Dim header As String
-    header = headerCell.Value
+    header = headerCell.value
     
     Dim regex As New RegExp
     regex.Global = True
@@ -997,15 +997,15 @@ Function CollectEbsColData(headerCell As Range)
                     If supportPointsCell Is Nothing Then GoTo r2yNextCell
                         
                     'Deserialize support points and estimates, interpolated for the whished value
-                    supportPoints = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(supportPointsCell.Value))
+                    supportPoints = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(supportPointsCell.value))
                     If Not Base.IsArrayAllocated(supportPoints) Then GoTo r2yNextCell
                         
                     Select Case estType
                     Case EstimateType.ceTime
-                        estArray = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(estimateCell.Value))
+                        estArray = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(estimateCell.value))
                     Case EstimateType.ceDate
                         'Cascade array casting as date strings cannot be converted to double directly
-                        estArray = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(estimateCell.Value)))
+                        estArray = Utils.CopyVarArrToDoubleArr(Utils.CopyVarArrToDateArr(Utils.DeserializeArray(estimateCell.value)))
                     End Select
                         
                     interpolatedVal = Utils.InterpolateArray(supportPoints, estArray, percentage)
@@ -1015,11 +1015,11 @@ Function CollectEbsColData(headerCell As Range)
                         'Use this number format to crop the decimal places
                         cell.NumberFormat = "0.00"
                         'Only one value was interpolated and returned in the array.
-                        cell.Value = interpolatedVal(0)
+                        cell.value = interpolatedVal(0)
                     Case EstimateType.ceDate
                         'General format will display date correctly, reset the format. Otherwise date will be displayed in numbers (650000,3)
                         cell.NumberFormat = "General"
-                        cell.Value = CDate(interpolatedVal(0))
+                        cell.value = CDate(interpolatedVal(0))
                     End Select
                 End If
 r2yNextCell:
@@ -1058,9 +1058,9 @@ r2yNextCell:
                     GoTo g5hNextCell
                 End If
                     
-                supportPoints = Utils.CopyVarArrToDoubleArr(supportPointsCell.Value)
+                supportPoints = Utils.CopyVarArrToDoubleArr(supportPointsCell.value)
                 'Time est array (h) is converted here
-                estArray = Utils.CopyVarArrToDoubleArr(estimateCell.Value)
+                estArray = Utils.CopyVarArrToDoubleArr(estimateCell.value)
                     
                 If Not Base.IsArrayAllocated(supportPoints) Or Not Base.IsArrayAllocated(estArray) Then
                     GoTo g5hNextCell
@@ -1070,7 +1070,7 @@ r2yNextCell:
                 interpolatedVal = Utils.InterpolateArray(supportPoints, estArray, percentage)
                     
                 cell.NumberFormat = "0.00"
-                cell.Value = interpolatedVal
+                cell.value = interpolatedVal
 g5hNextCell:
             Next cell
                 
@@ -1148,7 +1148,7 @@ Function CollectTotalTimesSpent()
             Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
             totalTime = TaskUtils.GetTaskTotalTime(sheetArea)
             cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
-            cell.Value = totalTime
+            cell.value = totalTime
         End If
     Next cell
 End Function
@@ -1250,8 +1250,8 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
             
             If Not tag Is Nothing Then
                 If StrComp(tag, "") <> 0 Then
-                    Call diV.Add(key:=CStr(tagIdx), item:=tag.Value)
-                    Call diH.Add(key:=CStr(tagIdx), item:=tagHeader.Value)
+                    Call diV.Add(key:=CStr(tagIdx), item:=tag.value)
+                    Call diH.Add(key:=CStr(tagIdx), item:=tagHeader.value)
                     tagIdx = tagIdx + 1
                 End If
             End If
@@ -1417,19 +1417,19 @@ Function BacksyncTask(syncedHash As String)
         
         Case TASK_ESTIMATE_HEADER
             If IsNumeric(existingVal) Then
-                cell.Value = CDbl(existingVal)
+                cell.value = CDbl(existingVal)
             Else
-                cell.Value = existingVal
+                cell.value = existingVal
             End If
         Case DUE_DATE_HEADER, TASK_FINISHED_ON_HEADER
             If IsDate(existingVal) Then
                 'Convert to date to insert value correctly
-                cell.Value = CDate(existingVal)
+                cell.value = CDate(existingVal)
             Else
-                cell.Value = existingVal
+                cell.value = existingVal
             End If
         Case Else
-            cell.Value = existingVal
+            cell.value = existingVal
         End Select
     Next header
 End Function
@@ -1474,7 +1474,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(name) And TypeName(name) = "String" Then
             'Set value
-            currentCell.Value = name
+            currentCell.value = name
         End If
         If handleName Then Call Planning.ManageTaskNameChange(currentCell)
     End If
@@ -1484,7 +1484,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(comment) And TypeName(comment) = "String" Then
             'Set value
-            currentCell.Value = comment
+            currentCell.value = comment
         End If
         If handleComment Then Call Planning.ManageCommentChange(currentCell)
     End If
@@ -1503,7 +1503,7 @@ Function ApplyTaskData(hash As String, _
                 If idx > UBound(tags) Then
                     Exit For
                 Else
-                    currentCell.Value = tags(idx)
+                    currentCell.value = tags(idx)
                 End If
             End If
             idx = idx + 1
@@ -1522,7 +1522,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(kanbanList) And TypeName(kanbanList) = "String" Then
             'Set value
-            currentCell.Value = kanbanList
+            currentCell.value = kanbanList
         End If
         'Interferes with finished on date
         If handleKanbanList Then Call Planning.ManageKanbanListChange(currentCell, kanbanChangesFinishedOn)
@@ -1533,7 +1533,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(estimate) Then
             'Set value
-            currentCell.Value = estimate
+            currentCell.value = estimate
         End If
         'Intreferes with contributor change when recalc ebs estimates is enabled
         If handleEstimate Then Call Planning.ManageEstimateChange(currentCell, recalcEbsEstimates)
@@ -1544,7 +1544,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(finishedOnDate) And TypeName(finishedOnDate) = "Date" Then
             'Set value
-            currentCell.Value = finishedOnDate
+            currentCell.value = finishedOnDate
         End If
         'Interferes with kanban list change
         If handleFinishedOnDate Then Call Planning.ManageFinishedOnDateChange(currentCell)
@@ -1555,7 +1555,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(dueDate) And TypeName(dueDate) = "Date" Then
             'Set value
-            currentCell.Value = dueDate
+            currentCell.value = dueDate
         End If
         If handleDueDate Then Call Planning.ManageDueDateChange(currentCell)
     End If
@@ -1565,7 +1565,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(contributor) And TypeName(contributor) = "String" Then
             'Set value
-            currentCell.Value = contributor
+            currentCell.value = contributor
         End If
         If handleContributor Then Call Planning.ManageContributorChange(currentCell, recalcEbsEstimates)
     End If
@@ -1575,7 +1575,7 @@ Function ApplyTaskData(hash As String, _
     If Not currentCell Is Nothing Then
         If Not IsMissing(priority) And TypeName(priority) = "Long" Then
             'Set value
-            currentCell.Value = priority
+            currentCell.value = priority
         End If
         If handlePriority Then Call Planning.ManageTaskPriorityChange
     End If
