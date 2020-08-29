@@ -64,6 +64,9 @@ Function ImportTasks()
     Dim anyHash As String
     
     For Each key In vSheets.Keys
+        'Prevent crash of worksheet for long-running import
+        DoEvents
+        
         Dim cpHash As String: cpHash = key
         If SanityUtils.CheckHash(cpHash) Then
             Dim loadedSheet As Worksheet
@@ -80,6 +83,9 @@ Function ImportTasks()
                 'Append postfix to task name.
                 Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
                 anyHash = cpHash
+                
+                'Close task sheet(s) to minimize memory usage
+                Call TaskUtils.VirtualizeTaskSheets
             End If
         End If
     Next key
