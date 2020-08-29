@@ -560,7 +560,7 @@ End Function
 '*******************************************************************************
 Public Function SHA256(sMessage As String) As String
     Dim hash(7) As Long
-    Dim M() As Long
+    Dim m() As Long
     Dim w(63) As Long
     Dim a As Long
     Dim b As Long
@@ -586,10 +586,10 @@ Public Function SHA256(sMessage As String) As String
     hash(7) = &H5BE0CD19
     
     'Preprocessing. Append padding bits and length and convert to words
-    M = ConvertToWordArray(sMessage)
+    m = ConvertToWordArray(sMessage)
     
     'Main loop
-    For i = 0 To UBound(M) Step 16
+    For i = 0 To UBound(m) Step 16
         a = hash(0)
         b = hash(1)
         c = hash(2)
@@ -601,7 +601,7 @@ Public Function SHA256(sMessage As String) As String
         
         For j = 0 To 63
             If j < 16 Then
-                w(j) = M(j + i)
+                w(j) = m(j + i)
             Else
                 w(j) = AddUnsigned(AddUnsigned(AddUnsigned(Gamma1(w(j - 2)), _
                                                            w(j - 7)), Gamma0(w(j - 15))), w(j - 16))
