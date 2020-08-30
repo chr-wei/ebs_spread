@@ -516,13 +516,7 @@ Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
     Dim rngLastMatch As Range
     
     'Initial search to get a stop condition
-    If Utils.GetTopLeftCell(rng).value = VIRTUAL_SHEET_NAME_HEADER Then
-        'Find functions starts to search after top left cell. Check whether top left cell is already a match.
-        Set rngFirstMatch = Utils.GetTopLeftCell(rng)
-    Else
-        Set rngFirstMatch = rng.Find(VIRTUAL_SHEET_NAME_HEADER)
-    End If
-    
+    Set rngFirstMatch = rng.Find(VIRTUAL_SHEET_NAME_HEADER, Utils.GetBottomRightCell(rng))
     Set rngLastMatch = rngFirstMatch
     
     'Find all other matches and set a new start cell in each value
