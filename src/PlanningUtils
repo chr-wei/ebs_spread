@@ -1362,6 +1362,18 @@ Function BacksyncTask(syncedHash As String)
     Dim taskSheetArea As Variant
     Set taskSheetArea = TaskUtils.GetTaskSheetArea(syncedHash)
     
+    Dim readSerTagHeaders As String
+    Dim readSerTagValues As String
+    readSerTagHeaders = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
+    readSerTagValues = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER)
+                            
+    Dim readTagHeaders() As String
+    Dim readTagValues() As String
+    readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
+    readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
+            
+    Dim lastTagCell As Range
+    
     For Each header In copiedFields
         Dim unifiedHeader As String
         unifiedHeader = Planning.UnifyTagName(CStr(header))
@@ -1372,18 +1384,7 @@ Function BacksyncTask(syncedHash As String)
         Case TAG_REGEX
             'Tags are stored in a serialized string inside the sheet. Deserialize the values and get the tag corresponding to
             'the current tag header
-                            
-            Dim readSerTagHeaders As String
-            Dim readSerTagValues As String
-            readSerTagHeaders = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_HEADERS_HEADER)
-            readSerTagValues = Utils.GetSingleDataCellVal(taskSheetArea, Constants.SERIALIZED_TAGS_VALUES_HEADER)
-                            
-            Dim readTagHeaders() As String
-            Dim readTagValues() As String
-                            
-            readTagHeaders = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagHeaders))
-            readTagValues = Utils.CopyVarArrToStringArr(Utils.DeserializeArray(readSerTagValues))
-                            
+                                                        
             If Base.IsArrayAllocated(readTagHeaders) And Base.IsArrayAllocated(readTagValues) Then
                 'Values were deserialized successfully
                 Dim headIdx As Integer
@@ -1391,6 +1392,8 @@ Function BacksyncTask(syncedHash As String)
                     If StrComp(readTagHeaders(headIdx), header) = 0 Then
                         'Tag for current header was found.
                         existingVal = readTagValues(headIdx)
+                        'Clear the tag value to mark it as set. Unset values will be stored later
+                        readTagValues(headIdx) = ""
                         Exit For
                     End If
                 Next headIdx
@@ -1424,10 +1427,33 @@ Function BacksyncTask(syncedHash As String)
             Else
                 cell.value = existingVal
             End If
+        Case TAG_REGEX
+            Set lastTagCell = cell
+            cell.value = existingVal
         Case Else
             cell.value = existingVal
         End Select
     Next header
+    
+    'Set overflowing tags to the last tag cell
+    Dim overflowTag As String
+    Dim unsetTag As Variant
+    If Not lastTagCell Is Nothing And Base.IsArrayAllocated(readTagValues) Then
+        overflowTag = lastTagCell.value
+        'Values were deserialized successfully
+        
+        For Each unsetTag In readTagValues
+            If unsetTag <> "" Then
+                If overflowTag = "" Then
+                    overflowTag = unsetTag
+                Else
+                    overflowTag = overflowTag & ";" & unsetTag
+                End If
+            End If
+        Next unsetTag
+    
+        lastTagCell.value = overflowTag
+    End If
 End Function
 
 Function ApplyTaskData(hash As String, _
