@@ -60,7 +60,9 @@ Function ImportTasks()
     'ExportImportUtils.RewriteImportSheetHashes
         
     Dim vSheets As Scripting.Dictionary
-    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX)
+    Dim orderedNames() As Variant
+    
+    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX, orderedNames)
     Dim key As Variant
     Dim anyHash As String
     
@@ -83,21 +85,20 @@ Function ImportTasks()
                 
                 If Not newSheet Is Nothing Then
                     Call SyncSheetData(importSheetArea, newSheet)
+                
+                    'Backsync the task to the planning sheet to make it appear in the list.
+                    Call PlanningUtils.BacksyncTask(syncedHash:=cpHash)
+    
+                    Dim currentName As String
+                    currentName = TaskUtils.GetName(importSheetArea)
+            
+                    'Append postfix to task name.
+                    Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
+                    anyHash = cpHash
+                    
+                    'Close task sheet(s) to minimize memory usage
+                    Call TaskUtils.VirtualizeTaskSheets
                 End If
-                'Call TaskUtils.SetHash(importSheetArea, cpHash)
-                
-                'Backsync the task to the planning sheet to make it appear in the list.
-                Call PlanningUtils.BacksyncTask(syncedHash:=cpHash)
-
-                Dim currentName As String
-                currentName = TaskUtils.GetName(importSheetArea)
-        
-                'Append postfix to task name.
-                Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
-                anyHash = cpHash
-                
-                'Close task sheet(s) to minimize memory usage
-                Call TaskUtils.VirtualizeTaskSheets
             End If
         End If
     Next key

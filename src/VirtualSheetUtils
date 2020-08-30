@@ -417,7 +417,7 @@ Function VirtualSheetExists(sheetName As String, storagePrefix As String) As Boo
     VirtualSheetExists = vSheets.Exists(sheetName)
 End Function
 
-Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
+Function GetAllVirtualSheets(storagePrefix As String, Optional ByRef orderedNames As Variant) As Scripting.Dictionary
     Const FN As String = "GetAllVirtualSheets"
     Call MessageUtils.InvokeFnMsg(FN)
     
@@ -429,10 +429,12 @@ Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
     '
     'Output args:
     '   GetAllVirtualSheets:    A dictionary containing all virtual sheets of the workbook (key value pair, see above)
+    '   orderedNames:           A list containing all virtual sheet names in strict order
     
     'Init output
     Dim vSheets As New Scripting.Dictionary
     Set GetAllVirtualSheets = vSheets
+    'orderednames =
     
     'Search for storage sheets
     Dim sheet As Worksheet
@@ -462,6 +464,11 @@ Function GetAllVirtualSheets(storagePrefix As String) As Scripting.Dictionary
                     If Not vSheets.Exists(key) Then
                         'Store name cell with key
                         Call vSheets.Add(key:=key, item:=nameCell)
+                        
+                        If Not IsMissing(orderedNames) Then
+                            ReDim Preserve orderedNames(0 To vSheets.Count - 1)
+                            orderedNames(vSheets.Count - 1) = key
+                        End If
                     End If
                 Next cll
             End If
@@ -509,7 +516,13 @@ Function FindAllSheetNameHeaders(ByVal rng As Range) As Range
     Dim rngLastMatch As Range
     
     'Initial search to get a stop condition
-    Set rngFirstMatch = rng.Find(VIRTUAL_SHEET_NAME_HEADER)
+    If Utils.GetTopLeftCell(rng).value = VIRTUAL_SHEET_NAME_HEADER Then
+        'Find functions starts to search after top left cell. Check whether top left cell is already a match.
+        Set rngFirstMatch = Utils.GetTopLeftCell(rng)
+    Else
+        Set rngFirstMatch = rng.Find(VIRTUAL_SHEET_NAME_HEADER)
+    End If
+    
     Set rngLastMatch = rngFirstMatch
     
     'Find all other matches and set a new start cell in each value
