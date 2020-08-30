@@ -772,28 +772,31 @@ Function GatherTasks(Optional rng As Range)
     Dim gatherCell As Range
     Set gatherCell = PlanningUtils.IntersectHashAndListColumn(startHash, Constants.TASK_PRIORITY_HEADER)
     
-    gatherVal = gatherCell.value
-    
-    idx = 0
-    For Each cell In rng
-        'Calculate a value slightly lower than the priority the tasks shall be gathered around. Maintain the original order of the tasks
-        newVal = gatherVal - idx * 0.001
-        cell.value = newVal
-        idx = idx + 1
-    Next cell
+    If Not IsNumeric(gatherCell.value) Then
+        Call MessageUtils.HandleMessage("Gathering tasks only works on unfinished tasks", _
+                                        ceInfo, FN)
+    Else
+        gatherVal = gatherCell.value
+        idx = 0
+        For Each cell In rng
+            'Calculate a value slightly lower than the priority the tasks shall be gathered around. Maintain the original order of the tasks
+            newVal = gatherVal - idx * 0.001
+            cell.value = newVal
+            idx = idx + 1
+        Next cell
+            
+        'If you break here you can see the changed values in the spreadsheet
+        PlanningUtils.OrganizePrioColumn
         
-    'If you break here you can see the changed values in the spreadsheet
-    PlanningUtils.OrganizePrioColumn
-    
-    'Now select the hash where you started with
-    Dim newSel As Range
-    Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
-    
-    If Not newSel Is Nothing Then
-        Call PlanningUtils.SelectOnPlanningSheet(newSel)
-        Call Planning.HandleSelectionChanges(newSel)
+        'Now select the hash where you started with
+        Dim newSel As Range
+        Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
+        
+        If Not newSel Is Nothing Then
+            Call PlanningUtils.SelectOnPlanningSheet(newSel)
+            Call Planning.HandleSelectionChanges(newSel)
+        End If
     End If
-    
 End Function
 
 Function OrganizePrioColumn()
