@@ -686,7 +686,7 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
                 
                 For idx = 1 To cellAreaCount
                     'Calculate a value slightly higher than the top neighbour priority and maintain the original order of the tasks
-                    newVal = topNeighbour.value + (cellAreaCount - idx + 1) * 0.001
+                    newVal = topNeighbour.value - (cellAreaCount - idx + 1) * 0.001
                     area.cells(idx) = newVal
                 Next idx
             End If
@@ -702,7 +702,7 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
                 
                 For idx = 1 To cellAreaCount
                     'Calculate a value slightly lower than the top neighbour priority and maintain the original order of the tasks
-                    newVal = bottomNeighbour.value - (idx + 1) * 0.001
+                    newVal = bottomNeighbour.value + (idx + 1) * 0.001
                     area.cells(idx) = newVal
                 Next idx
             End If
@@ -817,7 +817,7 @@ Function OrganizePrioColumn()
     Dim sf As SortFields
     Set sf = lo.Sort.SortFields
     sf.Clear
-    sf.Add key:=prioCol, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
+    sf.Add key:=prioCol, SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
     
     With lo.Sort
         .header = xlYes
