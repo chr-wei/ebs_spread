@@ -485,10 +485,12 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     
     Dim hashes() As String
     hashes = Utils.ConvertRangeValsToArr(hashCells)
-        
     Set dateCells = Base.IntersectN( _
                     hashCells.EntireRow, _
                     PlanningUtils.GetTaskListColumn(Constants.TASK_FINISHED_ON_HEADER, ceData))
+                    
+    'Filter date cells for valid dates
+    Set dateCells = Base.FindAll(rng:=dateCells, propertyVal:="Date", compType:=ceIs)
     
     Dim dates() As Date
     dates = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(dateCells))
@@ -507,6 +509,9 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     If UBound(hashes) < N Then
         upperLimit = UBound(hashes)
     Else
+'        'Crop date and hash array to
+'        ReDim Preserve hashes(0 To N - 1)
+'        ReDim Preserve dates(0 To N - 1)
         upperLimit = N
     End If
     
@@ -828,7 +833,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
     hashes = Utils.ConvertRangeValsToArr(hashCells)
     prios = Utils.CopyVarArrToDoubleArr(Utils.ConvertRangeValsToArr(unfinishedTasksPrioCells))
 
-    Call Base.QuickSort(prios, ceDescending, , , hashes)
+    Call Base.QuickSort(prios, ceAscending, , , hashes)
     
     'Start editing the run data
     

@@ -130,7 +130,7 @@ Public Const EBS_RUNDATA_INTERPOLATED_DATES_HEADER As String = "[Interpolated da
 
 'EBS propability constants
 Public Const EBS_GENERATE_RND_VELOCITIES As Boolean = False
-Public Const EBS_VELOCITY_POOL_SIZE As Integer = 200
+Public Const EBS_VELOCITY_POOL_SIZE As Integer = 50
 Public Const EBS_VELOCITY_PICKS As Integer = 50
 
 
