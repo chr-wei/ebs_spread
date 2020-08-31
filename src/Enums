@@ -7,6 +7,7 @@ Enum ComparisonTypes
     ceDoubleLess = 2
     ceDoubleBigger = 3
     ceRegex = 4
+    ceIs = 5
 End Enum
 
 Public Enum ListRowSelect

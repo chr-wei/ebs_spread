@@ -28,6 +28,9 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Function ExportVisibleTasks()
+    Const FN As String = "ExportVisibleTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+
     'This function exports all sheets of tasks that are visible in the planning sheet list.
     'Tasks are exported to a separate workbook only contaning the sheets of tasks
 
@@ -54,6 +57,9 @@ Function ExportVisibleTasks()
 End Function
 
 Function ImportTasks()
+    Const FN As String = "ImportTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+    
     'This function imports all tasks of a special export worksheet
      
     'Rewriting import sheet hashes can cause duplicate imports and is deactivated. Use copy task function instead.
@@ -66,10 +72,12 @@ Function ImportTasks()
     Dim key As Variant
     Dim anyHash As String
     
+    Dim keyIdx As Long: keyIdx = 1
+    
     For Each key In vSheets.Keys
         'Prevent crash of worksheet for long-running import
         DoEvents
-        
+                                                    
         Dim cpHash As String: cpHash = key
         If SanityUtils.CheckHash(cpHash) Then
         
@@ -101,6 +109,8 @@ Function ImportTasks()
                 End If
             End If
         End If
+        
+        keyIdx = keyIdx + 1
     Next key
     
     If anyHash <> "" Then

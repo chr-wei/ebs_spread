@@ -73,6 +73,8 @@ Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optiona
     
     If Not Base.IsArrayAllocated(vArray) Then
         Call MessageUtils.HandleMessage("vArray is not allocated", ceError, FN)
+        'Raise 'Invalid property value'
+        Call Err.Raise(380)
         Exit Function
     End If
     
@@ -213,6 +215,8 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                     compMatch = (CDbl(cellVal) < CDbl(propertyVal))
                 Case ComparisonTypes.ceDoubleBigger
                     compMatch = (CDbl(cellVal) > CDbl(propertyVal))
+                Case ComparisonTypes.ceIs
+                    compMatch = (TypeName(cellVal) = CStr(propertyVal))
                 End Select
                 
                 If compMatch Then
