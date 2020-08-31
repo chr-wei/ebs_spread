@@ -1,0 +1,55 @@
+VERSION 5.00
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ProgressBar 
+   Caption         =   "Caption"
+   ClientHeight    =   1440
+   ClientLeft      =   120
+   ClientTop       =   465
+   ClientWidth     =   3135
+   OleObjectBlob   =   "ProgressBar.frx":0000
+   StartUpPosition =   1  'Fenstermitte
+End
+Attribute VB_Name = "ProgressBar"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+
+Private Sub UserForm_Initialize()
+    Call Me.show(vbModeless)
+    Call Me.Update(cpt:="Running operation", percentage:=0, subTaskText:="Running ...")
+End Sub
+
+Function Update(Optional cpt As String = "Progress", Optional percentage As Double = -1, _
+    Optional N As Integer = -1, _
+    Optional ofN As Integer = -1, _
+    Optional subTaskText As String = "")
+    
+    If cpt <> "" Then Me.caption = cpt
+    
+    If N >= 0 And ofN > 0 Then percentage = N / ofN
+    
+    If percentage >= 0 And percentage <= 1 Then
+        Me.PercentageLabel = Round(percentage * 100, 0) & "%"
+        Me.BarForeground.Width = CInt(percentage * BarBackground.Width)
+    Else
+        Me.PercentageLabel = "N/A"
+        Me.BarForeground.Width = 0
+    End If
+    If subTaskText <> "" Then
+        subTaskText = subTaskText
+        Me.SubTaskLabel = subTaskText
+    End If
+    
+    Call Me.show(vbModeless)
+End Function
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = vbFormControlMenu Then
+        Dim ans As Integer
+        ans = MsgBox("Cancel '" & Me.caption & "'?", vbYesNo)
+        If ans = vbYes Then
+            Utils.TryCatchedCallExternalStop = True
+        End If
+    End If
+End Sub

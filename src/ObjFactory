@@ -12,6 +12,7 @@ Private MessageUtilsObj As Object
 Private SanityUtilsObj As Object
 Private SettingUtilsObj As Object
 Private VirtualSheetUtilsObj As Object
+Private ProgressBarObj As Object
 
 Public Function Base() As Object
     If BaseObj Is Nothing Then Set BaseObj = New Base
@@ -66,4 +67,23 @@ End Function
 Public Function VirtualSheetUtils() As Object
     If VirtualSheetUtilsObj Is Nothing Then Set VirtualSheetUtilsObj = New VirtualSheetUtils
     Set VirtualSheetUtils = VirtualSheetUtilsObj
+End Function
+
+Public Function FactoryProgressBar() As Object
+    If ProgressBarObj Is Nothing Then
+        Set ProgressBarObj = New ProgressBar
+    End If
+    
+    Set FactoryProgressBar = ProgressBarObj
+    
+    On Error Resume Next
+    Dim test As Single
+    test = FactoryProgressBar.Height
+    
+    If Err.Number <> 0 Then
+       Set ProgressBarObj = New ProgressBar
+       Err.Clear
+    End If
+    On Error GoTo 0
+    Set FactoryProgressBar = ProgressBarObj
 End Function

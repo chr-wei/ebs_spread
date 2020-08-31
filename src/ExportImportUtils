@@ -77,6 +77,9 @@ Function ImportTasks()
     For Each key In vSheets.Keys
         'Prevent crash of worksheet for long-running import
         DoEvents
+        
+        Call FactoryProgressBar.Update(cpt:="Importing tasks", _
+            n:=keyIdx + 1, ofN:=vSheets.Count, subTaskText:="Importing task " & keyIdx + 1 & " of " & vSheets.Count)
                                                     
         Dim cpHash As String: cpHash = key
         If SanityUtils.CheckHash(cpHash) Then
