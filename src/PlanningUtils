@@ -333,6 +333,24 @@ Function DeleteSelectedTask()
     End If
 End Function
 
+Function DeleteAllTasks()
+    Dim item As Variant
+    For Each item In VirtualSheetUtils.GetAllStorageSheets(Constants.STORAGE_SHEET_PREFIX).Items
+        Call Utils.DeleteWorksheetSilently(Base.CWorksheet(item))
+    Next item
+    
+    For Each item In TaskUtils.GetAllNonVirtualSheets()
+        Utils.DeleteWorksheetSilently (item)
+    Next item
+    
+    Dim lo As ListObject
+    Set lo = PlanningUtils.GetTaskList()
+            
+    If Not lo Is Nothing Then
+        If Not lo.DataBodyRange Is Nothing Then lo.DataBodyRange.Delete
+    End If
+End Function
+
 Function StartSelectedTask()
     Const FN As String = "PlanningUtils.StartSelectedTask"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -1136,7 +1154,15 @@ Function CollectTotalTimesSpent()
     Dim sheetArea As Range
     Dim totalTime
     
+    Dim taskIdx As Long: taskIdx = 0
     For Each cell In timeCells
+        DoEvents
+        'Check for stop event triggered through progress bar cancel button
+        If Utils.TryCatchedCallExternalStop = True Then Exit Function
+        
+        Call FactoryProgressBar.Update(cpt:="Collecting total times", _
+            n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading data of visible tasks...")
+        
         'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
         hash = PlanningUtils.GetTaskHash(cell)
         
@@ -1146,6 +1172,7 @@ Function CollectTotalTimesSpent()
             cell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
             cell.value = totalTime
         End If
+        taskIdx = taskIdx + 1
     Next cell
 End Function
 

@@ -27,6 +27,8 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
+Public TryCatchedCallExternalStop As Boolean
+
 Function CreateHashString(Optional prefix As String = "") As String
     Const FN As String = "CreateHashString"
     'Function is used to create a unique hash value (first 18 chars of sha256) with prefix if needed.
@@ -545,6 +547,9 @@ Function RunTryCatchedCall(f As String, Optional obj As Object, _
     'This is a wrapper to run functions of objects (worksheets) and modules with specific Application settings e.g. disabled Application events
     'with a try catch mechanism to prohibit errors from bothering the user
     
+    'Set external stop flag to false
+    TryCatchedCallExternalStop = False
+    
     'Comment next line to enable properly debugging
     If Not Constants.DEBUGGING_MODE Then
         On Error GoTo errHandle
@@ -585,8 +590,16 @@ errHandle:
         
 finallyHandle:
     'Finally all other tasks
+    
+    'Kill open forms
+    Dim frm As UserForm
+    For Each frm In UserForms
+        Unload frm
+    Next
+
     Excel.Application.EnableEvents = True
     Excel.Application.screenUpdating = True
+    
 End Function
 
 Function ConvertRangeValsToArr(rng As Range) As String()
