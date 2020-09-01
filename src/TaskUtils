@@ -241,7 +241,7 @@ Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolated
     End If
 End Function
 
-Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Double = -1) As Boolean
+Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Double = -1, Optional startTime As Date = CDate(0)) As Boolean
     'Adds a new line to the time list of the task sheet tracking the elapsed time of tasks. Additionally sets an indicator showing that the entry is
     'currently tracked.
     'Do only add with loaded sheet (Worksheet) and do not pass a range to param 'sheet' like in GetEbsListColumn
@@ -252,7 +252,8 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     '  sheet:  The task sheet
     '  durationHours:  A given duration. Immediately finishes the tracking entry and sets the end time of the entry to 'Now'. The start time is set
     '                  to Now (in d) - durationHours / 24
-    '
+    '  startDate:      Custom start date. Only needed if duration hours were passed as argument
+    
     'Output args:
     '   AddNewTrackingEntry: True if adding entry was successful
     
@@ -291,21 +292,22 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         indicatorCell.value = INDICATOR
         
         'Add a new #00000n number to the list
-        
-        Dim startTime As Date
+
         If durationHours = -1 Then
-            'Duration time is invalid. Set start to 'Now' and no end time
+            'Duration was not passed. Set start to 'Now' and no end time. Start time param is ignored if no duration is set
             startTime = Now
-        Else
+        ElseIf durationHours <> -1 And startTime = CDate(0) Then
             'Substract the hours and convert to days (24 h/day) to add a certain amount of time ending 'Now'. This is only done
             startTime = Now - durationHours / 24
+        ElseIf durationHours <> -1 And startTime > CDate(0) Then
+            'Duration is set and start time is set. Do not alter start time.
         End If
         
         startTimeCell.value = startTime
         
         If durationHours <> -1 Then
-            'Set end time to 'Now' since start time has been set to a time-backshifted value already
-            Call SetEndTimeToSheetTracking(sheet, Now)
+            'Set end time since duration was passed
+            Call SetEndTimeToSheetTracking(sheet, startTime + durationHours / 24)
         End If
         
            
