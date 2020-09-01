@@ -80,7 +80,7 @@ Function ImportTasks()
         If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         Call FactoryProgressBar.Update(cpt:="Importing tasks", _
-            n:=keyIdx + 1, ofN:=vSheets.Count, subTaskText:="Importing task " & keyIdx + 1 & " of " & vSheets.Count)
+                                       n:=keyIdx + 1, ofN:=vSheets.Count, subTaskText:="Importing task " & keyIdx + 1 & " of " & vSheets.Count)
                                                     
         Dim cpHash As String: cpHash = key
         If SanityUtils.CheckHash(cpHash) Then

@@ -791,7 +791,7 @@ Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double 
     
     'Check cells and entries
     If startTimeCell Is Nothing Or endTimeCell Is Nothing Or deltaTCell Is Nothing Or actionCell Is Nothing Or _
-        StrComp(contributor, "") = 0 Then Exit Function
+       StrComp(contributor, "") = 0 Then Exit Function
         
     If Not IsDate(startTimeCell.value) Or Not IsDate(endTimeCell.value) Then Exit Function
     

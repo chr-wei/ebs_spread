@@ -53,9 +53,8 @@ Public Const START_TIME_HEADER As String = "Start time"
 Public Const END_TIME_HEADER As String = "End time"
 
 Public Const TAG_REGEX As String = "%Tag *"
+Public Const SPACER_REGEX As String = "#\d+"
 Public Const EBS_COLUMN_REGEX As String = "^EBS (\d\d)% ((time)|(date))$"
-
-
 
 'Task sheet constants
 Public Const TASK_SHEET_TEMPLATE_NAME As String = "Task sheet template"

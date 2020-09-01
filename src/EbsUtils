@@ -511,9 +511,9 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
     If UBound(hashes) < n Then
         upperLimit = UBound(hashes)
     Else
-'        'Crop date and hash array to
-'        ReDim Preserve hashes(0 To N - 1)
-'        ReDim Preserve dates(0 To N - 1)
+        '        'Crop date and hash array to
+        '        ReDim Preserve hashes(0 To N - 1)
+        '        ReDim Preserve dates(0 To N - 1)
         upperLimit = n
     End If
     
@@ -522,8 +522,8 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
     
     For hashIdx = 0 To upperLimit
         Call FactoryProgressBar.Update(cpt:="Evidence based scheduling", _
-            n:=hashIdx + 1, ofN:=upperLimit + 1, _
-            subTaskText:=contributor & ": Generating velocity pool...")
+                                       n:=hashIdx + 1, ofN:=upperLimit + 1, _
+                                       subTaskText:=contributor & ": Generating velocity pool...")
         DoEvents
         
         Set taskSheetArea = TaskUtils.GetTaskSheetArea(CStr(hashes(hashIdx)))
@@ -884,7 +884,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
     For hashIdx = 0 To UBound(hashes)
         'For all found unfinished tasks iterate
         Call FactoryProgressBar.Update(cpt:="Evidence based scheduling", _
-            n:=hashIdx + 1, ofN:=UBound(hashes) + 1, subTaskText:=contributor & ": Estimating task " & hashIdx + 1 & " of " & UBound(hashes) + 1)
+                                       n:=hashIdx + 1, ofN:=UBound(hashes) + 1, subTaskText:=contributor & ": Estimating task " & hashIdx + 1 & " of " & UBound(hashes) + 1)
         If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         'Give back power to the os in case of long-running calculations

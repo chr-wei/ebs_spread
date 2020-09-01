@@ -212,6 +212,14 @@ Sub UI_CollectTotalTimesSpent()
     Call Utils.RunTryCatchedCall(f:="CollectTotalTimesSpent", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
+Sub UI_ResetListFormat()
+    Const FN As String = "Planning.UI_ResetListFormat"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
+    'Read the task's data to get the total time a user spent working on it.
+    Call Utils.RunTryCatchedCall(f:="ResetListFormat", obj:=PlanningUtils, screenUpdating:=False)
+End Sub
+
 Function HandleChanges(Target As Range)
     Const FN As String = "Planning.HandleChanges"
     Call MessageUtils.InvokeFnMsg(FN)
@@ -522,7 +530,7 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
         'Collect total time spent
         Dim timeCell As Range
         Set timeCell = Base.IntersectN( _
-                    PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), changedCell.EntireRow)
+                       PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), changedCell.EntireRow)
         
         Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
         timeCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
