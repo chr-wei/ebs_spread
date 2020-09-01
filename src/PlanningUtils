@@ -89,7 +89,7 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     entryAdded = False
     
     'Add the task line in planning sheet
-    entryAdded = AddNewTaskLine(newHash, entryCell)
+    entryAdded = AddNewTaskRow(newHash, entryCell)
     
     If entryAdded Then
         'Create a new task sheet
@@ -107,21 +107,21 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     End If
 End Function
 
-Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
-    Const FN As String = "PlanningUtils.AddNewTaskLine"
+Function AddNewTaskRow(hash As String, ByRef newEntryCell As Range) As Boolean
+    Const FN As String = "PlanningUtils.AddNewTaskRow"
     Call MessageUtils.InvokeFnMsg(FN)
         
     'Adds a new task line in the planning sheet's main list
     '
     'Input args:
-    '  hash:           Hash value which will be set for the new task (if any)
-    '  newEntryCell:   The cell a new task shall be added to. The cell will later contain the no. of the added task e.g. '#0001'
+    '  hash:            Hash value which will be set for the new task (if any)
+    '  newEntryCell:    The cell a new task shall be added to. The cell will later contain the no. of the added task e.g. '#0001'
     '
     'Output args:
-    '  AddNewTaskLine: If everything went well result will be 'true'
+    '  AddNewTaskRow:   If everything went well result will be 'true'
     
     'Init output
-    AddNewTaskLine = False
+    AddNewTaskRow = False
     
     Dim HashExists As Boolean
     HashExists = Not Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash) Is Nothing
@@ -190,13 +190,13 @@ Function AddNewTaskLine(hash As String, ByRef newEntryCell As Range) As Boolean
     'Do this as last step because priorities are resorting the table
     taskPrioCell.value = Constants.TASK_PRIO_INITIAL
     
-    'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskLine'
+    'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskRow'
     Call PlanningUtils.OrganizePrioColumn
     
     'Search for the hash here as tasks can get reordered with priority sorting
     Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
     
-    AddNewTaskLine = True
+    AddNewTaskRow = True
 End Function
 
 Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
@@ -1350,7 +1350,7 @@ Function BacksyncTask(syncedHash As String)
         'The task will be added again as it is not existent in the planning sheet
         Dim entryAdded As Boolean
         Dim entryCell As Range
-        entryAdded = AddNewTaskLine(syncedHash, entryCell)
+        entryAdded = AddNewTaskRow(syncedHash, entryCell)
         
         If entryAdded Then
             Call MessageUtils.HandleMessage("Syncing task '" & syncedHash & "' with list", _

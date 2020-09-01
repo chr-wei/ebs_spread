@@ -73,6 +73,8 @@ Public Const SINGLE_SUPPORT_POINT_HEADER As String = "Propability support point"
 Public Const EBS_SELF_TIME_HEADER As String = "EBS self time"
 Public Const ESTIMATE_QUOTIENT_HEADER As String = "EBS self time / Total time"
 Public Const TIME_DELTA_HEADER As String = "Time delta in h"
+Public Const CREATED_ON_HEADER = "Created on"
+
 Public Const TASK_SHEET_ACTION_ONE_HEADER As String = "Action1"
 Public Const TASK_SHEET_ACTION_TWOO_HEADER As String = "Action2"
 Public Const TASK_SHEET_ACTION_ONE_NAME As String = "SetPlainDelta()"
