@@ -1718,5 +1718,5 @@ Function ResetListFormat()
         Next spacerCell
     End If
     
-    If Not allSpacerCols Is Nothing Then allSpacerCols.value = "|"
+    If Not allSpacerCols Is Nothing Then allSpacerCols.value = "."
 End Function
