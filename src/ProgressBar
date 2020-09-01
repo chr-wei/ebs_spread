@@ -21,9 +21,9 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Function Update(Optional cpt As String = "Progress", Optional percentage As Double = -1, _
-    Optional n As Long = -1, _
-    Optional ofN As Long = -1, _
-    Optional subTaskText As String = "")
+                Optional n As Long = -1, _
+                Optional ofN As Long = -1, _
+                Optional subTaskText As String = "")
     
     If cpt <> "" Then Me.caption = cpt
     

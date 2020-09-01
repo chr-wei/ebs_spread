@@ -507,7 +507,7 @@ Function SetCellValuesForValidation(colRange As Range)
                 End If
             End If
         End If
-    'Else
+        'Else
         'There might be 'dead' data if the list does not contain any data - will be cleaned up if new data is set for the same header
     End If
 End Function

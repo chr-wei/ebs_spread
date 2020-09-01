@@ -196,6 +196,9 @@ Function AddNewTaskRow(hash As String, ByRef newEntryCell As Range) As Boolean
     'Search for the hash here as tasks can get reordered with priority sorting
     Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
     
+    'Apply proper list format
+    Call Me.ResetListFormat
+    
     AddNewTaskRow = True
 End Function
 
@@ -307,8 +310,8 @@ Function EndAllTasks()
     If Not indicatorCells Is Nothing Then
         indicatorCells.value = ""
         For Each item In indicatorCells
-        Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(PlanningUtils.GetTaskHash(item.value)))
-    Next item
+            Call TaskUtils.SetEndTimeToSheetTracking(TaskUtils.GetTaskSheetArea(PlanningUtils.GetTaskHash(item.value)))
+        Next item
     End If
 End Function
 
@@ -1161,7 +1164,7 @@ Function CollectTotalTimesSpent()
         If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         Call FactoryProgressBar.Update(cpt:="Collecting total times", _
-            n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading total time of visible task " & taskIdx + 1 & " of " & timeCells.Count)
+                                       n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading total time of visible task " & taskIdx + 1 & " of " & timeCells.Count)
         
         'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
         hash = PlanningUtils.GetTaskHash(cell)
@@ -1235,6 +1238,22 @@ Function GetTagHeaderCells() As Range
         
     'Returns all headers for tags
     Set GetTagHeaderCells = Utils.FindSheetCell(GetPlanningSheet.UsedRange, Constants.TAG_REGEX, ComparisonTypes.ceRegex)
+End Function
+
+Function GetSpacerHeaderCells() As Range
+    Const FN As String = "PlanningUtils.GetSpacerHeaderCells"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
+    'Returns all headers for tags
+    Dim lo As ListObject
+    Set lo = Me.GetTaskList()
+    If Not lo Is Nothing Then
+        Dim hr As Range
+        Set hr = lo.HeaderRowRange
+        If Not hr Is Nothing Then
+            Set GetSpacerHeaderCells = Utils.FindSheetCell(hr, Constants.SPACER_REGEX, ComparisonTypes.ceRegex)
+        End If
+    End If
 End Function
 
 Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders As String) As String
@@ -1652,8 +1671,50 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
     
     If PlanningUtils.IsTaskTracking(hash) Then
         'If the selected task is currently tracking, finish it to get a clean state
-        PlanningUtils.lasks
+        PlanningUtils.EndAllTasks
     End If
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.LoadTaskSheet(CStr(hash)), CDbl(deltaT))
+End Function
+
+Function ResetListFormat()
+    Dim lo As ListObject
+    Set lo = Me.GetTaskList()
+    
+    Dim lightColor As Long
+    lightColor = SettingUtils.GetColors(ceLightColor)
+        
+    If Not lo Is Nothing Then
+        Dim br As Range
+        Set br = lo.DataBodyRange
+        If Not br Is Nothing Then
+            With br
+                .RowHeight = 21#
+                .HorizontalAlignment = xlGeneral
+                .VerticalAlignment = xlVAlignCenter
+                .IndentLevel = 1
+                .ShrinkToFit = False
+                .WrapText = False
+                .Font.color = lightColor
+                .Font.Underline = False
+            End With
+        End If
+    End If
+    
+    Dim spacerHeaderCells As Range
+    Set spacerHeaderCells = PlanningUtils.GetSpacerHeaderCells
+    
+    Dim allSpacerCols As Range
+    Dim spacerCol As Range
+    
+    If Not spacerHeaderCells Is Nothing Then
+        Dim spacerCell As Range
+        For Each spacerCell In spacerHeaderCells
+            Set spacerCol = Me.GetTaskListColumn(spacerCell.value, ceData)
+            Set allSpacerCols = Base.UnionN(allSpacerCols, spacerCol)
+            spacerCell.ColumnWidth = 3.3
+        Next spacerCell
+    End If
+    
+    If Not allSpacerCols Is Nothing Then allSpacerCols.value = "|"
 End Function

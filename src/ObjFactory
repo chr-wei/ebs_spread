@@ -81,8 +81,8 @@ Public Function FactoryProgressBar() As Object
     test = FactoryProgressBar.Height
     
     If Err.Number <> 0 Then
-       Set ProgressBarObj = New ProgressBar
-       Err.Clear
+        Set ProgressBarObj = New ProgressBar
+        Err.Clear
     End If
     On Error GoTo 0
     Set FactoryProgressBar = ProgressBarObj
