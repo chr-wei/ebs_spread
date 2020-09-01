@@ -92,8 +92,10 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
     entryAdded = AddNewTaskRow(newHash, entryCell)
     
     If entryAdded Then
-        'Create a new task sheet
-        Call TaskUtils.AddTaskSheet(newHash)
+        'Create a new task sheet and hide it
+        Dim sheet As Worksheet
+        Set sheet = TaskUtils.AddTaskSheet(newHash)
+        sheet.Visible = xlSheetHidden
         
         'Select the title of the created task
         Dim title As Range
