@@ -147,6 +147,8 @@ Function AddTaskSheet(hash As String) As Worksheet
         sheet.name = hash
 
         Call TaskUtils.SetHash(sheet, hash)
+        Call TaskUtils.SetCreatedOnDate(sheet, Now)
+        
         Set AddTaskSheet = sheet
     End If
 End Function
@@ -521,6 +523,12 @@ Function SetDueDate(sheetArea As Variant, datee As Date)
         Call Utils.SetSingleDataCell(sheetArea, Constants.DUE_DATE_HEADER, datee)
     Else
         Call UnsetDueDate(sheetArea)
+    End If
+End Function
+
+Function SetCreatedOnDate(sheetArea As Variant, datee As Date)
+    If IsDate(datee) And datee <> CDate(0) Then
+        Call Utils.SetSingleDataCell(sheetArea, Constants.CREATED_ON_HEADER, datee)
     End If
 End Function
 
