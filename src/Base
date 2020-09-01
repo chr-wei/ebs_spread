@@ -71,7 +71,7 @@ Public Function QuickSort(ByRef vArray As Variant, direction As SortDir, Optiona
     '  None. vArray and associate array are called by ref and returned via passed args
     'Set the standard limits if no limits are specified
     
-    If Not Base.IsArrayAllocated(vArray) Then
+    If Not Me.IsArrayAllocated(vArray) Then
         Call MessageUtils.HandleMessage("vArray is not allocated", ceError, FN)
         'Raise 'Invalid property value'
         Call Err.Raise(380)
@@ -227,7 +227,7 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                         firstFlag = False
                     Else
                         'Combine the previously found cells to a common range
-                        Set result = Base.UnionN(result, cell)
+                        Set result = Me.UnionN(result, cell)
                     End If
                 End If
             End If
@@ -510,7 +510,7 @@ Function Max(val1 As Variant, Optional val2 As Variant) As Variant
     Max = 0
     
     'Check args
-    If IsArray(val1) And Not Base.IsArrayAllocated(val1) Then Exit Function
+    If IsArray(val1) And Not Me.IsArrayAllocated(val1) Then Exit Function
     
     If IsArray(val1) Then
         Dim arrVal As Variant
@@ -538,7 +538,7 @@ Function Min(val1 As Variant, Optional val2 As Variant) As Variant
     Min = 0
     
     'Check args
-    If IsArray(val1) And Not Base.IsArrayAllocated(val1) Then Exit Function
+    If IsArray(val1) And Not Me.IsArrayAllocated(val1) Then Exit Function
     
     If IsArray(val1) Then
         Dim arrVal As Variant
@@ -628,19 +628,19 @@ Function ConcatToArray(arr As Variant, concatee As Variant) As Variant
     ConcatToArray = outArray
     
     'Check args and concat
-    If Not Base.IsArrayAllocated(arr) Then
+    If Not Me.IsArrayAllocated(arr) Then
         arr = concatee
         Erase concatee
     End If
     
-    If Not Base.IsArrayAllocated(arr) Then Exit Function
+    If Not Me.IsArrayAllocated(arr) Then Exit Function
     
     Dim arrCount As Long: arrCount = UBound(arr) - LBound(arr) + 1
     Dim arrIdx As Long
     
     If Not IsArray(arr) Then Exit Function
     If IsArray(concatee) Then
-        If Not Base.IsArrayAllocated(concatee) Then
+        If Not Me.IsArrayAllocated(concatee) Then
             'Output first array if second array is not initialized
             ConcatToArray = arr
             Exit Function
@@ -686,7 +686,7 @@ Function ExtractSubArray(arr As Variant, lbnd As Long, ubnd As Long) As Variant(
     ExtractSubArray = subArr
     
     'Check args
-    If Not Base.IsArrayAllocated(arr) Then Exit Function
+    If Not Me.IsArrayAllocated(arr) Then Exit Function
     If lbnd < LBound(arr) Or ubnd > UBound(arr) Or lbnd > ubnd Then Exit Function
     
     'Extract the sub array

@@ -57,11 +57,11 @@ Enum MessageSeverity
 End Enum
 
 Function InvokeUIMsg(FN As String)
-    Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, True)
+    Call Me.HandleMessage("Invoke " & FN, ceVerbose, FN, True)
 End Function
 
 Function InvokeFnMsg(FN As String)
-    Call MessageUtils.HandleMessage("Invoke " & FN, ceVerbose, FN, False)
+    Call Me.HandleMessage("Invoke " & FN, ceVerbose, FN, False)
 End Function
 
 Function HandleMessage(message As String, _
@@ -70,7 +70,7 @@ Function HandleMessage(message As String, _
                        Optional clearPreviousMessages As Boolean = False)
     
     If clearPreviousMessages Then
-        Call MessageUtils.ClearListMessages
+        Call Me.ClearListMessages
     End If
     
     If severity <= MessageSeverity.ceVerbose And Not Constants.VERBOSE_OUTPUT Then
@@ -79,18 +79,18 @@ Function HandleMessage(message As String, _
     End If
     
     If Constants.DEBUGGING_MODE Then
-        Call MessageUtils.PostDirectMessage(message, severity, caller)
+        Call Me.PostDirectMessage(message, severity, caller)
     Else
-        If MessageUtils.DoMessageListPost(severity) Then
-            Call MessageUtils.PostListMessage(message, severity, caller)
-            If severity > MessageUtils.savedListMaxSeverity Then
+        If Me.DoMessageListPost(severity) Then
+            Call Me.PostListMessage(message, severity, caller)
+            If severity > Me.savedListMaxSeverity Then
                 savedListMaxSeverity = severity
-                Call MessageUtils.SetSheetColor(severity)
+                Call Me.SetSheetColor(severity)
             End If
         End If
         
-        If MessageUtils.DoDirectPost(severity) Then Call MessageUtils.PostDirectMessage(message, severity, caller)
-        If MessageUtils.DoMessageBoxPost(severity) Then Call MessageUtils.PostBoxMessage(message, severity, caller)
+        If Me.DoDirectPost(severity) Then Call Me.PostDirectMessage(message, severity, caller)
+        If Me.DoMessageBoxPost(severity) Then Call Me.PostBoxMessage(message, severity, caller)
     End If
 End Function
 
@@ -108,7 +108,7 @@ Function GetMessageList() As ListObject
     '
     'Output args:
     '  GetMessageList:    A reference to the list object with a fixed name
-    Set GetMessageList = MessageUtils.GetMessageSheet.ListObjects(MESSAGE_LIST_NAME)
+    Set GetMessageList = Me.GetMessageSheet.ListObjects(MESSAGE_LIST_NAME)
 End Function
 
 Function GetMessageListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
@@ -141,16 +141,16 @@ Function PostListMessage(message As String, severity As MessageSeverity, Optiona
         Dim callerCell As Range
         Dim severityCell As Range
         
-        Set messageCell = MessageUtils.IntersectMessageListColumn(MESSAGE_HEADER, newEntryCell)
-        Set timestampCell = MessageUtils.IntersectMessageListColumn(MESSAGE_TIMESTAMP_HEADER, newEntryCell)
-        Set callerCell = MessageUtils.IntersectMessageListColumn(MESSAGE_CALLER_HEADER, newEntryCell)
-        Set severityCell = MessageUtils.IntersectMessageListColumn(MESSAGE_SEVERITY_HEADER, newEntryCell)
+        Set messageCell = Me.IntersectMessageListColumn(MESSAGE_HEADER, newEntryCell)
+        Set timestampCell = Me.IntersectMessageListColumn(MESSAGE_TIMESTAMP_HEADER, newEntryCell)
+        Set callerCell = Me.IntersectMessageListColumn(MESSAGE_CALLER_HEADER, newEntryCell)
+        Set severityCell = Me.IntersectMessageListColumn(MESSAGE_SEVERITY_HEADER, newEntryCell)
         
         If Not messageCell Is Nothing And Not timestampCell Is Nothing And Not callerCell Is Nothing And Not severityCell Is Nothing Then
             newEntryCell.value = newFormattedNumber
             messageCell.value = message
             timestampCell.value = Now()
-            severityCell.value = MessageUtils.GetSeverityString(severity)
+            severityCell.value = Me.GetSeverityString(severity)
             
             If StrComp(caller, vbNullString) = 0 Then
                 callerCell.value = Constants.N_A
@@ -163,7 +163,7 @@ End Function
 
 Function PostDirectMessage(message As String, severity As MessageSeverity, Optional caller As String = vbNullString)
     Dim out As String
-    out = "[" & CStr(Now) & "] [" & MessageUtils.GetSeverityString(severity) & "]:" & vbTab & message
+    out = "[" & CStr(Now) & "] [" & Me.GetSeverityString(severity) & "]:" & vbTab & message
     
     If StrComp(caller, vbNullString) <> 0 Then
         'Add caller info to the message
@@ -198,12 +198,12 @@ End Function
 
 Function ClearListMessages()
     Dim br As Range
-    Set br = MessageUtils.GetMessageListBodyRange
+    Set br = Me.GetMessageListBodyRange
             
     If Not br Is Nothing Then br.Delete
     
-    Call MessageUtils.SetSheetColor(MessageSeverity.ceNoSeverity)
-    MessageUtils.savedListMaxSeverity = MessageSeverity.ceNoSeverity
+    Call Me.SetSheetColor(MessageSeverity.ceNoSeverity)
+    Me.savedListMaxSeverity = MessageSeverity.ceNoSeverity
 End Function
 
 Function GetMessageListBodyRange() As Range
@@ -213,7 +213,7 @@ Function GetMessageListBodyRange() As Range
     Set GetMessageListBodyRange = Nothing
     
     Dim lo As ListObject
-    Set lo = MessageUtils.GetMessageList
+    Set lo = Me.GetMessageList
     If Not lo Is Nothing Then
         Dim dbc As Range
         Set dbc = lo.DataBodyRange
@@ -224,7 +224,7 @@ End Function
 Function SetSheetColor(severity As MessageSeverity)
     Dim color As Long
     Dim sheet As Worksheet
-    Set sheet = MessageUtils.GetMessageSheet
+    Set sheet = Me.GetMessageSheet
         
     Select Case severity
     Case MessageSeverity.ceInfo

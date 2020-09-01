@@ -51,9 +51,9 @@ Function HandleFollowHyperlink(ByVal Target As hyperlink)
     
         Select Case clickedCell.value
         Case Constants.TASK_SHEET_ACTION_ONE_NAME
-            Call TaskUtils.SetPlainDelta(clickedCell)
+            Call Me.SetPlainDelta(clickedCell)
         Case Constants.TASK_SHEET_ACTION_TWOO_NAME
-            Call TaskUtils.SetCalendarDelta(clickedCell)
+            Call Me.SetCalendarDelta(clickedCell)
         End Select
         
         'Overwrite action of the clicked link and select the clicked cell
@@ -71,8 +71,8 @@ Function LoadTaskSheet(hash As String) As Worksheet
     
     'Getting a task sheet may load it from a virtual sheet storage. Many open sheets inside a workbook have been found to consume
     'a lot of ram memory. Virtualize them to prevent memory problems
-    If TaskUtils.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
-        Call TaskUtils.VirtualizeTaskSheets
+    If Me.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
+        Call Me.VirtualizeTaskSheets
         Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
                                         ceVerbose, FN)
     End If
@@ -122,8 +122,8 @@ Function AddTaskSheet(hash As String) As Worksheet
     
     'Many open sheets inside a workbook have been found to consume
     'a lot of ram memory. Virtualize them to prevent memory problems
-    If TaskUtils.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
-        Call TaskUtils.VirtualizeTaskSheets
+    If Me.GetAllNonVirtualSheets.Count >= Constants.TASK_SHEET_COUNT_LIMIT Then
+        Call Me.VirtualizeTaskSheets
         Call MessageUtils.HandleMessage("Too many task sheets opened. Virtualizing sheets to prevent excessive memory usage.", _
                                         ceVerbose, FN)
     End If
@@ -146,8 +146,8 @@ Function AddTaskSheet(hash As String) As Worksheet
         Set sheet = ThisWorkbook.Worksheets(Constants.TASK_SHEET_TEMPLATE_NAME & " (2)")
         sheet.name = hash
 
-        Call TaskUtils.SetHash(sheet, hash)
-        Call TaskUtils.SetCreatedOnDate(sheet, Now)
+        Call Me.SetHash(sheet, hash)
+        Call Me.SetCreatedOnDate(sheet, Now)
         
         Set AddTaskSheet = sheet
     End If
@@ -230,8 +230,8 @@ Function AddNewEbsEntry(sheet As Worksheet, supportPoint As Double, interpolated
         Dim supportPointCell As Range
         Dim interpolatedEstCell As Range
         
-        Set supportPointCell = TaskUtils.IntersectEbsListColumn(sheet, Constants.SINGLE_SUPPORT_POINT_HEADER, newEntryCell)
-        Set interpolatedEstCell = TaskUtils.IntersectEbsListColumn(sheet, Constants.EBS_SELF_TIME_HEADER, newEntryCell)
+        Set supportPointCell = Me.IntersectEbsListColumn(sheet, Constants.SINGLE_SUPPORT_POINT_HEADER, newEntryCell)
+        Set interpolatedEstCell = Me.IntersectEbsListColumn(sheet, Constants.EBS_SELF_TIME_HEADER, newEntryCell)
         
         If Not supportPointCell Is Nothing And Not interpolatedEstCell Is Nothing Then
             newEntryCell.value = newFormattedNumber
@@ -272,8 +272,8 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
     If entryReceived Then
         newEntryCell.value = newFormattedNumber
         
-        Set startTimeCol = TaskUtils.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
-        Set indicatorCol = TaskUtils.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
+        Set startTimeCol = Me.GetTimeListColumn(sheet, Constants.START_TIME_HEADER, ceData)
+        Set indicatorCol = Me.GetTimeListColumn(sheet, Constants.INDICATOR_HEADER, ceData)
         
         Set startTimeCell = Base.IntersectN(newEntryCell.EntireRow, startTimeCol)
         Set indicatorCell = Base.IntersectN(newEntryCell.EntireRow, indicatorCol)
@@ -310,7 +310,7 @@ Function AddNewTrackingEntry(sheet As Worksheet, Optional durationHours As Doubl
         
            
         'Add special functions to the currently ended tracking entry which let you control delta time calculation (see also 'TaskUtils.HandleFollowHyperlink')
-        Call TaskUtils.AddSpecialActionsToTimeListRow(sheet, startTimeCell)
+        Call Me.AddSpecialActionsToTimeListRow(sheet, startTimeCell)
     
         AddNewTrackingEntry = True
     End If
@@ -326,7 +326,7 @@ Function SetEndTimeToSheetTracking(sheetArea As Variant, Optional time As Date =
     Dim trackingEntry As Range
     Dim endTimeCell As Range
     
-    Set trackingEntry = TaskUtils.GetTimeListColumn(sheetArea, Constants.INDICATOR_HEADER, ceData)
+    Set trackingEntry = Me.GetTimeListColumn(sheetArea, Constants.INDICATOR_HEADER, ceData)
     Set trackingEntry = Base.FindAll(trackingEntry, Constants.INDICATOR)
     
     If trackingEntry Is Nothing Then
@@ -380,14 +380,14 @@ Function SetEstimate(sheetArea As Variant, userEstimate As Variant, setNewEbsEst
     If IsNumeric(userEstimate) And userEstimate > 0 Then
         Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_ESTIMATE_HEADER, userEstimate)
         
-        If setNewEbsEstimates Then Call TaskUtils.SetEbsEstimates(Base.CWorksheet(sheetArea), CDbl(userEstimate))
+        If setNewEbsEstimates Then Call Me.SetEbsEstimates(Base.CWorksheet(sheetArea), CDbl(userEstimate))
     Else
         Call Utils.SetSingleDataCell(sheetArea, Constants.TASK_ESTIMATE_HEADER, Constants.N_A)
         
         If setNewEbsEstimates Then
             'Clear the ebs list entries if invalid data was passed
             Dim br As Range
-            Set br = TaskUtils.GetEbsListBodyRange(sheetArea)
+            Set br = Me.GetEbsListBodyRange(Base.CWorksheet(sheetArea))
             
             If Not br Is Nothing Then br.Delete
         End If
@@ -411,7 +411,7 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
         
     'Clear list of ebs estimates first
     Dim br As Range
-    Set br = TaskUtils.GetEbsListBodyRange(sheet)
+    Set br = Me.GetEbsListBodyRange(sheet)
         
     If Not br Is Nothing Then br.Delete
         
@@ -460,7 +460,7 @@ Function SetEbsEstimates(sheet As Worksheet, userEstimate As Double)
     'Iterate over support points
     Dim rowIdx As Integer
     For rowIdx = 0 To UBound(supportPoints)
-        Call TaskUtils.AddNewEbsEntry(sheet, CDbl(supportPoints(rowIdx)), interpolatedEstimates(rowIdx))
+        Call Me.AddNewEbsEntry(sheet, CDbl(supportPoints(rowIdx)), interpolatedEstimates(rowIdx))
     Next rowIdx
 End Function
 
@@ -569,7 +569,7 @@ Function GetLastEndTimestamp(sheetArea As Variant) As Date
     Dim endStamps As Range
     Dim val As String
        
-    Set endStamps = TaskUtils.GetTimeListColumn(sheetArea, Constants.END_TIME_HEADER, ceData)
+    Set endStamps = Me.GetTimeListColumn(sheetArea, Constants.END_TIME_HEADER, ceData)
     If Not endStamps Is Nothing Then
         'Read the last value from the list
         val = Utils.GetBottomRightCell(endStamps).value
@@ -741,7 +741,7 @@ Function SetPlainDelta(rowIdentifier As Range)
     'Restore the 'standard' method to calculate the delta: Plain subtraction of two dates. Formula only works inside a list object
     '
     'Input args:
-    '   rowIdentifier:    The cell a user clicked a hyperlink in. See TaskUtils.HandleFollowHyperlink or any cell of the time list row
+    '   rowIdentifier:    The cell a user clicked a hyperlink in. See Me.HandleFollowHyperlink or any cell of the time list row
     
     Const PLAIN_DELTA_FORMULA As String = "=MAX(([@[" & Constants.END_TIME_HEADER & "]]-[@[" & Constants.START_TIME_HEADER & "]])*24,0)"
     Dim taskSheet As Worksheet
@@ -750,8 +750,8 @@ Function SetPlainDelta(rowIdentifier As Range)
     'Get the cell to add the formula to
     Dim deltaTCell As Range
     Dim actionCell As Range
-    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
-    Set actionCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, rowIdentifier)
+    Set deltaTCell = Me.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
+    Set actionCell = Me.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, rowIdentifier)
     
     
     If deltaTCell Is Nothing Or actionCell Is Nothing Then Exit Function
@@ -759,14 +759,14 @@ Function SetPlainDelta(rowIdentifier As Range)
     deltaTCell.Formula = PLAIN_DELTA_FORMULA     'Be careful here to use english formula format (German ';' become ',') otherwise setting formula will fail
     
     'Clear all the accent colors from the cells and highlight the clicked one
-    Call TaskUtils.SetClickActionHighlight(taskSheet, actionCell)
+    Call Me.SetClickActionHighlight(taskSheet, actionCell)
 End Function
 
 Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double = -1)
     'Function calculates the calendar appointment based time delta between two given dates of a time tracking row
     '
     'Input args:
-    '   rowIdentifier:    The cell a user clicked a hyperlink in (see TaskUtils.HandleFollowHyperlink) or any other cell of the time list row
+    '   rowIdentifier:    The cell a user clicked a hyperlink in (see Me.HandleFollowHyperlink) or any other cell of the time list row
     
     Dim taskSheet As Worksheet
     Set taskSheet = rowIdentifier.Parent
@@ -775,7 +775,7 @@ Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double 
     Set lo = rowIdentifier.ListObject
     
     Dim contributor As String
-    contributor = TaskUtils.GetContributor(taskSheet)
+    contributor = Me.GetContributor(taskSheet)
     
     'if delta
     Dim startTimeCell As Range
@@ -784,10 +784,10 @@ Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double 
     Dim actionCell As Range
         
     'Get cells of the time list to calculate delta from
-    Set startTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.START_TIME_HEADER, rowIdentifier)
-    Set endTimeCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.END_TIME_HEADER, rowIdentifier)
-    Set deltaTCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
-    Set actionCell = TaskUtils.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, rowIdentifier)
+    Set startTimeCell = Me.IntersectTimeListColumn(taskSheet, Constants.START_TIME_HEADER, rowIdentifier)
+    Set endTimeCell = Me.IntersectTimeListColumn(taskSheet, Constants.END_TIME_HEADER, rowIdentifier)
+    Set deltaTCell = Me.IntersectTimeListColumn(taskSheet, Constants.TIME_DELTA_HEADER, rowIdentifier)
+    Set actionCell = Me.IntersectTimeListColumn(taskSheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, rowIdentifier)
     
     'Check cells and entries
     If startTimeCell Is Nothing Or endTimeCell Is Nothing Or deltaTCell Is Nothing Or actionCell Is Nothing Or _
@@ -825,7 +825,7 @@ Function SetCalendarDelta(rowIdentifier As Range, Optional fakeDeltaT As Double 
     End If
     
     'Clear all the accent colors from the cells and highlight the clicked one
-    Call TaskUtils.SetClickActionHighlight(taskSheet, actionCell)
+    Call Me.SetClickActionHighlight(taskSheet, actionCell)
 End Function
 
 Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
@@ -840,11 +840,11 @@ Function SetClickActionHighlight(sheet As Worksheet, clickedCell As Range)
     'Get the two clickable cells
     
     'Add the first clickable cell of the row
-    Set actionCells = TaskUtils.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, clickedCell)
+    Set actionCells = Me.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, clickedCell)
     
     'Add the second clickable cell of the row
     Set actionCells = Base.UnionN(actionCells, _
-                                  TaskUtils.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, clickedCell))
+                                  Me.IntersectTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, clickedCell))
     
     actionCells.Interior.color = xlNone
     
@@ -868,8 +868,8 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
     Dim actionOneCell As Range
     Dim actionTwooCell As Range
     
-    Set actionOneCell = Base.IntersectN(rowIdentifier.EntireRow, TaskUtils.GetTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, ceData))
-    Set actionTwooCell = Base.IntersectN(rowIdentifier.EntireRow, TaskUtils.GetTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, ceData))
+    Set actionOneCell = Base.IntersectN(rowIdentifier.EntireRow, Me.GetTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_ONE_HEADER, ceData))
+    Set actionTwooCell = Base.IntersectN(rowIdentifier.EntireRow, Me.GetTimeListColumn(sheet, Constants.TASK_SHEET_ACTION_TWOO_HEADER, ceData))
     
     If Not actionOneCell Is Nothing And Not actionTwooCell Is Nothing Then
         'Add special action links to the list row to manage delta time calculation of task sheet row (by plain delta or with calendar data)
@@ -882,7 +882,7 @@ Function AddSpecialActionsToTimeListRow(sheet As Worksheet, rowIdentifier As Ran
         Call Utils.AddSubtileHyperlink(actionTwooCell, actionTwooCell.address)
         
         'Set color for first action cell: Plain delta calc
-        Call TaskUtils.SetPlainDelta(actionOneCell)
+        Call Me.SetPlainDelta(actionOneCell)
     End If
 End Function
 
@@ -890,7 +890,7 @@ Function VirtualizeTaskSheets()
     'Store all task sheets to a virtual storage sheet to prevent excessive memory (ram) consumption
     
     Dim sheet As Worksheet
-    For Each sheet In TaskUtils.GetAllNonVirtualSheets()
+    For Each sheet In Me.GetAllNonVirtualSheets()
         Call VirtualSheetUtils.StoreAsVirtualSheet(sheet.name, sheet, Constants.STORAGE_SHEET_PREFIX)
     Next sheet
     
@@ -902,12 +902,12 @@ Function VirtualizeTaskSheets()
     Next item
 End Function
 
-Function ClearTimeList(sheetArea As Variant)
-    Dim br As Range: Set br = TaskUtils.GetTimeListBodyRange(sheetArea)
+Function ClearTimeList(sheetArea As Worksheet)
+    Dim br As Range: Set br = Me.GetTimeListBodyRange(sheetArea)
     If Not br Is Nothing Then br.Delete
 End Function
 
-Function ClearEbsList(sheetArea As Variant)
-    Dim br As Range: Set br = TaskUtils.GetEbsListBodyRange(sheetArea)
+Function ClearEbsList(sheetArea As Worksheet)
+    Dim br As Range: Set br = Me.GetEbsListBodyRange(sheetArea)
     If Not br Is Nothing Then br.Delete
 End Function

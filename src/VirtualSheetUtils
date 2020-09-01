@@ -78,7 +78,7 @@ Function StoreAsVirtualSheet(name As String, inSheetArea As Variant, storagePref
     Dim inHash As String
     inHash = TaskUtils.GetHash(inSheetArea)
     
-    If VirtualSheetUtils.VirtualSheetExists(inHash, storagePrefix) Then
+    If Me.VirtualSheetExists(inHash, storagePrefix) Then
         'Only store if sheet is not already virtual (check by sheet name)
         Call MessageUtils.HandleMessage("Cannot store sheet '" & inHash & "' as virtual sheet. Sheet already exists.'", ceError, FN)
         Exit Function
@@ -86,7 +86,7 @@ Function StoreAsVirtualSheet(name As String, inSheetArea As Variant, storagePref
     
     'Prepare or get an existing virtual storage sheet
     Dim vSheetStorageRng As Range
-    Set vSheetStorageRng = VirtualSheetUtils.GetNewSheetStorage(name, rSheetRng, storagePrefix)
+    Set vSheetStorageRng = Me.GetNewSheetStorage(name, rSheetRng, storagePrefix)
        
     'Copy and paste the whole cell content of inSheetArea into the virtual storage range
     rSheetRng.Copy
@@ -124,10 +124,10 @@ Function GetFreeStorageSheet(inSheetArea As Range, storagePrefix As String) As W
 
     Dim item As Variant
     Dim storageSheet As Worksheet
-    For Each item In VirtualSheetUtils.GetAllStorageSheets(storagePrefix).Items
+    For Each item In Me.GetAllStorageSheets(storagePrefix).Items
         Set storageSheet = item
         'Cycle through all available storage sheets
-        If Not VirtualSheetUtils.StorageIsFull(storageSheet, inSheetArea) Then
+        If Not Me.StorageIsFull(storageSheet, inSheetArea) Then
             'Found a storage sheet with enough space
             Set GetFreeStorageSheet = storageSheet
             Exit Function
@@ -202,13 +202,13 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
     Dim useSheetTemplate As Boolean: useSheetTemplate = False
     If Not templateSheet Is Nothing Then useSheetTemplate = True
     
-    If Not VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
+    If Not Me.VirtualSheetExists(sheetName, storagePrefix) Then
         Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be loaded.'", _
                                         ceError, FN)
     Else
         'The virtual sheet exists and can be loaded without conflict
         Dim vr As Range
-        Set vr = VirtualSheetUtils.GetVirtualStorageDataRange(sheetName, storagePrefix)
+        Set vr = Me.GetVirtualStorageDataRange(sheetName, storagePrefix)
                 
         'Get the non-virtual storage sheet (nvs)
         Dim nvs As Worksheet
@@ -233,7 +233,7 @@ Function LoadVirtualSheet(sheetName As String, storagePrefix As String, Optional
         Excel.Application.CutCopyMode = False
         
         'Free virtual sheet storage
-        Call VirtualSheetUtils.DeleteVirtualSheet(sheetName, storagePrefix)
+        Call Me.DeleteVirtualSheet(sheetName, storagePrefix)
         
         Set LoadVirtualSheet = nvs
     End If
@@ -249,19 +249,19 @@ Function DeleteVirtualSheet(sheetName As String, storagePrefix As String)
     '   sheetName:      The virtual sheet's name you want to delete
     '   storagePrefix:  The virtual sheet storage prefix used to identify the storage sheet
     
-    If Not VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
+    If Not Me.VirtualSheetExists(sheetName, storagePrefix) Then
         Call MessageUtils.HandleMessage("Virtual sheet '" & sheetName & "' does not exist and cannot be deleted.'", ceError, FN)
     Else
         'The virtual sheet exists and can be deleted
         Dim vr As Range
-        Set vr = VirtualSheetUtils.GetVirtualStorageDataRange(sheetName, storagePrefix)
+        Set vr = Me.GetVirtualStorageDataRange(sheetName, storagePrefix)
         
         'Free virtual sheet storage: Delete data, the header range and the footer range (empty row)
         Base.UnionN(Base.UnionN(vr.EntireRow, Utils.GetTopNeighbour(vr)).EntireRow, Utils.GetBottomNeighbour(vr).EntireRow).Delete
     End If
     
     'Run garbage collection to delete empty storage sheets
-    Call VirtualSheetUtils.GarbageCollectStorageSheets(storagePrefix)
+    Call Me.GarbageCollectStorageSheets(storagePrefix)
 End Function
 
 Function GarbageCollectStorageSheets(storagePrefix As String)
@@ -274,9 +274,9 @@ Function GarbageCollectStorageSheets(storagePrefix As String)
     
     Dim item As Variant
     Dim storageSheet As Worksheet
-    For Each item In VirtualSheetUtils.GetAllStorageSheets(storagePrefix).Items
+    For Each item In Me.GetAllStorageSheets(storagePrefix).Items
         Set storageSheet = item
-        If VirtualSheetUtils.IsStorageSheetEmpty(storageSheet) Then
+        If Me.IsStorageSheetEmpty(storageSheet) Then
             Call Utils.DeleteWorksheetSilently(storageSheet)
         End If
     Next item
@@ -301,10 +301,10 @@ Function GetVirtualStorageDataRange(sheetName As String, storagePrefix As String
     'Check args
     If StrComp(sheetName, "") = 0 Then Exit Function
     
-    If VirtualSheetUtils.VirtualSheetExists(sheetName, storagePrefix) Then
+    If Me.VirtualSheetExists(sheetName, storagePrefix) Then
         'Read the range as the virtual sheet exists: Read row and col count and span a range
         Dim vSheets As Scripting.Dictionary
-        Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(storagePrefix)
+        Set vSheets = Me.GetAllVirtualSheets(storagePrefix)
         
         Dim storageSheet As Worksheet
         Set storageSheet = vSheets(sheetName).Parent
@@ -352,7 +352,7 @@ Function GetNewSheetStorage(name As String, inSheetArea As Range, storagePrefix 
     
     'Get a storage sheet which has enough space to store the data of 'inSheetArea'
     Dim freeStorageSheet As Worksheet
-    Set freeStorageSheet = VirtualSheetUtils.GetFreeStorageSheet(inSheetArea, storagePrefix)
+    Set freeStorageSheet = Me.GetFreeStorageSheet(inSheetArea, storagePrefix)
     
     Dim usedRng As Range
     Set usedRng = freeStorageSheet.UsedRange
@@ -361,7 +361,7 @@ Function GetNewSheetStorage(name As String, inSheetArea As Range, storagePrefix 
     Dim vSheetNameHeaderCell As Range
     Set vSheetNameHeaderCell = Utils.GetBottomLeftCell(usedRng)
                 
-    If Not VirtualSheetUtils.IsStorageSheetEmpty(freeStorageSheet) Then
+    If Not Me.IsStorageSheetEmpty(freeStorageSheet) Then
         'If the returned storage sheet already contains some storage sheets enter the header below an empty footer row
         Set vSheetNameHeaderCell = vSheetNameHeaderCell.Offset(VIRTUAL_SHEET_OFFSET, 0)
     End If
@@ -412,7 +412,7 @@ Function VirtualSheetExists(sheetName As String, storagePrefix As String) As Boo
     
     'Load all virtual sheets to a collection of key=name, value=data range
     Dim vSheets As Scripting.Dictionary
-    Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(storagePrefix)
+    Set vSheets = Me.GetAllVirtualSheets(storagePrefix)
 
     VirtualSheetExists = vSheets.Exists(sheetName)
 End Function
@@ -450,7 +450,7 @@ Function GetAllVirtualSheets(storagePrefix As String, Optional ByRef orderedName
             Set sheetNameHeaderRange = Base.IntersectN(sheet.UsedRange, sheet.cells(1, 1).EntireColumn)
             
             'Get a range of all cells containing the virtual sheet name header const
-            Set foundInSheet = VirtualSheetUtils.FindAllSheetNameHeaders(sheetNameHeaderRange)
+            Set foundInSheet = Me.FindAllSheetNameHeaders(sheetNameHeaderRange)
             
             If Not foundInSheet Is Nothing Then
                 'Concat all the sheet names
@@ -559,7 +559,7 @@ Function GetAllStorageSheets(storagePrefix As String) As Scripting.Dictionary
     'Get task sheets (they have a hash set as their name)
     Dim sheetIdx: sheetIdx = 0
     For Each sheet In ThisWorkbook.Worksheets
-        If VirtualSheetUtils.SheetIsStorageSheet(sheet, storagePrefix) Then
+        If Me.SheetIsStorageSheet(sheet, storagePrefix) Then
             Call storageSheets.Add(key:=sheet.name, item:=sheet)
         End If
     Next sheet

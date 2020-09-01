@@ -47,7 +47,7 @@ Function GetTaskList() As ListObject
     '
     'Output args:
     '  GetTaskList:    A reference to the list object with a fixed name
-    Set GetTaskList = PlanningUtils.GetPlanningSheet.ListObjects(Constants.TASK_LIST_NAME)
+    Set GetTaskList = Me.GetPlanningSheet.ListObjects(Constants.TASK_LIST_NAME)
 End Function
 
 Function GetTaskListColumn(colIdentifier As Variant, rowIdentifier As ListRowSelect) As Range
@@ -97,11 +97,11 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
         
         'Select the title of the created task
         Dim title As Range
-        Set title = PlanningUtils.IntersectHashAndListColumn(newHash, Constants.TASK_NAME_HEADER)
+        Set title = Me.IntersectHashAndListColumn(newHash, Constants.TASK_NAME_HEADER)
         
         If Not title Is Nothing Then
             'Select title and manually invoke handling of selection changes (this is necessary if function is called with disabled events)
-            Call PlanningUtils.SelectOnPlanningSheet(title)
+            Call Me.SelectOnPlanningSheet(title)
             Call Planning.HandleSelectionChanges(title)
         End If
     End If
@@ -191,7 +191,7 @@ Function AddNewTaskRow(hash As String, ByRef newEntryCell As Range) As Boolean
     taskPrioCell.value = Constants.TASK_PRIO_INITIAL
     
     'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskRow'
-    Call PlanningUtils.OrganizePrioColumn
+    Call Me.OrganizePrioColumn
     
     'Search for the hash here as tasks can get reordered with priority sorting
     Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
@@ -221,7 +221,7 @@ Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String
     
     If rng Is Nothing Then
         'Use selection if nothing was passed
-        Set rng = PlanningUtils.GetPlanningSelection
+        Set rng = Me.GetPlanningSelection
     End If
     
     Dim activeSheetName As String
@@ -280,7 +280,7 @@ Function IsTaskTracking(entry As Variant) As Boolean
     Case "Range"
         Dim rng As Range
         Set rng = entry
-        taskHash = PlanningUtils.GetTaskHash(rng)
+        taskHash = Me.GetTaskHash(rng)
     End Select
     
     If StrComp(taskHash, "") = 0 Then
@@ -289,7 +289,7 @@ Function IsTaskTracking(entry As Variant) As Boolean
     Else
         'If the indicator sign is in the task row the task is tracking.
         Dim indicatorCell As Range
-        Set indicatorCell = PlanningUtils.IntersectHashAndListColumn(taskHash, Constants.INDICATOR_HEADER)
+        Set indicatorCell = Me.IntersectHashAndListColumn(taskHash, Constants.INDICATOR_HEADER)
 
         IsTaskTracking = StrComp(indicatorCell.value, Constants.INDICATOR) = 0
     End If
@@ -326,7 +326,7 @@ Function DeleteSelectedTask()
     Set entryCell = Nothing
     
     'We pass an empty entryCell here to get the selected cell.
-    hash = PlanningUtils.GetTaskHash(entryCell)
+    hash = Me.GetTaskHash(entryCell)
     
     If Not SanityUtils.CheckHash(hash) Then
         Exit Function
@@ -347,7 +347,7 @@ Function DeleteAllTasks()
     Next item
     
     Dim lo As ListObject
-    Set lo = PlanningUtils.GetTaskList()
+    Set lo = Me.GetTaskList()
             
     If Not lo Is Nothing Then
         If Not lo.DataBodyRange Is Nothing Then lo.DataBodyRange.Delete
@@ -371,26 +371,26 @@ Function StartSelectedTask()
     Set entryCell = Nothing
     
     'We pass an empty entryCell here to retrieve the cell of the function.
-    hash = PlanningUtils.GetTaskHash(entryCell)
+    hash = Me.GetTaskHash(entryCell)
     
     If Not SanityUtils.CheckHash(hash) Then
         Exit Function
     Else
         'Fetch the sheets. Load a real task sheet as table entry will be added.
         Set taskSheet = TaskUtils.LoadTaskSheet(hash)
-        Set planningSheet = PlanningUtils.GetPlanningSheet
+        Set planningSheet = Me.GetPlanningSheet
         
         'Add a new time entry for the selected task. Check if this was successful
         If TaskUtils.AddNewTrackingEntry(taskSheet) Then
         
             'Add a marker in the planning sheet
             Dim indicatorCell As Range
-            Set indicatorCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.INDICATOR_HEADER)
+            Set indicatorCell = Me.IntersectHashAndListColumn(hash, Constants.INDICATOR_HEADER)
             indicatorCell.value = Constants.INDICATOR
             
             'If task is still marked as in backlog or done, mark it as in progress
             Dim kanbanListCell As Range
-            Set kanbanListCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
+            Set kanbanListCell = Me.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
             
             If StrComp(kanbanListCell.value, Constants.KANBAN_LIST_TODO) = 0 Or _
                                                                            StrComp(kanbanListCell.value, Constants.KANBAN_LIST_DONE) = 0 Then
@@ -421,7 +421,7 @@ Function IntersectHashAndListColumn(hash As String, colIdentifier As Variant) As
     If Not SanityUtils.CheckHash(hash) Then Exit Function
     
     Dim hashCell As Range
-    Set hashCell = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
+    Set hashCell = Me.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
     Set hashCell = Base.FindAll(hashCell, hash)
     Set IntersectHashAndListColumn = _
                                    Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, colIdentifier, hashCell)
@@ -438,23 +438,23 @@ Function ReinitPriorities()
     Dim priorities As Range
     Dim noPriorities As Range
     Dim hashes As Range
-    Dim finishedTasks As Range: Set finishedTasks = PlanningUtils.GetFinishedTasks
-    Dim unfinishedTasks As Range: Set unfinishedTasks = PlanningUtils.GetUnfinishedTasks
+    Dim finishedTasks As Range: Set finishedTasks = Me.GetFinishedTasks
+    Dim unfinishedTasks As Range: Set unfinishedTasks = Me.GetUnfinishedTasks
     
     If Not finishedTasks Is Nothing Then
         'Get task that do not have any priority - all finished tasks
         Set noPriorities = Base.IntersectN(finishedTasks.EntireRow, _
-                                           PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
+                                           Me.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
     End If
     
     If Not unfinishedTasks Is Nothing Then
         'Get taks that do have a priority - all unfinished tasks
         Set priorities = Base.IntersectN(unfinishedTasks.EntireRow, _
-                                         PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
+                                         Me.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceData))
            
         'Intersect the unfinished task rows with the column that contains their hashes
         Set hashes = Base.IntersectN(unfinishedTasks.EntireRow, _
-                                     PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData))
+                                     Me.GetTaskListColumn(Constants.T_HASH_HEADER, ceData))
     End If
     
     'Write N/A to all tasks with no priority
@@ -529,7 +529,7 @@ Function SetMultiCellHighlight(Optional sel As Range) As Range
     
     'Fallback to cursor selection
     If IsMissing(sel) Then
-        Set sel = PlanningUtils.GetPlanningSelection
+        Set sel = Me.GetPlanningSelection
     End If
     
     If sel.Count <> 1 Then
@@ -544,9 +544,9 @@ Function SetMultiCellHighlight(Optional sel As Range) As Range
     Dim selRows As Range
     
     'Find all column cells containing the same value as the ref cell
-    Set multiSel = PlanningUtils.GetTaskListColumn(sel, ceData)
+    Set multiSel = Me.GetTaskListColumn(sel, ceData)
     Set multiSel = Base.FindAll(multiSel, val)
-    Set bdRange = PlanningUtils.GetTaskListBodyRange
+    Set bdRange = Me.GetTaskListBodyRange
     
     'Set highlight
     Dim accentColor As Long
@@ -577,7 +577,7 @@ Function ResetHighlight()
     lightColor = SettingUtils.GetColors(ceLightColor)
     
     Dim dbc As Range
-    Set dbc = PlanningUtils.GetTaskListBodyRange
+    Set dbc = Me.GetTaskListBodyRange
     If Not dbc Is Nothing Then
         'Delete the accent color from the cells
         dbc.Interior.color = xlNone
@@ -599,17 +599,17 @@ Function GetAllListValidatedCols() As Range
     
     'Collect all resetable cols according to defined tags of columns
     Dim tagHeaderCells As Range
-    Set tagHeaderCells = PlanningUtils.GetTagHeaderCells
+    Set tagHeaderCells = Me.GetTagHeaderCells
     
     If Not tagHeaderCells Is Nothing Then
         Dim tagCell As Range
         For Each tagCell In tagHeaderCells
-            Set listValidatedCol = PlanningUtils.GetTaskListColumn(tagCell.value, ceData)
+            Set listValidatedCol = Me.GetTaskListColumn(tagCell.value, ceData)
             Set allListValidatedCols = Base.UnionN(allListValidatedCols, listValidatedCol)
         Next tagCell
     End If
     
-    Set allListValidatedCols = Base.UnionN(allListValidatedCols, PlanningUtils.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData))
+    Set allListValidatedCols = Base.UnionN(allListValidatedCols, Me.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData))
     Set GetAllListValidatedCols = allListValidatedCols
 End Function
 
@@ -634,7 +634,7 @@ Function CopyTask(newHash As String, sourceListHash As String)
         Set taskSheet = TaskUtils.LoadTaskSheet(newHash)
         
         'Backsync the task to the planning sheet to make it appear in the list.
-        Call PlanningUtils.BacksyncTask(syncedHash:=newHash)
+        Call Me.BacksyncTask(syncedHash:=newHash)
         
         Dim currentName As String
         currentName = TaskUtils.GetName(taskSheet)
@@ -642,7 +642,7 @@ Function CopyTask(newHash As String, sourceListHash As String)
         Call TaskUtils.ClearTimeList(taskSheet)
         
         'Append postfix to task name, set kanban list to todo and recalculate ebs estimates
-        Call PlanningUtils.ApplyTaskData(hash:=newHash, name:=currentName & " (copy)", handleName:=True, _
+        Call Me.ApplyTaskData(hash:=newHash, name:=currentName & " (copy)", handleName:=True, _
                                          kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
                                          handleEstimate:=True, recalcEbsEstimates:=True)
     End If
@@ -660,12 +660,12 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
     
     If IsMissing(rng) Or rng Is Nothing Then
         'Activate planning sheet to get valid selection
-        Set rng = PlanningUtils.GetPlanningSelection
+        Set rng = Me.GetPlanningSelection
     End If
     
     Dim startHash As String
     Dim startColHeader As String
-    startHash = PlanningUtils.GetTaskHash(PlanningUtils.GetPlanningSelection)
+    startHash = Me.GetTaskHash(PlanningUtils.GetPlanningSelection)
     startColHeader = Utils.GetListColumnHeader(PlanningUtils.GetPlanningSelection)
     
     'Check if only one col is selected
@@ -731,14 +731,14 @@ Function ShiftPrio(dir As Variant, Optional rng As Range)
     End Select
     
     'If you break here you can see the changed values in the spreadsheet
-    PlanningUtils.OrganizePrioColumn
+    Me.OrganizePrioColumn
     
     'Now select the hash where you started with
     Dim newSel As Range
-    Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
+    Set newSel = Me.IntersectHashAndListColumn(startHash, startColHeader)
     
     If Not newSel Is Nothing Then
-        Call PlanningUtils.SelectOnPlanningSheet(newSel)
+        Call Me.SelectOnPlanningSheet(newSel)
         Call Planning.HandleSelectionChanges(newSel)
     End If
     
@@ -754,7 +754,7 @@ Function GatherTasks(Optional rng As Range)
     '  rng: A passed range identifiying the tasks that shall be gathered. If nothing is passed use the current selection
     
     If IsMissing(rng) Or rng Is Nothing Then
-        Set rng = PlanningUtils.GetPlanningSelection
+        Set rng = Me.GetPlanningSelection
     End If
     
     If rng.Count <= 1 Then
@@ -764,7 +764,7 @@ Function GatherTasks(Optional rng As Range)
     
     Dim startHash As String
     Dim startColHeader As String
-    startHash = PlanningUtils.GetTaskHash(PlanningUtils.GetPlanningSelection)
+    startHash = Me.GetTaskHash(PlanningUtils.GetPlanningSelection)
     startColHeader = Utils.GetListColumnHeader(PlanningUtils.GetPlanningSelection)
     
     'Check if only one col is selected
@@ -791,7 +791,7 @@ Function GatherTasks(Optional rng As Range)
     Dim gatherVal As Double
     
     Dim gatherCell As Range
-    Set gatherCell = PlanningUtils.IntersectHashAndListColumn(startHash, Constants.TASK_PRIORITY_HEADER)
+    Set gatherCell = Me.IntersectHashAndListColumn(startHash, Constants.TASK_PRIORITY_HEADER)
     
     If Not IsNumeric(gatherCell.value) Then
         Call MessageUtils.HandleMessage("Gathering tasks only works on unfinished tasks", _
@@ -807,14 +807,14 @@ Function GatherTasks(Optional rng As Range)
         Next cell
             
         'If you break here you can see the changed values in the spreadsheet
-        PlanningUtils.OrganizePrioColumn
+        Me.OrganizePrioColumn
         
         'Now select the hash where you started with
         Dim newSel As Range
-        Set newSel = PlanningUtils.IntersectHashAndListColumn(startHash, startColHeader)
+        Set newSel = Me.IntersectHashAndListColumn(startHash, startColHeader)
         
         If Not newSel Is Nothing Then
-            Call PlanningUtils.SelectOnPlanningSheet(newSel)
+            Call Me.SelectOnPlanningSheet(newSel)
             Call Planning.HandleSelectionChanges(newSel)
         End If
     End If
@@ -829,14 +829,14 @@ Function OrganizePrioColumn()
     'High priority values get to the top and low value to the bottom
     
     'First step: Clean values
-    Call PlanningUtils.ReinitPriorities
+    Call Me.ReinitPriorities
     
     'Second step: Resort
     Dim lo As ListObject
     
-    Set lo = PlanningUtils.GetTaskList
+    Set lo = Me.GetTaskList
     Dim prioCol As Range
-    Set prioCol = PlanningUtils.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceAll)
+    Set prioCol = Me.GetTaskListColumn(Constants.TASK_PRIORITY_HEADER, ceAll)
     
     Dim sf As SortFields
     Set sf = lo.Sort.SortFields
@@ -875,7 +875,7 @@ Function GetCumulativeMode(ebsColCell As Range) As CumulativeMode
     Dim headerCell As Range
     Dim cumulativeSetCell As Range
     
-    Set headerCell = PlanningUtils.GetTaskListColumn(ebsColCell, ceHeader)
+    Set headerCell = Me.GetTaskListColumn(ebsColCell, ceHeader)
     Set cumulativeSetCell = Utils.GetTopNeighbour(headerCell)
     
     Select Case cumulativeSetCell.value
@@ -897,7 +897,7 @@ Function CollectEbsColData(headerCell As Range)
     If headerCell Is Nothing Then Exit Function
     
     'Reset the column values to N/A
-    PlanningUtils.GetTaskListColumn(headerCell, ceData).value = Constants.N_A
+    Me.GetTaskListColumn(headerCell, ceData).value = Constants.N_A
     
     Dim header As String
     header = headerCell.value
@@ -932,7 +932,7 @@ Function CollectEbsColData(headerCell As Range)
         Set finishedTasks = finishedTasks
         Set finishedTasks = Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, header, finishedTasks)
         
-        Set unfinishedTasks = PlanningUtils.GetUnfinishedTasks
+        Set unfinishedTasks = Me.GetUnfinishedTasks
         Set unfinishedTasks = Utils.IntersectListColAndCells(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, header, unfinishedTasks)
         
         If Not finishedTasks Is Nothing Then
@@ -944,7 +944,7 @@ Function CollectEbsColData(headerCell As Range)
         
         'Find out whether the column shall display cumulative data or not.
         Dim cumuMode As CumulativeMode
-        cumuMode = PlanningUtils.GetCumulativeMode(headerCell)
+        cumuMode = Me.GetCumulativeMode(headerCell)
         'Debug info
         'Debug.Print "Cumulative mode is " & cumuMode
         
@@ -989,11 +989,11 @@ Function CollectEbsColData(headerCell As Range)
                 'Cycle through all unfinished tasks and get cumulative estimates for them. The estimates are only valid in the
                 'queued order of the last ebs run. If the user reordered the tasks after the current ebs run one has to rerun this method
                 'to get the current estimate values. The method is therefore triggered after each ebs run.
-                hash = PlanningUtils.GetTaskHash(cell)
+                hash = Me.GetTaskHash(cell)
                     
                 If SanityUtils.CheckHash(hash) Then
                     'Read the data for the current contributor: First get ebs sheet of contributor
-                    contributor = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
+                    contributor = Me.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
                     Set contribSheet = EbsUtils.GetEbsSheet(contributor)
                     If contribSheet Is Nothing Then GoTo r2yNextCell
                         
@@ -1061,7 +1061,7 @@ r2yNextCell:
             End If
                 
             For Each cell In cycleRange
-                hash = PlanningUtils.GetTaskHash(cell)
+                hash = Me.GetTaskHash(cell)
                     
                 'Read the task sheet
                 Dim taskSheetArea As Range
@@ -1112,7 +1112,7 @@ Function GetUnfinishedTasks() As Range
     Dim finishedTasks As Range
     Dim unfinishedTasks As Range
     
-    Set kanbanData = PlanningUtils.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
+    Set kanbanData = Me.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
     
     If kanbanData Is Nothing Then Exit Function
     Set finishedTasks = Base.FindAll(kanbanData, Constants.KANBAN_LIST_DONE)
@@ -1133,7 +1133,7 @@ Function GetFinishedTasks() As Range
     Dim kanbanData As Range
     Dim finishedTasks As Range
     
-    Set kanbanData = PlanningUtils.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
+    Set kanbanData = Me.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
     If kanbanData Is Nothing Then Exit Function
     Set GetFinishedTasks = Base.FindAll(kanbanData, Constants.KANBAN_LIST_DONE)
     'Debug info
@@ -1147,8 +1147,8 @@ Function CollectTotalTimesSpent()
     'For every task on planning sheetArea that is currently visible collect the total time the user has spent on it
     Dim timeCells As Range
     Set timeCells = Base.IntersectN( _
-                    PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
-                    PlanningUtils.GetVisibleTasks.EntireRow)
+                    Me.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), _
+                    Me.GetVisibleTasks.EntireRow)
     
     If timeCells Is Nothing Then Exit Function
     
@@ -1167,7 +1167,7 @@ Function CollectTotalTimesSpent()
                                        n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading total time of visible task " & taskIdx + 1 & " of " & timeCells.Count)
         
         'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
-        hash = PlanningUtils.GetTaskHash(cell)
+        hash = Me.GetTaskHash(cell)
         
         If SanityUtils.CheckHash(hash) Then
             Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
@@ -1190,7 +1190,7 @@ Function UpdateAllEbsCols()
     Dim headerCell As Range
     
     For Each headerCell In colHeaderCells
-        Call PlanningUtils.CollectEbsColData(headerCell)
+        Call Me.CollectEbsColData(headerCell)
     Next headerCell
 End Function
 
@@ -1204,7 +1204,7 @@ Function GetTaskListBodyRange() As Range
     Set GetTaskListBodyRange = Nothing
     
     Dim lo As ListObject
-    Set lo = PlanningUtils.GetPlanningSheet.ListObjects(Constants.TASK_LIST_NAME)
+    Set lo = Me.GetPlanningSheet.ListObjects(Constants.TASK_LIST_NAME)
     If Not lo Is Nothing Then
         Dim dbc As Range
         Set dbc = lo.DataBodyRange
@@ -1276,7 +1276,7 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
     GetSerializedTags = ""
     
     Dim headers As Range
-    Set headers = PlanningUtils.GetTagHeaderCells
+    Set headers = Me.GetTagHeaderCells
     
     If Not headers Is Nothing Then
         Dim diV As New Scripting.Dictionary
@@ -1288,7 +1288,7 @@ Function GetSerializedTags(hash As String, Optional ByRef serializedTagHeaders A
         Dim tagIdx As Integer: tagIdx = 0
         
         For Each tagHeader In headers
-            Set tag = PlanningUtils.IntersectHashAndListColumn(hash, tagHeader)
+            Set tag = Me.IntersectHashAndListColumn(hash, tagHeader)
             
             If Not tag Is Nothing Then
                 If StrComp(tag, "") <> 0 Then
@@ -1317,7 +1317,7 @@ Function GetVisibleTasks() As Range
     Set GetVisibleTasks = Nothing
     
     Dim hashRange As Range
-    Set hashRange = PlanningUtils.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
+    Set hashRange = Me.GetTaskListColumn(Constants.T_HASH_HEADER, ceData)
     Dim cll As Range
     Dim visibleHashes As Range
     
@@ -1358,7 +1358,7 @@ Function BacksyncTask(syncedHash As String)
     
     'First add a new task and return the cell of the entry to have a reference for further copying
     Dim taskIsOnPlanningSheet As Boolean
-    taskIsOnPlanningSheet = PlanningUtils.HashExists(syncedHash)
+    taskIsOnPlanningSheet = Me.HashExists(syncedHash)
     
     If taskIsOnPlanningSheet Then
         'Task could be found in planning sheet. Backsync the task in lean mode (no new ebs estimats will be generated for the task as this would
@@ -1393,7 +1393,7 @@ Function BacksyncTask(syncedHash As String)
     'Populate regex fields
     'Copy regex fields (tags)
     Dim tagHeaders As Range
-    Set tagHeaders = PlanningUtils.GetTagHeaderCells
+    Set tagHeaders = Me.GetTagHeaderCells
     
     If Not tagHeaders Is Nothing Then
         Dim tagHeader As Range
@@ -1455,7 +1455,7 @@ Function BacksyncTask(syncedHash As String)
         
         'Now save the value to the task line
         Dim cell As Range
-        Set cell = PlanningUtils.IntersectHashAndListColumn(syncedHash, CStr(header))
+        Set cell = Me.IntersectHashAndListColumn(syncedHash, CStr(header))
 
         'Handle cell value changes here
         Select Case unifiedHeader
@@ -1538,7 +1538,7 @@ Function ApplyTaskData(hash As String, _
     Dim currentCell As Range
     
     'Name
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(name) And TypeName(name) = "String" Then
             'Set value
@@ -1548,7 +1548,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Comment
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.COMMENT_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.COMMENT_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(comment) And TypeName(comment) = "String" Then
             'Set value
@@ -1566,7 +1566,7 @@ Function ApplyTaskData(hash As String, _
         Dim idx As Integer: idx = 0
         
         For Each header In headers
-            Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, CStr(header))
+            Set currentCell = Me.IntersectHashAndListColumn(hash, CStr(header))
             If Not currentCell Is Nothing Then
                 If idx > UBound(tags) Then
                     Exit For
@@ -1581,12 +1581,12 @@ Function ApplyTaskData(hash As String, _
     'Handle tags
     If handleTags And Base.IsArrayAllocated(headers) Then
         Dim anyTagCell As Range
-        Set anyTagCell = PlanningUtils.IntersectHashAndListColumn(hash, CStr(headers(0)))
+        Set anyTagCell = Me.IntersectHashAndListColumn(hash, CStr(headers(0)))
         Call Planning.ManageTagsChange(anyTagCell)
     End If
     
     'Kanban list
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(kanbanList) And TypeName(kanbanList) = "String" Then
             'Set value
@@ -1597,7 +1597,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Estimate
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(estimate) Then
             'Set value
@@ -1608,7 +1608,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Finished on date
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(finishedOnDate) And TypeName(finishedOnDate) = "Date" Then
             'Set value
@@ -1619,7 +1619,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Due date
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.DUE_DATE_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.DUE_DATE_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(dueDate) And TypeName(dueDate) = "Date" Then
             'Set value
@@ -1629,7 +1629,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Contributor
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(contributor) And TypeName(contributor) = "String" Then
             'Set value
@@ -1639,7 +1639,7 @@ Function ApplyTaskData(hash As String, _
     End If
     
     'Priority
-    Set currentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
+    Set currentCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
     If Not currentCell Is Nothing Then
         If Not IsMissing(priority) And TypeName(priority) = "Long" Then
             'Set value
@@ -1651,13 +1651,13 @@ End Function
 
 Function GetPlanningSelection() As Range
     'Activate planning sheet to get valid selection
-    PlanningUtils.GetPlanningSheet.Activate
+    Me.GetPlanningSheet.Activate
     Set GetPlanningSelection = Selection
 End Function
 
 Function SelectOnPlanningSheet(rng As Range) As Range
     If StrComp(rng.Parent.name, Constants.PLANNING_SHEET_NAME) = 0 Then
-        PlanningUtils.GetPlanningSheet.Activate
+        Me.GetPlanningSheet.Activate
         rng.Select
     End If
 End Function
@@ -1669,9 +1669,9 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
     '   hash:   The task sheet's hash one wants to add the time to
     '   deltaT: The time to add in h
     
-    If PlanningUtils.IsTaskTracking(hash) Then
+    If Me.IsTaskTracking(hash) Then
         'If the selected task is currently tracking, finish it to get a clean state
-        PlanningUtils.EndAllTasks
+        Me.EndAllTasks
     End If
     
     Call TaskUtils.AddNewTrackingEntry(TaskUtils.LoadTaskSheet(CStr(hash)), CDbl(deltaT))
@@ -1702,7 +1702,7 @@ Function ResetListFormat()
     End If
     
     Dim spacerHeaderCells As Range
-    Set spacerHeaderCells = PlanningUtils.GetSpacerHeaderCells
+    Set spacerHeaderCells = Me.GetSpacerHeaderCells
     
     Dim allSpacerCols As Range
     Dim spacerCol As Range

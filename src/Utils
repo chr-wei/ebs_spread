@@ -79,7 +79,7 @@ Function GetListColumn(sheetArea As Variant, Optional listId As Variant, _
     
     Select Case TypeName(sheetArea)
     Case "Worksheet", "Range"
-        Set lo = Utils.GetListObjectById(sheetArea, listId)
+        Set lo = Me.GetListObjectById(sheetArea, listId)
     Case "ListObject"
         Set lo = sheetArea
     End Select
@@ -101,7 +101,7 @@ Function GetListColumn(sheetArea As Variant, Optional listId As Variant, _
         Dim cell As Range
         Dim header As String
         Set cell = colIdentifier
-        header = Utils.GetListColumnHeader(cell)
+        header = Me.GetListColumnHeader(cell)
         Set lc = lo.ListColumns(header)
     End Select
     
@@ -245,17 +245,17 @@ End Function
 
 Function GetLeftNeighbour(rng As Range) As Range
     'Get a single next left cell to a given selection
-    Set GetLeftNeighbour = Utils.GetTopLeftCell(rng).Offset(0, -1)
+    Set GetLeftNeighbour = Me.GetTopLeftCell(rng).Offset(0, -1)
 End Function
 
 Function GetRightNeighbour(rng As Range) As Range
     'Get a single next right cell to a given selection
-    Set GetRightNeighbour = Utils.GetBottomRightCell(rng).Offset(0, 1)
+    Set GetRightNeighbour = Me.GetBottomRightCell(rng).Offset(0, 1)
 End Function
 
 Function GetBottomNeighbour(rng As Range) As Range
     'Get a single next bottom cell to a given selection
-    Set GetBottomNeighbour = Utils.GetBottomRightCell(rng).Offset(1, 0)
+    Set GetBottomNeighbour = Me.GetBottomRightCell(rng).Offset(1, 0)
     
     'Debug info
     'Debug.Print (GetBottomNeighbour.Address)
@@ -263,7 +263,7 @@ End Function
 
 Function GetTopNeighbour(rng As Range) As Range
     'Get a single next top cell to a given selection
-    Set GetTopNeighbour = Utils.GetTopLeftCell(rng).Offset(-1, 0)
+    Set GetTopNeighbour = Me.GetTopLeftCell(rng).Offset(-1, 0)
 End Function
 
 Function GetNumberedEntries(sheetArea As Variant, listId As Variant) As Range
@@ -281,7 +281,7 @@ Function GetNumberedEntries(sheetArea As Variant, listId As Variant) As Range
     
     'Read the entries of the first column of a list
     Dim entries As Range
-    Set entries = Utils.GetListColumn(sheetArea, listId, 1, ceData)
+    Set entries = Me.GetListColumn(sheetArea, listId, 1, ceData)
     If entries Is Nothing Then
         Set GetNumberedEntries = Nothing
         Exit Function
@@ -375,12 +375,12 @@ Function GetNewEntry(sheetArea As Variant, listId As Variant, ByRef newEntry As 
     
     Dim entries As Range
     Dim head As Range
-    Set entries = Utils.GetNumberedEntries(sheetArea, listId)
+    Set entries = Me.GetNumberedEntries(sheetArea, listId)
     
     If entries Is Nothing Then
         'If no entries could be found get the header cell. Next cell will be selected below the header cell. GetNumberedEntries will return 'Nothing'
         'if there is a data row in the list which has no numbered entry in the first column (means no entry for us)
-        Set head = Utils.GetListColumn(sheetArea, listId, 1, ceHeader)
+        Set head = Me.GetListColumn(sheetArea, listId, 1, ceHeader)
         
         'Debug info
         'Debug.Print entries.Address
@@ -392,7 +392,7 @@ Function GetNewEntry(sheetArea As Variant, listId As Variant, ByRef newEntry As 
             Set lo = sheetArea.ListObjects(listId)
         Case "Range"
             Dim listDict As Scripting.Dictionary
-            Set listDict = Utils.GetListObjectById(sheetArea)
+            Set listDict = Me.GetListObjectById(sheetArea, listId)
             Set lo = listDict.Items()(listId - 1)
         End Select
         
@@ -404,7 +404,7 @@ Function GetNewEntry(sheetArea As Variant, listId As Variant, ByRef newEntry As 
     newFormattedNumber = "#" & Format(Utils.GetNextEntryNumber(entries), Constants.COUNTED_ENTRIES_FORMAT)
     
     'Append a new entry to the existing ones. If entries was nothing head is set, if entries was something head is not set
-    Set newEntry = Utils.GetBottomNeighbour(Base.UnionN(head, entries))
+    Set newEntry = Me.GetBottomNeighbour(Base.UnionN(head, entries))
     GetNewEntry = True
 End Function
 
@@ -427,7 +427,7 @@ Function IntersectListColAndCells(sheetArea As Variant, listId As Variant, colId
     End If
     
     Dim listCol As Range
-    Set listCol = Utils.GetListColumn(sheetArea, listId, colIdentifier, ceAll)
+    Set listCol = Me.GetListColumn(sheetArea, listId, colIdentifier, ceAll)
     
     If Not listCol Is Nothing Then
         Set IntersectListColAndCells = Base.IntersectN(listCol, rowIdentifier.EntireRow)
@@ -449,13 +449,13 @@ Function SetCellValuesForValidation(colRange As Range)
     colRange.Validation.Delete
     
     Dim colHeader As String
-    colHeader = Utils.GetListColumnHeader(colRange)
+    colHeader = Me.GetListColumnHeader(colRange)
                 
     Dim cell As Range
     
     'All strings in the passed cells. These are filtered to get unique values.
     Dim stringDict As New Scripting.Dictionary
-    Set stringDict = Utils.ConvertRngToDict(colRange)
+    Set stringDict = Me.ConvertRngToDict(colRange)
     
     If stringDict.Count > 0 Then
         Dim lvw As Worksheet
@@ -467,12 +467,12 @@ Function SetCellValuesForValidation(colRange As Range)
             
             If Not lo Is Nothing Then
                 Dim loc As Range
-                Set loc = Utils.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
+                Set loc = Me.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
                 
                 If loc Is Nothing Then
                     lo.ListColumns.Add (1)
                     lo.HeaderRowRange(1) = colHeader
-                    Set loc = Utils.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
+                    Set loc = Me.GetListColumn(sheetArea:=lo, colIdentifier:=colHeader)
                 Else
                     loc.value = ""
                 End If
@@ -489,12 +489,12 @@ Function SetCellValuesForValidation(colRange As Range)
                 Next item
                 
                 'Clear data validation table
-                Call Utils.ClearBlankRowsInTable(lo)
-                Call Utils.ClearBlankColsInTable(lo)
+                Call Me.ClearBlankRowsInTable(lo)
+                Call Me.ClearBlankColsInTable(lo)
                  
                 'Set data name for the area
                 Dim namedRngname As String
-                namedRngname = Utils.SetNamedRange(colHeader & Constants.V_DATA_POSTFIX, loc.Parent.Range(loc.item(1), loc.item(rowIdx)))
+                namedRngname = Me.SetNamedRange(colHeader & Constants.V_DATA_POSTFIX, loc.Parent.Range(loc.item(1), loc.item(rowIdx)))
                 If namedRngname <> "" Then
                     'Set up the range validation (title, error msg etc.)
                     With colRange.Validation
@@ -1002,11 +1002,11 @@ Function GetSingleDataCellVal(sheetArea As Variant, headerText As String, Option
     End Select
     
     Dim headerCell As Range
-    Set headerCell = Utils.FindSheetCell(area, headerText)
+    Set headerCell = Me.FindSheetCell(area, headerText)
     
     If Not headerCell Is Nothing Then
-        Set headerCell = Utils.GetTopLeftCell(headerCell)
-        Set dataCell = Utils.GetRightNeighbour(headerCell)
+        Set headerCell = Me.GetTopLeftCell(headerCell)
+        Set dataCell = Me.GetRightNeighbour(headerCell)
         
         If Not IsError(dataCell.value) Then
             GetSingleDataCellVal = dataCell.value
@@ -1040,9 +1040,9 @@ Function SetSingleDataCell(sheetArea As Variant, headerText As String, data As V
     Dim headerCell As Range
     Dim dataCell As Range
     
-    Set headerCell = Utils.FindSheetCell(area, headerText)
+    Set headerCell = Me.FindSheetCell(area, headerText)
     If Not headerCell Is Nothing Then
-        Set dataCell = Utils.GetRightNeighbour(headerCell)
+        Set dataCell = Me.GetRightNeighbour(headerCell)
         dataCell.value = data
     Else
         'Debug info
@@ -1102,7 +1102,7 @@ Function DeleteFilteredListObjectRow(rowIdentifier As Range)
         'Unhide all data as deletion only works when all cells are visible:
         'Read the active filters and store their props
         Dim filterData() As Variant
-        filterData = Utils.GetAutoFilters(lo)
+        filterData = Me.GetAutoFilters(lo)
         
         'Display all data (filters are deleted)
         lo.AutoFilter.ShowAllData
@@ -1114,7 +1114,7 @@ Function DeleteFilteredListObjectRow(rowIdentifier As Range)
         
         'Reapply the filters again if there were any
         If Base.IsArrayAllocated(filterData) Then
-            Call Utils.ReapplyAutoFilters(lo, filterData)
+            Call Me.ReapplyAutoFilters(lo, filterData)
         End If
     End If
 End Function
@@ -1330,7 +1330,7 @@ Function GetListObjectNames(rng As Range) As Variant()
     Else
         lists = Array(lo)
         
-        Call Utils.GetWindmillRanges(rng, Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange), _
+        Call Me.GetWindmillRanges(rng, Base.UnionN(lo.HeaderRowRange, lo.DataBodyRange), _
                                      bottomLeftQuarter, bottomRightQuarter, topRightQuarter, topLeftQuarter)
     
         lists = Base.ConcatToArray(lists, GetListObjectNames(topLeftQuarter))
@@ -1366,28 +1366,28 @@ Function GetWindmillRanges(rng As Range, sectionRange As Range, _
         Dim maxCols As Long: maxCols = par.Columns.Count
         Dim maxRows As Long: maxRows = par.Rows.Count
         
-        Set upleft = Utils.GetTopLeftCell(sectionRange)
+        Set upleft = Me.GetTopLeftCell(sectionRange)
         If upleft.Column > 1 Then
-            Set upleft = Utils.GetLeftNeighbour(upleft)
+            Set upleft = Me.GetLeftNeighbour(upleft)
             If upleft.Column >= GetBottomLeftCell(rng).Column Then Set windmillWingOne = Base.IntersectN(rng, par.Range(Utils.GetBottomLeftCell(rng), upleft))
         End If
         
-        Set bottomleft = Utils.GetBottomLeftCell(sectionRange)
+        Set bottomleft = Me.GetBottomLeftCell(sectionRange)
         If bottomleft.Row < maxRows Then
-            Set bottomleft = Utils.GetBottomNeighbour(bottomleft)
+            Set bottomleft = Me.GetBottomNeighbour(bottomleft)
             If bottomleft.Row <= GetBottomRightCell(rng).Row Then Set windmillWingTwo = par.Range(Utils.GetBottomRightCell(rng), bottomleft)
         End If
         
-        Set bottomright = Utils.GetBottomRightCell(sectionRange)
+        Set bottomright = Me.GetBottomRightCell(sectionRange)
         If bottomright.Column > 1 Then
-            Set bottomright = Utils.GetRightNeighbour(bottomright)
+            Set bottomright = Me.GetRightNeighbour(bottomright)
             If bottomright.Column <= GetTopRightCell(rng).Column Then Set windmillWingThree = Base.IntersectN(rng, par.Range(Utils.GetTopRightCell(rng), bottomright))
         End If
         
-        Set upright = Utils.GetTopRightCell(sectionRange)
+        Set upright = Me.GetTopRightCell(sectionRange)
         If upright.Row > 1 Then
-            Set upright = Utils.GetTopNeighbour(upright)
-            If upright.Row >= Utils.GetTopLeftCell(rng).Row Then Set windmillWingFour = par.Range(Utils.GetTopLeftCell(rng), upright)
+            Set upright = Me.GetTopNeighbour(upright)
+            If upright.Row >= Me.GetTopLeftCell(rng).Row Then Set windmillWingFour = par.Range(Utils.GetTopLeftCell(rng), upright)
         End If
     End If
     ' Debug info

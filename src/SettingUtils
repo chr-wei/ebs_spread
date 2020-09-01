@@ -67,7 +67,7 @@ Function IntersectContributorAndSettingColumn(contributor As String, colIdentifi
     
     'Get a cell of a data column to a specific contributor
     Dim contributorCell As Range
-    If SettingUtils.GetContributorCell(contributor, contributorCell) Then
+    If Me.GetContributorCell(contributor, contributorCell) Then
         Set IntersectContributorAndSettingColumn = _
                                                  Utils.IntersectListColAndCells(SettingUtils.GetSettingsSheet, Constants.CONTRIBUTOR_LIST_NAME, colIdentifier, contributorCell)
     End If
@@ -89,7 +89,7 @@ Function GetContributorCell(contributor As String, Optional ByRef contributorCel
     If StrComp(contributor, "") = 0 Then Exit Function
     
     Dim data As Range
-    Set data = SettingUtils.GetContributorSettingColumn(Constants.CONTRIBUTOR_HEADER, ceData)
+    Set data = Me.GetContributorSettingColumn(Constants.CONTRIBUTOR_HEADER, ceData)
     Set contributorCell = Base.FindAll(data, contributor)
     
     'Set the output / getting cell successful?
@@ -170,7 +170,7 @@ Function GetContributorMailSetting(contributor As String) As String
     
     Dim mailCell As Range
     
-    Set mailCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, MAIL_HEADER)
+    Set mailCell = Me.IntersectContributorAndSettingColumn(contributor, MAIL_HEADER)
     
     If mailCell Is Nothing Then
         Exit Function
@@ -213,8 +213,8 @@ Function GetContributorCalIdSetting(contributor As String, Optional ByRef storId
     Dim idCell As Range
     Dim storeIdCell As Range
     
-    Set idCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, Constants.CAL_ID_HEADER)
-    Set storeIdCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, Constants.STORE_ID_HEADER)
+    Set idCell = Me.IntersectContributorAndSettingColumn(contributor, Constants.CAL_ID_HEADER)
+    Set storeIdCell = Me.IntersectContributorAndSettingColumn(contributor, Constants.STORE_ID_HEADER)
     
     If Not idCell Is Nothing Then
         GetContributorCalIdSetting = Trim(idCell.value)
@@ -244,7 +244,7 @@ Function GetContributorGetWorkDoneCat(contributor As String) As String
     
     Dim catCell As Range
     
-    Set catCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, GETTING_WORK_DONE_CAT_HEADER)
+    Set catCell = Me.IntersectContributorAndSettingColumn(contributor, GETTING_WORK_DONE_CAT_HEADER)
     
     If catCell Is Nothing Then
         'Fallback to standard value
@@ -266,7 +266,7 @@ Function GetFirstDayOfWeekSetting() As Integer
       
     Dim firstDayOfWeek As Integer
     
-    firstDayOfWeek = SettingUtils.GetWeekdayVal(Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.FIRST_DAY_OF_WEEK_HEADER))
+    firstDayOfWeek = Me.GetWeekdayVal(Utils.GetSingleDataCellVal(SettingUtils.GetSettingsSheet, Constants.FIRST_DAY_OF_WEEK_HEADER))
 
     If firstDayOfWeek = -1 Then
         'Fallback to standard value
@@ -299,7 +299,7 @@ Function GetContributorApptOnOffset(contributor As String, onOffsetSelector As A
     
     Select Case onOffsetSelector
     Case ApptOnOffset.ceOnset
-        Set cell = SettingUtils.IntersectContributorAndSettingColumn(contributor, APPT_ONSET_HEADER)
+        Set cell = Me.IntersectContributorAndSettingColumn(contributor, APPT_ONSET_HEADER)
     Case ApptOnOffset.ceOffset
         Set cell = IntersectContributorAndSettingColumn(contributor, APPT_OFFSET_HEADER)
     End Select
@@ -350,7 +350,7 @@ Function GetContributorWorkingDays(contributor As String) As Double()
     
     Dim wdsCell As Range
     
-    Set wdsCell = SettingUtils.IntersectContributorAndSettingColumn(contributor, WORKING_DAYS_HEADER)
+    Set wdsCell = Me.IntersectContributorAndSettingColumn(contributor, WORKING_DAYS_HEADER)
     
     If wdsCell Is Nothing Then
         GetContributorWorkingDays = Utils.CopyVarArrToDoubleArr(Constants.STANDARD_WORKING_DAYS)
@@ -367,7 +367,7 @@ Function GetContributorWorkingDays(contributor As String) As Double()
             'Read the workdays. Serialized array in settings row should look like this: {Mon; Tue; Wed; Thu; Fri}
             
             For dayIdx = 0 To UBound(workingDaysSet)
-                workingDays(dayIdx) = SettingUtils.GetWeekdayVal(workingDaysSet(dayIdx))
+                workingDays(dayIdx) = Me.GetWeekdayVal(workingDaysSet(dayIdx))
             Next dayIdx
             GetContributorWorkingDays = workingDays
         End If
