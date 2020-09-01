@@ -518,7 +518,16 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
         End If
                       
         prioCell.value = Constants.N_A
-                
+        
+        'Collect total time spent
+        Dim timeCell As Range
+        Set timeCell = Base.IntersectN( _
+                    PlanningUtils.GetTaskListColumn(Constants.TOTAL_TIME_HEADER, ceData), changedCell.EntireRow)
+        
+        Set sheetArea = TaskUtils.GetTaskSheetArea(hash)
+        timeCell.NumberFormat = Constants.TWO_DECIMALS_FORMAT
+        timeCell.value = TaskUtils.GetTaskTotalTime(sheetArea)
+        
     Case Else
         'Set a priority if no proper value is set
         If Not IsNumeric(prioCell.value) Then
