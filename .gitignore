@@ -1,0 +1,2 @@
+# Omit all source module files with a trailing number (copied sheet modules etc.)
+/src/*[0-9]
