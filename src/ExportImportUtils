@@ -71,12 +71,13 @@ Function ImportTasks()
     Set vSheets = VirtualSheetUtils.GetAllVirtualSheets(Constants.EXIMPORT_SHEET_PREFIX, orderedNames)
     Dim key As Variant
     Dim anyHash As String
-    
+        
     Dim keyIdx As Long: keyIdx = 1
     
     For Each key In vSheets.Keys
         'Prevent crash of worksheet for long-running import
         DoEvents
+        If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         Call FactoryProgressBar.Update(cpt:="Importing tasks", _
             n:=keyIdx + 1, ofN:=vSheets.Count, subTaskText:="Importing task " & keyIdx + 1 & " of " & vSheets.Count)

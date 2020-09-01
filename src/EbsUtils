@@ -154,6 +154,8 @@ Function RunEbs()
     For Each contributor In contributors
         'Do seperate EBS for every contributor. Contributors'must not be mixed.
         
+        If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
+        
         Set sheet = GetEbsSheet(CStr(contributor))
             
         Dim ebsEntryCell As Range
@@ -315,7 +317,7 @@ Function RunEbs()
         
         'Update the ebs columns on planning sheet
         Call PlanningUtils.UpdateAllEbsCols
-        Call PlanningUtils.CollectTotalTimesSpent
+        'Call PlanningUtils.CollectTotalTimesSpent
 n03nextContributor:
     Next contributor
 End Function
@@ -427,7 +429,7 @@ Function IntersectRunDataColumn(sheet As Worksheet, colIdentifier As Variant, ro
     'Debug.Print "Intersecting cell: " + rowIdentifier.Address
 End Function
 
-Function GenVelocityPool(contributor As String, N As Long) As Double()
+Function GenVelocityPool(contributor As String, n As Long) As Double()
     'Generates a velocity pool for the specified contributor. The pool consists of velocity data from finished tasks of the contributor.
     'One can generate random velocity data in addtion to real data if not enough data is present
     '
@@ -443,7 +445,7 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     GenVelocityPool = velocities
     
     'Check args
-    If StrComp(contributor, "") = 0 Or N < 1 Then
+    If StrComp(contributor, "") = 0 Or n < 1 Then
         Exit Function
     End If
     
@@ -506,19 +508,24 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     Dim upperLimit As Long
     
     'Get all velocities out of the array, if less than n velocities exist. Get max n velocities if more velocities are avialable
-    If UBound(hashes) < N Then
+    If UBound(hashes) < n Then
         upperLimit = UBound(hashes)
     Else
 '        'Crop date and hash array to
 '        ReDim Preserve hashes(0 To N - 1)
 '        ReDim Preserve dates(0 To N - 1)
-        upperLimit = N
+        upperLimit = n
     End If
     
     Dim velocity As Double
     Dim taskSheetArea As Range
     
     For hashIdx = 0 To upperLimit
+        Call FactoryProgressBar.Update(cpt:="Evidence based scheduling", _
+            n:=hashIdx + 1, ofN:=upperLimit + 1, _
+            subTaskText:=contributor & ": Generating velocity pool...")
+        DoEvents
+        
         Set taskSheetArea = TaskUtils.GetTaskSheetArea(CStr(hashes(hashIdx)))
         
         'Read the velocity from the sheet's cell
@@ -541,10 +548,10 @@ Function GenVelocityPool(contributor As String, N As Long) As Double()
     End If
 
     'Generate additional velocites if not enough are available
-    If veloCount < N And Constants.EBS_GENERATE_RND_VELOCITIES Then
+    If veloCount < n And Constants.EBS_GENERATE_RND_VELOCITIES Then
         Dim genVelocityIdx As Long
         
-        For genVelocityIdx = UBound(velocities) + 1 To N
+        For genVelocityIdx = UBound(velocities) + 1 To n
             ReDim Preserve velocities(genVelocityIdx)
             velocities(genVelocityIdx) = EbsUtils.GenRandomVelocity(Constants.EBS_UPPER_RND_VELOCITY_LIMIT, Constants.EBS_LOWER_RND_VELOCITY_LIMIT)
         Next genVelocityIdx
@@ -876,6 +883,9 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
             
     For hashIdx = 0 To UBound(hashes)
         'For all found unfinished tasks iterate
+        Call FactoryProgressBar.Update(cpt:="Evidence based scheduling", _
+            n:=hashIdx + 1, ofN:=UBound(hashes) + 1, subTaskText:=contributor & ": Estimating task " & hashIdx + 1 & " of " & UBound(hashes) + 1)
+        If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         'Give back power to the os in case of long-running calculations
         DoEvents
@@ -1659,7 +1669,7 @@ Function DeleteAllEbsSheets()
     regex.Pattern = Constants.EBS_SHEET_REGEX
     Dim sheet As Worksheet
     For Each sheet In ThisWorkbook.Worksheets
-        If regex.Test(sheet.name) Then
+        If regex.test(sheet.name) Then
             Call Utils.DeleteWorksheetSilently(sheet)
         End If
     Next sheet

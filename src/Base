@@ -206,7 +206,7 @@ Function FindAll(ByVal rng As Range, ByVal propertyVal As Variant, Optional prop
                 Case ComparisonTypes.ceRegex
                     Dim regex As New RegExp
                     regex.Pattern = propertyVal
-                    compMatch = (regex.Test(cellVal))
+                    compMatch = (regex.test(cellVal))
                 Case ComparisonTypes.ceStringComp
                     compMatch = (StrComp(cellVal, propertyVal) = 0)
                 Case ComparisonTypes.ceEqual
@@ -463,7 +463,7 @@ Public Function IsArrayAllocated(arr As Variant) As Boolean
     'Output args:
     '  IsArrayAllocated:   True/False
 
-    Dim N As Long
+    Dim n As Long
     On Error Resume Next
     
     'if Arr is not an array, return FALSE and get out.
@@ -474,7 +474,7 @@ Public Function IsArrayAllocated(arr As Variant) As Boolean
     
     'Attempt to get the UBound of the array. If the array has not been allocated,
     'an error will occur. Test Err.Number to see if an error occurred.
-    N = UBound(arr, 1)
+    n = UBound(arr, 1)
     If (Err.Number = 0) Then
     
         'Under some circumstances, if an array
