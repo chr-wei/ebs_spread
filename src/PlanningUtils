@@ -645,8 +645,8 @@ Function CopyTask(newHash As String, sourceListHash As String)
         
         'Append postfix to task name, set kanban list to todo and recalculate ebs estimates
         Call Me.ApplyTaskData(hash:=newHash, name:=currentName & " (copy)", handleName:=True, _
-                                         kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
-                                         handleEstimate:=True, recalcEbsEstimates:=True)
+                              kanbanList:=Constants.KANBAN_LIST_TODO, handleKanbanList:=True, kanbanChangesFinishedOn:=True, _
+                              handleEstimate:=True, recalcEbsEstimates:=True)
     End If
 End Function
 
@@ -1138,6 +1138,25 @@ Function GetFinishedTasks() As Range
     Set kanbanData = Me.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
     If kanbanData Is Nothing Then Exit Function
     Set GetFinishedTasks = Base.FindAll(kanbanData, Constants.KANBAN_LIST_DONE)
+    'Debug info
+    'Debug.Print "Kanban data: " & kanbanData.Address
+End Function
+
+Function GetMetaTasks() As Range
+    Const FN As String = "PlanningUtils.GetMetaTasks"
+    Call MessageUtils.InvokeFnMsg(FN)
+        
+    'Use the kanban list tag 'Done'to find all finished tasks
+    
+    'Init output
+    Set GetMetaTasks = Nothing
+    
+    Dim kanbanData As Range
+    Dim finishedTasks As Range
+    
+    Set kanbanData = Me.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
+    If kanbanData Is Nothing Then Exit Function
+    Set GetMetaTasks = Base.FindAll(kanbanData, Constants.KANBAN_LIST_META)
     'Debug info
     'Debug.Print "Kanban data: " & kanbanData.Address
 End Function
@@ -1680,6 +1699,10 @@ Function AddXHoursTime(hash As Variant, deltaT As Variant)
 End Function
 
 Function ResetListFormat()
+    'Set up the list format
+    'Format cells
+    'Set dividers for spacer columns to prevent text overflow
+    
     Dim lo As ListObject
     Set lo = Me.GetTaskList()
     
@@ -1719,4 +1742,93 @@ Function ResetListFormat()
     End If
     
     If Not allSpacerCols Is Nothing Then allSpacerCols.value = "."
+End Function
+
+Function ShareMetaTaskTime()
+    'Divide the spent time on tasks marked as 'meta' tasks equally on all other visible tasks
+    Dim visibleTasks As Range
+    Set visibleTasks = Me.GetVisibleTasks()
+   
+    Dim metaTasks As Range
+    Set metaTasks = Me.GetMetaTasks()
+   
+    'Get all visible, non-meta tasks
+    Dim nonMetaTasks As Range
+    Set nonMetaTasks = Base.Difference(visibleTasks, metaTasks.EntireRow)
+   
+    'Get all visible meta tasks
+    Set metaTasks = Base.IntersectN(visibleTasks, metaTasks.EntireRow)
+    
+    If nonMetaTasks Is Nothing Or metaTasks Is Nothing Then Exit Function
+    'Debug info
+    'Debug.Print "Visible Meta: " & metaTasks.address
+    'Debug.Print "Visible Non-meta: " & nonMetaTasks.address
+   
+    Dim ans As Long
+    ans = MsgBox("Share task time of " & metaTasks.Count & " meta tasks to " & _
+        nonMetaTasks.Count & " non-meta tasks ?", vbYesNo, "Share meta task time")
+    
+    If ans = vbNo Then Exit Function
+    
+    Dim cll As Range
+    Dim successfullyShared As Boolean
+    For Each cll In metaTasks
+        successfullyShared = False
+        Dim hash As String
+        
+        hash = Me.GetTaskHash(cll)
+        
+        If SanityUtils.CheckHash(hash) Then
+            Dim metaShtArea As Range
+            Set metaShtArea = TaskUtils.GetTaskSheetArea(hash)
+            If Not metaShtArea Is Nothing Then
+                Dim tdc As Range
+                Dim tsc As Range
+                Dim tec As Range
+                
+                Set tdc = TaskUtils.GetTimeListColumn(metaShtArea, Constants.TIME_DELTA_HEADER, ceData)
+                Set tsc = TaskUtils.GetTimeListColumn(metaShtArea, Constants.START_TIME_HEADER, ceData)
+                Set tec = TaskUtils.GetTimeListColumn(metaShtArea, Constants.END_TIME_HEADER, ceData)
+                
+                If tdc Is Nothing Or tsc Is Nothing Or tec Is Nothing Then
+                    'Print err.
+                Else
+                    Dim deltaCell As Range
+                    For Each deltaCell In tdc
+                        If deltaCell.value > 0 Then
+                            'Read time entry of meta task (if total time not 0)
+                            Dim delta As Double
+                            delta = deltaCell.value
+                                                       
+                            Dim startIter As Date: startIter = Base.IntersectN(tsc, deltaCell.EntireRow)
+                            
+                            'Time values set to non meta tasks (divide equally through non-meta task count)
+                            Dim splitTime As Double
+                            splitTime = delta / nonMetaTasks.Count
+                            
+                            Dim nonMetaCell As Range
+                            For Each nonMetaCell In nonMetaTasks
+                                'Set time to non meta task
+                                Dim nonMetaSht As Worksheet
+                                Set nonMetaSht = TaskUtils.LoadTaskSheet(Me.GetTaskHash(nonMetaCell))
+                                If Not nonMetaSht Is Nothing Then
+                                    Call TaskUtils.AddNewTrackingEntry(nonMetaSht, splitTime, startIter)
+                                    'Update start time for next non-meta task
+                                    startIter = startIter + splitTime / 24
+                                End If
+                            Next nonMetaCell
+                        End If
+                    Next deltaCell
+                    successfullyShared = True
+                End If
+            End If
+        End If
+        
+        If successfullyShared Then
+            'Now load meta sheet to clear time list
+            Dim metaSht As Worksheet
+            Set metaSht = TaskUtils.LoadTaskSheet(hash)
+            Call TaskUtils.ClearTimeList(metaSht)
+        End If
+    Next cll
 End Function

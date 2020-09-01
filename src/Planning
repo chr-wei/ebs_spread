@@ -220,6 +220,14 @@ Sub UI_ResetListFormat()
     Call Utils.RunTryCatchedCall(f:="ResetListFormat", obj:=PlanningUtils, screenUpdating:=False)
 End Sub
 
+Sub UI_ShareMetaTaskTime()
+    Const FN As String = "Planning.UI_ShareMetaTaskTime"
+    Call MessageUtils.InvokeUIMsg(FN)
+    
+    'Read the task's data to get the total time a user spent working on it.
+    Call Utils.RunTryCatchedCall(f:="ShareMetaTaskTime", obj:=PlanningUtils, screenUpdating:=False)
+End Sub
+
 Function HandleChanges(Target As Range)
     Const FN As String = "Planning.HandleChanges"
     Call MessageUtils.InvokeFnMsg(FN)
