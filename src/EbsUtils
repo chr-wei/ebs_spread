@@ -50,9 +50,9 @@ Function HandleEbsSheetChanges(Target As Range)
     'If changed cell is a part of one of the following columns manage change
     Select Case (header)
     Case Constants.EBS_SHOW_POOL_HEADER
-        Call EbsUtils.ManagePoolVisibilityChange(Target)
+        Call Me.ManagePoolVisibilityChange(Target)
     Case Constants.EBS_PROP_CHART_MODE_HEADER, Constants.EBS_PROP_CHART_SCALING_HEADER
-        Call EbsUtils.PrintPropabilityChart(Target.Parent)
+        Call Me.PrintPropabilityChart(Target.Parent)
     End Select
 End Function
 
@@ -65,7 +65,7 @@ Function ManagePoolVisibilityChange(changedCell As Range)
     '  changedCell: Cell within the table for which the setting was switched (all cells of the column are reinvestigated)
     
     'Delete all the entries from the velocity histogram
-    Call EbsUtils.ClearHistogramContents(changedCell.Parent)
+    Call Me.ClearHistogramContents(changedCell.Parent)
     
     Dim colData As Range
     Set colData = Utils.GetListColumn(changedCell.Parent, Constants.EBS_MAIN_LIST_IDX, changedCell, ceData)
@@ -113,10 +113,10 @@ Function ManagePoolVisibilityChange(changedCell As Range)
             Set ebsDate = Utils.IntersectListColAndCells(changedCell.Parent, Constants.EBS_MAIN_LIST_IDX, Constants.EBS_RUN_DATE_HEADER, poolCell)
             
             'Calc the velocity histogram from the bare pool velocities (count and categorize)
-            Call EbsUtils.CalcVelocityHistogram(poolVals, histoX, histoVal)
+            Call Me.CalcVelocityHistogram(poolVals, histoX, histoVal)
             
             'Print out the values
-            Call EbsUtils.PrintVelocityHistogramDataRow(changedCell.Parent, ebsDate.value, histoX, histoVal, transparencyVals(poolIdx - 1))
+            Call Me.PrintVelocityHistogramDataRow(changedCell.Parent, ebsDate.value, histoX, histoVal, transparencyVals(poolIdx - 1))
             poolIdx = poolIdx + 1
         End If
     Next poolCell
@@ -170,7 +170,7 @@ Function RunEbs()
         
         'refurbish start
         Dim runDate As Date
-        eHash = EbsUtils.GetLatestEbsRun(sheet, runDate)
+        eHash = Me.GetLatestEbsRun(sheet, runDate)
         
         Dim createNewEntry As Boolean
         createNewEntry = ((Now - runDate) > EBS_TRACK_ENTRIES_DELTA_DAYS)
@@ -197,20 +197,20 @@ Function RunEbs()
             'Use the latest ebs run entry
             'runDate = rundate
             Set eHashCell = Base.FindAll(EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_HASH_HEADER, ceAll), eHash)
-            Set ebsEntryCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_ENTRY_HEADER, eHashCell)
+            Set ebsEntryCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_ENTRY_HEADER, eHashCell)
             'We found the entry. Create a new eHash now. eHash is updated even if the existing entry is only modified
             eHash = Utils.CreateHashString("e")
         End If
         
         'Prepare the cells data is written to
         Set entryRow = ebsEntryCell.EntireRow
-        Set dateCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, entryRow)
-        Set velocityCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_VELOCITY_POOL_HEADER, entryRow)
-        Set showPoolCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_SHOW_POOL_HEADER, entryRow)
-        Set supportPointsCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, entryRow)
-        Set hourEstimatesCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_TIME_ESTIMATES_HEADER, entryRow)
-        Set dateEstimatesCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_DATE_ESTIMATES_HEADER, entryRow)
-        Set eHashCell = EbsUtils.IntersectEbsMainListColumn(sheet, Constants.EBS_HASH_HEADER, entryRow)
+        Set dateCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, entryRow)
+        Set velocityCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_VELOCITY_POOL_HEADER, entryRow)
+        Set showPoolCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_SHOW_POOL_HEADER, entryRow)
+        Set supportPointsCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, entryRow)
+        Set hourEstimatesCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_TIME_ESTIMATES_HEADER, entryRow)
+        Set dateEstimatesCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_DATE_ESTIMATES_HEADER, entryRow)
+        Set eHashCell = Me.IntersectEbsMainListColumn(sheet, Constants.EBS_HASH_HEADER, entryRow)
         
         'Sanity check cells
         If ebsEntryCell Is Nothing Or _
@@ -265,7 +265,7 @@ Function RunEbs()
         'The written data is only valid for the current situation (current order of tasks in the queue, curren time values)
         
         If Base.IsArrayAllocated(velocityPool) Then
-            runDataWritten = EbsUtils.WriteRunData(CStr(contributor), velocityPool, accumulatedTimeEstimates, supportPoints, interpolatedHourEstimates, _
+            runDataWritten = Me.WriteRunData(CStr(contributor), velocityPool, accumulatedTimeEstimates, supportPoints, interpolatedHourEstimates, _
                                                    interpolatedDateEstimates)
         Else
             runDataWritten = False
@@ -313,7 +313,7 @@ Function RunEbs()
                 
         'Redraw the velocity pool and the propability chart. Has to be done when run ebs is run via Utils.RunTryCatchedCall
         Call ManagePoolVisibilityChange(showPoolCell)
-        Call EbsUtils.PrintPropabilityChart(sheet)
+        Call Me.PrintPropabilityChart(sheet)
         
         'Update the ebs columns on planning sheet
         Call PlanningUtils.UpdateAllEbsCols
@@ -336,7 +336,7 @@ Function PrepareEbsSheets(ByRef contributors As Variant)
     Dim contributor As Variant
 
     For Each contributor In contributors
-        Call EbsUtils.GetEbsSheet(CStr(contributor))
+        Call Me.GetEbsSheet(CStr(contributor))
     Next contributor
 End Function
 
@@ -425,7 +425,7 @@ Function IntersectRunDataColumn(sheet As Worksheet, colIdentifier As Variant, ro
     Set IntersectRunDataColumn = Utils.IntersectListColAndCells(sheet, Constants.EBS_RUNDATA_LIST_IDX, colIdentifier, rowIdentifier)
     
     'Debug info
-    'Debug.Print "Intersecting col: " + EbsUtils.GetRunDataListColumn(sheet, colIdentifier, ceAll).Address
+    'Debug.Print "Intersecting col: " + Me.GetRunDataListColumn(sheet, colIdentifier, ceAll).Address
     'Debug.Print "Intersecting cell: " + rowIdentifier.Address
 End Function
 
@@ -553,7 +553,7 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
         
         For genVelocityIdx = UBound(velocities) + 1 To n
             ReDim Preserve velocities(genVelocityIdx)
-            velocities(genVelocityIdx) = EbsUtils.GenRandomVelocity(Constants.EBS_UPPER_RND_VELOCITY_LIMIT, Constants.EBS_LOWER_RND_VELOCITY_LIMIT)
+            velocities(genVelocityIdx) = Me.GenRandomVelocity(Constants.EBS_UPPER_RND_VELOCITY_LIMIT, Constants.EBS_LOWER_RND_VELOCITY_LIMIT)
         Next genVelocityIdx
     End If
     
@@ -793,7 +793,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
 
     'Clear the run data list
     Dim sheet As Worksheet
-    Set sheet = EbsUtils.GetEbsSheet(contributor)
+    Set sheet = Me.GetEbsSheet(contributor)
     
     'Get the run data data table / list object
     Dim lo As ListObject
@@ -906,7 +906,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
              
             'Calculate time estimates: Total time needed to complete the task
             Erase monteCarloTimeEstimates
-            monteCarloTimeEstimates = EbsUtils.GetMonteCarloTimeEstimates(userEstimate, contribPool, Constants.EBS_VELOCITY_PICKS)
+            monteCarloTimeEstimates = Me.GetMonteCarloTimeEstimates(userEstimate, contribPool, Constants.EBS_VELOCITY_PICKS)
             
             'Calculate the remaining times: (Monte carlo estimate) - (remaining time)
             Erase remainingTimeEstimates
@@ -918,7 +918,7 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
              
             'Clear data and interpolate the accumulated time estimates (crop data)
             Erase interpolatedHourEstimates
-            interpolatedHourEstimates = EbsUtils.InterpolateEstimates(supportPoints, accumulatedTimeEstimates)
+            interpolatedHourEstimates = Me.InterpolateEstimates(supportPoints, accumulatedTimeEstimates)
              
             Dim calendarItems As Outlook.Items
             
@@ -962,25 +962,25 @@ Function WriteRunData(contributor As String, contribPool() As Double, ByRef accu
         
         'Intersect cells to prepare data insertion
         Set runDataRow = newEntryCell.EntireRow
-        Set hashEntryCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_T_HASH_HEADER, _
+        Set hashEntryCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_T_HASH_HEADER, _
                                                             runDataRow)
-        Set prioEntryCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_PRIORITY_HEADER, _
+        Set prioEntryCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_PRIORITY_HEADER, _
                                                             runDataRow)
-        Set spentTimeEntryCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_TIME_SPENT_HEADER, _
+        Set spentTimeEntryCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_TIME_SPENT_HEADER, _
                                                                  runDataRow)
-        Set userEstimateCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.TASK_ESTIMATE_HEADER, _
+        Set userEstimateCell = Me.IntersectRunDataColumn(sheet, Constants.TASK_ESTIMATE_HEADER, _
                                                                runDataRow)
-        Set remainingTimeEstimateCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_REMAINING_TIME_POOL_HEADER, _
+        Set remainingTimeEstimateCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_REMAINING_TIME_POOL_HEADER, _
                                                                         runDataRow)
-        Set monteCarloEstimateCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_ESTIMATES_POOL_HEADER, _
+        Set monteCarloEstimateCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_ESTIMATES_POOL_HEADER, _
                                                                      runDataRow)
-        Set accumulatedEstimatesCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_ACCUMULATED_TIME_POOL_HEADER, _
+        Set accumulatedEstimatesCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_ACCUMULATED_TIME_POOL_HEADER, _
                                                                        runDataRow)
-        Set interpolatedEstimatesCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER, _
+        Set interpolatedEstimatesCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER, _
                                                                         runDataRow)
-        Set interpolatedDatesEstimatesCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER, _
+        Set interpolatedDatesEstimatesCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER, _
                                                                              runDataRow)
-        Set supportPointsCell = EbsUtils.IntersectRunDataColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, _
+        Set supportPointsCell = Me.IntersectRunDataColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, _
                                                                 runDataRow)
         
         If newEntryCell Is Nothing Or _
@@ -1066,7 +1066,7 @@ Function InterpolateEstimates(supportPoints() As Double, inputEstimates() As Dou
     
     'Generate y values / prepare the axis to the estimates [0.0 to 0.1 equidistant]
     Dim propabilityAxis() As Double
-    propabilityAxis = EbsUtils.CalcPropabilityAxis(axisSize)
+    propabilityAxis = Me.CalcPropabilityAxis(axisSize)
     
     'Now call interpolateion algorithm
     interpolated = Utils.InterpolateArray(propabilityAxis, copiedEstimates, supportPoints)
@@ -1122,7 +1122,7 @@ Function GetMonteCarloTimeEstimates(userEstimate As Double, velocityPool() As Do
     
     For estimateIdx = 0 To pickCount - 1
         'Gen random index
-        pickedIndex = EbsUtils.GenRandomIndex(UBound(velocityPool))
+        pickedIndex = Me.GenRandomIndex(UBound(velocityPool))
         pickedVelocity = velocityPool(pickedIndex)
         monteCarloEstimates(estimateIdx) = userEstimate / pickedVelocity 'user est: 5.00 / velo: 0.5 = 10.00, low velocity = long time
     Next estimateIdx
@@ -1197,7 +1197,7 @@ Function PrintPropabilityChart(sheet As Worksheet)
     Dim sca As PropabilityChartScale
     
     'Read axis type (date / time) and mode to use
-    Call EbsUtils.GetPropabilityChartSettings(sheet, mode, sca)
+    Call Me.GetPropabilityChartSettings(sheet, mode, sca)
     
     'At max three datasets are displayed (currently)
     Dim x1() As Double
@@ -1212,7 +1212,7 @@ Function PrintPropabilityChart(sheet As Worksheet)
     chartSupPoints = Utils.CopyVarArrToDoubleArr(Constants.EBS_HIGHLIGHT_PROPABILITIES)
     
     If mode = PropabilityChartMode.ceChartModeLast Then
-        Call EbsUtils.GetDataForLastRunGraph(sheet, mode, sca, x1, y1, x2, y2)
+        Call Me.GetDataForLastRunGraph(sheet, mode, sca, x1, y1, x2, y2)
         
         'Check for the read datasets: Are all two sets available?
         If sca = PropabilityChartScale.ceChartScaleTime Then
@@ -1226,7 +1226,7 @@ Function PrintPropabilityChart(sheet As Worksheet)
         End If
         
     ElseIf mode = PropabilityChartMode.ceChartModeLastHundred Or mode = ceChartModeAll Then
-        Call EbsUtils.GetDataForLongtimeGraph(sheet, mode, sca, chartSupPoints, x1, y1, y2, y3)
+        Call Me.GetDataForLongtimeGraph(sheet, mode, sca, chartSupPoints, x1, y1, y2, y3)
         'Check for the read datasets: Are all three sets with same x-axis available?
         If Not Base.IsArrayAllocated(x1) Or Not Base.IsArrayAllocated(y1) Or _
                                                                           Not Base.IsArrayAllocated(y2) Or Not Base.IsArrayAllocated(y3) Then Exit Function
@@ -1420,7 +1420,7 @@ Function GetDataForLongtimeGraph(sheet As Worksheet, mode As PropabilityChartMod
     End Select
      
     Dim filteredCells As Range                   'x values are stored here (dates of ebs runs)
-    Set filteredCells = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, ceData)
+    Set filteredCells = Me.GetEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, ceData)
     
     'Find all cells with a date later than 'minDate'
     Set filteredCells = Base.FindAll(filteredCells, minDate, , ceDoubleBigger)
@@ -1439,13 +1439,13 @@ Function GetDataForLongtimeGraph(sheet As Worksheet, mode As PropabilityChartMod
     Dim estimates() As Double
                   
     'Get the column with data
-    Set supPointsRange = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
+    Set supPointsRange = Me.GetEbsMainListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
     
     Select Case sca
     Case PropabilityChartScale.ceChartScaleTime
-        Set estRange = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_TIME_ESTIMATES_HEADER, ceData)
+        Set estRange = Me.GetEbsMainListColumn(sheet, Constants.EBS_TIME_ESTIMATES_HEADER, ceData)
     Case PropabilityChartScale.ceChartScaleDate
-        Set estRange = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_DATE_ESTIMATES_HEADER, ceData)
+        Set estRange = Me.GetEbsMainListColumn(sheet, Constants.EBS_DATE_ESTIMATES_HEADER, ceData)
     End Select
  
             
@@ -1527,7 +1527,7 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         'Show accumulated times (h) and interpolated times (h) of the accumulated times for the last task
                     
         'First x-axis: accumulated time
-        Set x1Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_ACCUMULATED_TIME_POOL_HEADER, ceData)
+        Set x1Cells = Me.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_ACCUMULATED_TIME_POOL_HEADER, ceData)
         
         If x1Cells Is Nothing Then Exit Function
         
@@ -1540,19 +1540,19 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         Call Base.QuickSort(x1, ceAscending)
         
         'First y-axis: propabilities for accumulated time. Do not read y val from table - generate the propability axis for the x axis here
-        y1 = EbsUtils.CalcPropabilityAxis(UBound(x1) + 1)
+        y1 = Me.CalcPropabilityAxis(UBound(x1) + 1)
         
         If Not Base.IsArrayAllocated(y1) Then Exit Function
                     
         'Second x-axis: interpolated accumulated time
-        Set x2Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER, ceData)
+        Set x2Cells = Me.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_TIME_HEADER, ceData)
         Set x2Cells = Utils.GetBottomRightCell(x2Cells)
         x2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(x2Cells.value))
         
         If Not Base.IsArrayAllocated(x2) Then Exit Function
                     
         'Second y-axis: propabilities for interpolated accumulated time
-        Set y2Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
+        Set y2Cells = Me.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
         Set y2Cells = Utils.GetBottomRightCell(y2Cells)
         y2 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y2Cells.value))
         
@@ -1561,7 +1561,7 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
     ElseIf sca = PropabilityChartScale.ceChartScaleDate Then
         'Show interpolated dates (d)
         'First x-axis: interpolated dates
-        Set x1Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER, ceData)
+        Set x1Cells = Me.GetRunDataListColumn(sheet, Constants.EBS_RUNDATA_INTERPOLATED_DATES_HEADER, ceData)
         Set x1Cells = Utils.GetBottomRightCell(x1Cells)
         
         If x1Cells Is Nothing Then Exit Function
@@ -1570,7 +1570,7 @@ Function GetDataForLastRunGraph(sheet As Worksheet, mode As PropabilityChartMode
         
         If Not Base.IsArrayAllocated(x1) Then Exit Function
         
-        Set y1Cells = EbsUtils.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
+        Set y1Cells = Me.GetRunDataListColumn(sheet, Constants.EBS_SUPPORT_POINT_HEADER, ceData)
         Set y1Cells = Utils.GetBottomRightCell(y1Cells)
         y1 = Utils.CopyVarArrToDoubleArr(Utils.DeserializeArray(y1Cells.value))
         
@@ -1627,7 +1627,7 @@ Function GetLatestEbsRun(sheet As Worksheet, Optional ByRef runDate As Date) As 
     If sheet Is Nothing Then Exit Function
     
     Dim eHashCells As Range
-    Set eHashCells = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_HASH_HEADER, ceData)
+    Set eHashCells = Me.GetEbsMainListColumn(sheet, Constants.EBS_HASH_HEADER, ceData)
     
     If Not eHashCells Is Nothing Then
         Dim runCount As Long
@@ -1635,7 +1635,7 @@ Function GetLatestEbsRun(sheet As Worksheet, Optional ByRef runDate As Date) As 
         
         If runCount > 0 Then
             Dim dateCells As Range
-            Set dateCells = EbsUtils.GetEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, ceData)
+            Set dateCells = Me.GetEbsMainListColumn(sheet, Constants.EBS_RUN_DATE_HEADER, ceData)
             
             Dim dates() As Date
             Dim hashes() As String
