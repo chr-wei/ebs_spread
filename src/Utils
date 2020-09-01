@@ -685,7 +685,7 @@ Function DeserializeArray(serialized As String) As Variant
     regex.Global = True
     regex.Pattern = Constants.SERIALIZED_ARRAY_REGEX
 
-    If Not regex.Test(serialized) Then
+    If Not regex.test(serialized) Then
         Exit Function
     End If
     

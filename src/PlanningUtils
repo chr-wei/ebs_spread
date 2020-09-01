@@ -904,7 +904,7 @@ Function CollectEbsColData(headerCell As Range)
     
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         'If the header text of the cell is an ebs col header: read the col propability of the estimates to be displayed
         Dim matches As MatchCollection
         Set matches = regex.Execute(header)
@@ -1158,10 +1158,10 @@ Function CollectTotalTimesSpent()
     For Each cell In timeCells
         DoEvents
         'Check for stop event triggered through progress bar cancel button
-        If Utils.TryCatchedCallExternalStop = True Then Exit Function
+        If Utils.TryCatchedCallExternalStop Then Call Err.Raise(18)
         
         Call FactoryProgressBar.Update(cpt:="Collecting total times", _
-            n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading data of visible tasks...")
+            n:=taskIdx + 1, ofN:=timeCells.Count, subTaskText:="Reading total time of visible task " & taskIdx + 1 & " of " & timeCells.Count)
         
         'Cycle through all the cells the time will be stored in later on. Read the total time from the task sheetArea
         hash = PlanningUtils.GetTaskHash(cell)

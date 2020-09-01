@@ -241,7 +241,7 @@ Function HandleChanges(Target As Range)
         
             'Test if the bottom neighbour of the selected cell is an ebs column.
             'Set the header so that the handler for the ebs column is called
-            If regex.Test(bn.value) Then
+            If regex.test(bn.value) Then
                 Set Target = bn
                 header = bn.value
             Else
@@ -324,7 +324,7 @@ Function UnifyTagName(header As String) As String
     regex.Global = True
     regex.Pattern = Constants.TAG_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         UnifyTagName = Constants.TAG_REGEX
     Else
         'Fall back to old header
@@ -339,7 +339,7 @@ Function UnifyEbsColumnName(header As String) As String
     regex.Global = True
     regex.Pattern = Constants.EBS_COLUMN_REGEX
     
-    If regex.Test(header) Then
+    If regex.test(header) Then
         UnifyEbsColumnName = Constants.EBS_COLUMN_REGEX
         Exit Function
     Else
