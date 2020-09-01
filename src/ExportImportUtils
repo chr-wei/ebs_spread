@@ -107,9 +107,6 @@ Function ImportTasks()
                     'Append postfix to task name.
                     Call PlanningUtils.ApplyTaskData(hash:=cpHash, name:=currentName & SettingUtils.GetImportedTaskPostfixSetting, handleName:=True)
                     anyHash = cpHash
-                    
-                    'Close task sheet(s) to minimize memory usage
-                    Call TaskUtils.VirtualizeTaskSheets
                 End If
             End If
         End If
