@@ -531,11 +531,15 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
         'Read the velocity from the sheet's cell
         velocity = TaskUtils.GetVelocity(taskSheetArea)
         
-        'Check velocity val - cannot be negative
+        'Check velocity val - negative number indicates 'no velocity'
         If velocity <> -1 Then
             ReDim Preserve velocities(veloIdx)
             velocities(veloIdx) = velocity
             veloIdx = veloIdx + 1
+        ElseIf upperLimit < UBound(hashes) Then
+            'If no value can be read increase the upper limit to exmine more tasks.
+            'Omitting this can lead to fewer than n velocity values
+            upperLimit = upperLimit + 1
         End If
     Next hashIdx
     
