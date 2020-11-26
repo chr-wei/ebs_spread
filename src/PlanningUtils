@@ -66,30 +66,25 @@ Function GetTaskListColumn(colIdentifier As Variant, rowIdentifier As ListRowSel
     Set GetTaskListColumn = Utils.GetListColumn(GetPlanningSheet, Constants.TASK_LIST_NAME, colIdentifier, rowIdentifier)
 End Function
 
-Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell As Range)
+Function AddNewTask() As String
     Const FN As String = "PlanningUtils.AddNewTask"
     Call MessageUtils.InvokeFnMsg(FN)
     
-    'Adds a new task and returns entry cell and generated hash value
-    '
-    'Input args:
-    '  entryCell:  The cell a new task shall be added to. The cell will later contain the no. of the added task e.g. '#0001'
-    '  newHash:    Hash value which will be set for the new task (if any)
+    'Adds a new task and returns hash
     '
     'Output args:
-    '  newHash:    If no hash value was given one can read the newly generated hash from here
+    '  AddNewTask:  Generated hash to identify task
     
     'Generate a new HASH if no hash was passed
-    If Not SanityUtils.CheckHash(newHash) Then
-        newHash = Utils.CreateHashString("t")
-    End If
+    Dim newHash As String
+    newHash = Utils.CreateHashString("t")
     
     'Add a new entry to task list'
-    Dim entryAdded As Boolean
-    entryAdded = False
+    Dim entryAdded As Boolean: entryAdded = False
     
     'Add the task line in planning sheet
-    entryAdded = AddNewTaskRow(newHash, entryCell)
+    Dim entryCell As Range
+    entryAdded = Me.AddNewTaskRow(newHash, entryCell)
     
     If entryAdded Then
         'Create a new task sheet and hide it
@@ -106,6 +101,8 @@ Function AddNewTask(Optional ByRef newHash As String, Optional ByRef entryCell A
             Call Me.SelectOnPlanningSheet(title)
             Call Planning.HandleSelectionChanges(title)
         End If
+        
+        AddNewTask = newHash
     End If
 End Function
 
@@ -121,6 +118,14 @@ Function AddNewTaskRow(hash As String, ByRef newEntryCell As Range) As Boolean
     '
     'Output args:
     '  AddNewTaskRow:   If everything went well result will be 'true'
+    
+    'Do not call this method with enabled events as it may have problematic consequences
+    
+    If Application.EnableEvents = True Then
+        Call MessageUtils.HandleMessage("Do not run this function with enabled events. Trouble ahead - exiting function.", _
+                                        ceError, FN)
+        Exit Function
+    End If
     
     'Init output
     AddNewTaskRow = False
@@ -149,59 +154,66 @@ Function AddNewTaskRow(hash As String, ByRef newEntryCell As Range) As Boolean
     'First get the new line the task will be added to
     gotEntryData = Utils.GetNewEntry(PlanningUtils.GetPlanningSheet, Constants.TASK_LIST_NAME, _
                                      newEntryCell, newFormattedNumber)
-    Set taskNameCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, TASK_NAME_HEADER, newEntryCell)
-    Set taskEstimateCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, TASK_ESTIMATE_HEADER, newEntryCell)
-    Set taskKanbanListCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, KANBAN_LIST_HEADER, newEntryCell)
-    Set taskContributorCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, CONTRIBUTOR_HEADER, newEntryCell)
+
     Set taskHashCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, T_HASH_HEADER, newEntryCell)
-    Set taskPrioCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, Constants.TASK_PRIORITY_HEADER, newEntryCell)
-    Set taskFinishedOnCell = Utils.IntersectListColAndCells(GetPlanningSheet, Constants.TASK_LIST_NAME, Constants.TASK_FINISHED_ON_HEADER, newEntryCell)
     
-    If newEntryCell Is Nothing Or _
-       taskNameCell Is Nothing Or _
-       taskEstimateCell Is Nothing Or _
-       taskKanbanListCell Is Nothing Or _
-       taskContributorCell Is Nothing Or _
-       taskHashCell Is Nothing Or _
-       taskFinishedOnCell Is Nothing Or _
-       taskPrioCell Is Nothing Then
-        'Exit if a cell could not be found
+    If taskHashCell Is Nothing Then
         Exit Function
+    Else
+        
+        'Add the generated hash to identify the task
+        taskHashCell.value = hash
+    
+        'Set taskNameCell = Me.GetTaskListColumn(TASK_NAME_HEADER, newEntryCell)
+        Set taskNameCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
+        Set taskEstimateCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
+        Set taskKanbanListCell = Me.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
+        Set taskContributorCell = Me.IntersectHashAndListColumn(hash, Constants.CONTRIBUTOR_HEADER)
+        Set taskPrioCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_PRIORITY_HEADER)
+        Set taskFinishedOnCell = Me.IntersectHashAndListColumn(hash, Constants.TASK_FINISHED_ON_HEADER)
+        
+        If newEntryCell Is Nothing Or _
+           taskNameCell Is Nothing Or _
+           taskEstimateCell Is Nothing Or _
+           taskKanbanListCell Is Nothing Or _
+           taskContributorCell Is Nothing Or _
+           taskFinishedOnCell Is Nothing Or _
+           taskPrioCell Is Nothing Then
+            'Exit if a cell could not be found
+            Exit Function
+        End If
+        
+        'Add number for new entry
+        newEntryCell.value = newFormattedNumber
+        
+        'Add placeholders for fields or initial values or const values
+        taskNameCell.value = Constants.TASK_NAME_INITIAL
+        taskEstimateCell.value = Constants.TASK_ESTIMATE_INITIAL
+        taskKanbanListCell.value = Constants.KANBAN_LIST_TODO
+        taskContributorCell.value = Constants.CONTRIBUTOR_INITIAL
+        taskFinishedOnCell.value = Constants.N_A
+        
+        'Add a hyperlink to the sheet which will be generated in the next step
+        Dim subAddress As String
+        subAddress = Constants.TASK_SHEET_STD_LINK
+        
+        'Add a hyperlink with custom format
+        Call Utils.AddSubtileHyperlink(taskNameCell, subAddress)
+        
+        'Do this as last step because priorities are resorting the table
+        taskPrioCell.value = Constants.TASK_PRIO_INITIAL
+        
+        'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskRow'
+        Call Me.OrganizePrioColumn
+        
+        'Search for the hash here as tasks can get reordered with priority sorting
+        Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
+        
+        'Apply proper list format
+        Call Me.ResetListFormat
+        
+        AddNewTaskRow = True
     End If
-    
-    'Add the generated hash to identify the task
-    taskHashCell.value = hash
-    
-    'Add number for new entry
-    newEntryCell.value = newFormattedNumber
-    
-    'Add placeholders for fields or initial values or const values
-    taskNameCell.value = Constants.TASK_NAME_INITIAL
-    taskEstimateCell.value = Constants.TASK_ESTIMATE_INITIAL
-    taskKanbanListCell.value = Constants.KANBAN_LIST_TODO
-    taskContributorCell.value = Constants.CONTRIBUTOR_INITIAL
-    taskFinishedOnCell.value = Constants.N_A
-    
-    'Add a hyperlink to the sheet which will be generated in the next step
-    Dim subAddress As String
-    subAddress = Constants.TASK_SHEET_STD_LINK
-    
-    'Add a hyperlink with custom format
-    Call Utils.AddSubtileHyperlink(taskNameCell, subAddress)
-    
-    'Do this as last step because priorities are resorting the table
-    taskPrioCell.value = Constants.TASK_PRIO_INITIAL
-    
-    'Call sorting prio column manually to since events should be disabled when calling 'AddNewTaskRow'
-    Call Me.OrganizePrioColumn
-    
-    'Search for the hash here as tasks can get reordered with priority sorting
-    Set newEntryCell = Utils.FindSheetCell(GetPlanningSheet.UsedRange, hash)
-    
-    'Apply proper list format
-    Call Me.ResetListFormat
-    
-    AddNewTaskRow = True
 End Function
 
 Function GetTaskHash(Optional ByRef rng As Range = Nothing) As String

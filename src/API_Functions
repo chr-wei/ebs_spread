@@ -1,0 +1,28 @@
+Attribute VB_Name = "API_Functions"
+Option Explicit
+
+Public Function API_AddNewTask(taskName As String, Optional taskEstimate As Double = 0, Optional totalTime As Double = 0)
+    'API function to add a new task. Currently only task name, estimate and total time spent can be set.
+    
+    'Check args
+    If taskName = "" Then Exit Function
+    
+    Dim hash As String
+    hash = Utils.RunTryCatchedCall(f:="AddNewTask", obj:=PlanningUtils, enableEvt:=False, screenUpdating:=False)
+
+    Dim nameCell As Range, estimateCell As Range, totalTimeCell As Range
+    Set nameCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
+    Set estimateCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
+
+    If Not nameCell Is Nothing And taskName <> "" Then
+        nameCell.value = taskName
+    End If
+
+    If Not estimateCell Is Nothing And taskEstimate > 0 Then
+        estimateCell.value = taskEstimate
+    End If
+
+    If totalTime > 0 Then
+        Call PlanningUtils.AddXHoursTime(hash, totalTime)
+    End If
+End Function

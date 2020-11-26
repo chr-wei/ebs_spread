@@ -543,7 +543,7 @@ End Function
 
 Function RunTryCatchedCall(f As String, Optional obj As Object, _
                            Optional arg1 As Variant, Optional arg2 As Variant, Optional arg3 As Variant, Optional arg4 As Variant, _
-                           Optional enableEvt As Boolean = False, Optional screenUpdating As Boolean = True)
+                           Optional enableEvt As Boolean = False, Optional screenUpdating As Boolean = True) As Variant
     'This is a wrapper to run functions of objects (worksheets) and modules with specific Application settings e.g. disabled Application events
     'with a try catch mechanism to prohibit errors from bothering the user
     
@@ -564,18 +564,18 @@ Function RunTryCatchedCall(f As String, Optional obj As Object, _
     
     'Call the passed function either on a passed object (e.g. worksheet) or just without (e.g a module function)
     If IsMissing(obj) Or obj Is Nothing Then
-        Call Excel.Application.Run(f, arg1, arg2, arg3, arg4)
+        RunTryCatchedCall = Excel.Application.Run(f, arg1, arg2, arg3, arg4)
     Else
         If IsMissing(arg1) Then
-            Call CallByName(obj, f, VbMethod)
+            RunTryCatchedCall = CallByName(obj, f, VbMethod)
         ElseIf IsMissing(arg2) Then
-            Call CallByName(obj, f, VbMethod, arg1)
+            RunTryCatchedCall = CallByName(obj, f, VbMethod, arg1)
         ElseIf IsMissing(arg3) Then
-            Call CallByName(obj, f, VbMethod, arg1, arg2)
+            RunTryCatchedCall = CallByName(obj, f, VbMethod, arg1, arg2)
         ElseIf IsMissing(arg4) Then
-            Call CallByName(obj, f, VbMethod, arg1, arg2, arg3)
+            RunTryCatchedCall = CallByName(obj, f, VbMethod, arg1, arg2, arg3)
         Else
-            Call CallByName(obj, f, VbMethod, arg1, arg2, arg3, arg4)
+            RunTryCatchedCall = CallByName(obj, f, VbMethod, arg1, arg2, arg3, arg4)
         End If
     End If
     

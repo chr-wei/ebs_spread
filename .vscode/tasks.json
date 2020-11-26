@@ -18,7 +18,7 @@
                 }
             },
             "presentation": {
-                "reveal": "silent",
+                // "reveal": "silent", // To not open a new terminal session and show output
                 "clear": true
             },
             "args": [
@@ -28,10 +28,31 @@
             ],
             "command": "CScript",
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
+        },
+        {
+            "label": "Generate tasks",
+            "type": "shell",
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "cmd.exe",
+                        "args": [
+                            "/d",
+                            "/c"
+                        ]
+                    }
+                }
+            },
+            "presentation": {
+                // "reveal": "silent", // To not open a new terminal session and show output
+                "clear": true
+            },
+            "args": [
+                "\"${workspaceFolder}\\dev_tools\\Generate_Tasks.vbs\"",
+                "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\""
+            ],
+            "command": "CScript",
+            "problemMatcher": [],
+        },
     ]
 }
