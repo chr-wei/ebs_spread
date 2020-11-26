@@ -30,7 +30,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "Generate tasks",
+            "label": "Prepare release binary",
             "type": "shell",
             "windows": {
                 "options": {
@@ -48,11 +48,20 @@
                 "clear": true
             },
             "args": [
-                "\"${workspaceFolder}\\dev_tools\\Generate_Tasks.vbs\"",
-                "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\""
+                "\"${workspaceFolder}\\dev_tools\\PREPARE_RELEASE_BIN.vbs\"",
+                "\"${workspaceFolder}\\bin\\EbsSpread.xlsm\"",
+                "\"${workspaceFolder}\\releases\\EbsSpread_${input:releaseVer}.xlsm\"", 
             ],
             "command": "CScript",
             "problemMatcher": [],
+        },
+    ],
+    "inputs": [
+        {
+            "id": "releaseVer",
+            "description": "Specify version of release e.g. v2.555",
+            "default": "v0.000",
+            "type": "promptString"
         },
     ]
 }
