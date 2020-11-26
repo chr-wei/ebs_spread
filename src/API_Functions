@@ -1,8 +1,16 @@
 Attribute VB_Name = "API_Functions"
 Option Explicit
 
-Public Function API_AddNewTask(taskName As String, Optional taskEstimate As Double = 0, Optional totalTime As Double = 0)
-    'API function to add a new task. Currently only task name, estimate and total time spent can be set.
+Public Function API_AddNewTask(taskName As String, _
+                               Optional comment As String = "", _
+                               Optional tag1 As String = "", _
+                               Optional tag2 As String = "", _
+                               Optional kanbanList As String = "", _
+                               Optional taskEstimate As Double = 0, _
+                               Optional totalTime As Double = 0, _
+                               Optional dueDate As Double = CDate(0))
+                               
+    'API function to add a new task
     
     'Check args
     If taskName = "" Then Exit Function
@@ -10,19 +18,89 @@ Public Function API_AddNewTask(taskName As String, Optional taskEstimate As Doub
     Dim hash As String
     hash = Utils.RunTryCatchedCall(f:="AddNewTask", obj:=PlanningUtils, enableEvt:=False, screenUpdating:=False)
 
-    Dim nameCell As Range, estimateCell As Range, totalTimeCell As Range
+    Dim nameCell As Range
+    Dim commentCell As Range
+    Dim tag1Cell As Range
+    Dim tag2Cell As Range
+    Dim kanbanCell As Range
+    Dim estimateCell As Range
+    Dim dueDateCell As Range
+    
     Set nameCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_NAME_HEADER)
+    Set commentCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.COMMENT_HEADER)
+    
+    'Set tag cells (they may have arbitrary names so do not refer to header names directly)
+    Dim tagCells As Range: Set tagCells = PlanningUtils.GetTagHeaderCells
+    If Not tagCells(1) Is Nothing Then Set tag1Cell = PlanningUtils.IntersectHashAndListColumn(hash, tagCells(1))
+    If Not tagCells(2) Is Nothing Then Set tag2Cell = PlanningUtils.IntersectHashAndListColumn(hash, tagCells(2))
+
+    Set kanbanCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.KANBAN_LIST_HEADER)
     Set estimateCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.TASK_ESTIMATE_HEADER)
+    Set dueDateCell = PlanningUtils.IntersectHashAndListColumn(hash, Constants.DUE_DATE_HEADER)
 
     If Not nameCell Is Nothing And taskName <> "" Then
         nameCell.value = taskName
     End If
-
+    
+    If Not commentCell Is Nothing And comment <> "" Then
+        commentCell.value = comment
+    End If
+    
+    If Not tag1Cell Is Nothing And tag1 <> "" Then
+        tag1Cell.value = tag1
+    End If
+    
+    If Not tag2Cell Is Nothing And tag2 <> "" Then
+        tag2Cell.value = tag2
+    End If
+    
     If Not estimateCell Is Nothing And taskEstimate > 0 Then
         estimateCell.value = taskEstimate
+    End If
+    
+    If Not dueDateCell Is Nothing And dueDate <> CDate(0) Then
+        dueDateCell.value = dueDate
     End If
 
     If totalTime > 0 Then
         Call PlanningUtils.AddXHoursTime(hash, totalTime)
     End If
+        
+    If Not kanbanCell Is Nothing And kanbanList <> "" Then
+        kanbanCell.value = kanbanList
+    End If
+End Function
+
+Public Function API_DeleteAllTasks()
+    'API function to delete all tasks: Data and entries in planning sheet
+    
+    'Make sure there a no virtual task sheets - save them in storage sheets
+    Call TaskUtils.VirtualizeTaskSheets
+
+    'Delete all storage sheets
+    Dim sheet As Variant
+    For Each sheet In VirtualSheetUtils.GetAllStorageSheets(Constants.STORAGE_SHEET_PREFIX).Items
+        Call Utils.DeleteWorksheetSilently(Base.CWorksheet(sheet))
+    Next sheet
+    
+    'Clear task list
+    Dim br As Range
+    Set br = PlanningUtils.GetTaskListBodyRange()
+    
+    If Not br Is Nothing Then
+        br.Delete
+    End If
+End Function
+
+Public Function API_DeleteAllEbsSheets()
+    'API function to delete all ebs sheets of all contributors
+    Dim regex As New RegExp
+    regex.Global = True
+    regex.Pattern = Constants.EBS_SHEET_REGEX
+    Dim sheet As Worksheet
+    For Each sheet In ThisWorkbook.Worksheets
+        If regex.test(sheet.name) Then
+            Call Utils.DeleteWorksheetSilently(sheet)
+        End If
+    Next sheet
 End Function

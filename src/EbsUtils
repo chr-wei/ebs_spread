@@ -1664,17 +1664,3 @@ Function GetLatestEbsRun(sheet As Worksheet, Optional ByRef runDate As Date) As 
         End If
     End If
 End Function
-
-Function DeleteAllEbsSheets()
-    'Delete all ebs sheets. This is a helping function currently not called in the program.
-
-    Dim regex As New RegExp
-    regex.Global = True
-    regex.Pattern = Constants.EBS_SHEET_REGEX
-    Dim sheet As Worksheet
-    For Each sheet In ThisWorkbook.Worksheets
-        If regex.test(sheet.name) Then
-            Call Utils.DeleteWorksheetSilently(sheet)
-        End If
-    Next sheet
-End Function
