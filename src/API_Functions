@@ -8,7 +8,7 @@ Public Function API_AddNewTask(taskName As String, _
                                Optional kanbanList As String = "", _
                                Optional taskEstimate As Double = 0, _
                                Optional totalTime As Double = 0, _
-                               Optional dueDate As Double = CDate(0))
+                               Optional dueDate As Date = CDate(0))
                                
     'API function to add a new task
     

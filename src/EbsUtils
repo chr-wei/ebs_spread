@@ -452,7 +452,6 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
     Dim finishedTasks As Range
     Dim contributorTasks As Range
     Dim hashCells As Range
-    Dim dateCells As Range
     
     'Search all n last finished tasks on planning sheet which have a valid velocity value
     Set finishedTasks = PlanningUtils.GetFinishedTasks()
@@ -481,48 +480,50 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
     'Debug info
     'Debug.Print "hashCells: " + hashCells.Address
     
+    Dim validDateCells As Range
+    Set validDateCells = Base.IntersectN( _
+                    hashCells.EntireRow, _
+                    PlanningUtils.GetTaskListColumn(Constants.TASK_FINISHED_ON_HEADER, ceData))
+    
+    'Filter date cells for valid dates
+    Set validDateCells = Base.FindAll(rng:=validDateCells, propertyVal:="Date", compType:=ceIs)
+    
+    Set hashCells = Base.IntersectN(hashCells, validDateCells.EntireRow)
+    
     If hashCells Is Nothing Then
         Exit Function
     End If
     
     Dim hashes() As String
     hashes = Utils.ConvertRangeValsToArr(hashCells)
-    Set dateCells = Base.IntersectN( _
-                    hashCells.EntireRow, _
-                    PlanningUtils.GetTaskListColumn(Constants.TASK_FINISHED_ON_HEADER, ceData))
-                    
-    'Filter date cells for valid dates
-    Set dateCells = Base.FindAll(rng:=dateCells, propertyVal:="Date", compType:=ceIs)
     
     Dim dates() As Date
-    dates = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(dateCells))
+    dates = Utils.CopyVarArrToDateArr(Utils.ConvertRangeValsToArr(validDateCells))
     
     'Sort the hashes ascending to the finished date. Sort hashes accordingly to keep reference
     Call Base.QuickSort(dates, ceDescending, , , hashes)
     
-    Dim hash As String
-    Dim hashIdx As Long
-    Dim veloIdx As Long
-    veloIdx = 0
-    
-    Dim upperLimit As Long
-    
-    'Get all velocities out of the array, if less than n velocities exist. Get max n velocities if more velocities are avialable
-    If UBound(hashes) < n Then
-        upperLimit = UBound(hashes)
-    Else
-        '        'Crop date and hash array to
-        '        ReDim Preserve hashes(0 To N - 1)
-        '        ReDim Preserve dates(0 To N - 1)
-        upperLimit = n
-    End If
+'    Dim upperLimit As Long
+'
+'    'Get all velocities out of the array, if less than n velocities exist. Get max n velocities if more velocities are avialable
+'    If UBound(hashes) < n Then
+'        upperLimit = UBound(hashes)
+'    Else
+'        '        'Crop date and hash array to
+'        '        ReDim Preserve hashes(0 To N - 1)
+'        '        ReDim Preserve dates(0 To N - 1)
+'        upperLimit = n
+'    End If
     
     Dim velocity As Double
     Dim taskSheetArea As Range
     
-    For hashIdx = 0 To upperLimit
+    Dim hashIdx As Long: hashIdx = 0
+    Dim veloIdx As Long: veloIdx = 0
+    
+    While veloIdx < n And hashIdx <= UBound(hashes)
         Call FactoryProgressBar.Update(cpt:="Evidence based scheduling", _
-                                       n:=hashIdx + 1, ofN:=upperLimit + 1, _
+                                       n:=veloIdx + 1, ofN:=n + 1, _
                                        subTaskText:=contributor & ": Generating velocity pool...")
         DoEvents
         
@@ -536,12 +537,9 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
             ReDim Preserve velocities(veloIdx)
             velocities(veloIdx) = velocity
             veloIdx = veloIdx + 1
-        ElseIf upperLimit < UBound(hashes) Then
-            'If no value can be read increase the upper limit to exmine more tasks.
-            'Omitting this can lead to fewer than n velocity values
-            upperLimit = upperLimit + 1
         End If
-    Next hashIdx
+        hashIdx = hashIdx + 1
+    Wend
     
     Dim veloCount As Long
     
