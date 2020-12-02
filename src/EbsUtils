@@ -503,18 +503,6 @@ Function GenVelocityPool(contributor As String, n As Long) As Double()
     'Sort the hashes ascending to the finished date. Sort hashes accordingly to keep reference
     Call Base.QuickSort(dates, ceDescending, , , hashes)
     
-'    Dim upperLimit As Long
-'
-'    'Get all velocities out of the array, if less than n velocities exist. Get max n velocities if more velocities are avialable
-'    If UBound(hashes) < n Then
-'        upperLimit = UBound(hashes)
-'    Else
-'        '        'Crop date and hash array to
-'        '        ReDim Preserve hashes(0 To N - 1)
-'        '        ReDim Preserve dates(0 To N - 1)
-'        upperLimit = n
-'    End If
-    
     Dim velocity As Double
     Dim taskSheetArea As Range
     
