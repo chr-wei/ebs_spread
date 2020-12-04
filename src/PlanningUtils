@@ -624,6 +624,7 @@ Function GetAllListValidatedCols() As Range
     End If
     
     Set allListValidatedCols = Base.UnionN(allListValidatedCols, Me.GetTaskListColumn(Constants.CONTRIBUTOR_HEADER, ceData))
+    Set allListValidatedCols = Base.UnionN(allListValidatedCols, Me.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData))
     Set GetAllListValidatedCols = allListValidatedCols
 End Function
 

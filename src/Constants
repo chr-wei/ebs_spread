@@ -44,6 +44,7 @@ Public Const CONTRIBUTOR_INITIAL As String = "Me"
 
 Public Const TASK_SHEET_STD_LINK As String = PLANNING_SHEET_NAME + "!A1"
 
+'See kanban list options below
 Public Const KANBAN_LIST_TODO As String = "To do"
 Public Const KANBAN_LIST_IN_PROGRESS As String = "In progress"
 Public Const KANBAN_LIST_DONE As String = "Done"
@@ -207,6 +208,16 @@ Public Const COPY_STORAGE_SHEET_PREFIX As String = "COPY_STOR_"
 
 'Array constants
 
+'Kanban list options
+Function KANBAN_LIST_OPTIONS() As Variant
+    KANBAN_LIST_OPTIONS = Array("Important", _
+                                "Note", _
+                                Constants.KANBAN_LIST_TODO, _
+                                Constants.KANBAN_LIST_IN_PROGRESS, _
+                                "Testing/Review", _
+                                Constants.KANBAN_LIST_DONE, _
+                                Constants.KANBAN_LIST_META)
+End Function
 'Support points for saved propabilities
 Function EBS_SUPPORT_PROPABILITIES() As Double()
     EBS_SUPPORT_PROPABILITIES = Utils.CopyVarArrToDoubleArr(Array(0.05, 0.2, 0.35, 0.5, 0.65, 0.8, 0.95))

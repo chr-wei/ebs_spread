@@ -581,7 +581,12 @@ Function ManageKanbanListChange(changedCell As Range, changeFinishedOnDate As Bo
         'Manage finished on date change for planning and task sheetArea manually
         Call Planning.ManageFinishedOnDateChange(finishedOnCell)
     End If
-  
+    
+    'Update the data validation list
+    Dim kanbanCells As Range
+    Set kanbanCells = PlanningUtils.GetTaskListColumn(Constants.KANBAN_LIST_HEADER, ceData)
+    Call Utils.SetCellValuesForValidation(kanbanCells, Constants.KANBAN_LIST_OPTIONS)
+    
     'Sort the priority column
     Call PlanningUtils.OrganizePrioColumn
 End Function

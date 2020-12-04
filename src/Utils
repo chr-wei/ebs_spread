@@ -435,13 +435,14 @@ Function IntersectListColAndCells(sheetArea As Variant, listId As Variant, colId
     'Debug info
 End Function
 
-Function SetCellValuesForValidation(colRange As Range)
+Function SetCellValuesForValidation(colRange As Range, Optional forcedValues As Variant)
     'This function specifies the unique values of a certain range as dropdown list values of the same range.
     'This is needed for auto updated drop down list
     'Entries of the dropdown list are managed on a seperate worksheet and referenced by a named range
     
     'Input args:
-    '   cellRange:  The range of cells you want to set the validation for
+    '   cellRange:      The range of cells you want to set the validation for
+    '   forcedValues:   Array of string containing the values to be applied as validation
     
     'Check args
     If colRange.ListObject Is Nothing Then Exit Function
@@ -478,7 +479,12 @@ Function SetCellValuesForValidation(colRange As Range)
                 End If
                 
                 Dim list() As Variant
-                list = Base.DictToArray(stringDict)
+                If Base.IsArrayAllocated(forcedValues) Then
+                    'Use a list of forced values instead of current column contents
+                    list = forcedValues
+                Else
+                    list = Base.DictToArray(stringDict)
+                End If
         
                 Dim item As Variant
                 Dim rowIdx As Long: rowIdx = 0
